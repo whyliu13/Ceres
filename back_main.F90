@@ -382,8 +382,6 @@ do tm  = 1, M
   enddo
   write(2,*) "####################################################################"
 
-
-
  if(solvtype .eq. 1)then
   call bicgstab(UNEW_in,hflag)
  elseif(solvtype .eq. 0)then
@@ -392,7 +390,6 @@ do tm  = 1, M
   print *, "solver type invalid"
   stop
  endif
-
 
   write(2,*)"#################################################################"
   write(2,*) "T2", "  mat = 1"

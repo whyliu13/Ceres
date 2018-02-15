@@ -849,7 +849,7 @@
         UWALL=3.0
        else if ((dir.eq.2).and.(sidesten.eq.2)) then
         bctype=1 ! dirichlet
-        UWALL=2.0
+        UWALL=0.0
        else
         print *,"dir or sidesten invalid"
         stop
@@ -1321,7 +1321,7 @@
          if (vf.le.AVGTOL) then
           AU(i,j,im)=(meshvol/deltat)*U(i,j,im)
          else        
-          AU(i,j,im)=(meshvol/deltat)*vf*U(i,j,im)+div_tot 
+          AU(i,j,im)=(meshvol/deltat)*vf*U(i,j,im) + div_tot 
          endif
 
         enddo ! im
@@ -1581,16 +1581,16 @@
 
       print *,"bicgstab with operator_type= ",operator_type
 
-  write(2,*)"#################################################################"
-  write(2,*) "bcgs", "  mat = 1"
+  !write(2,*)"#################################################################"
+  !write(2,*) "bcgs", "  mat = 1"
   do i1 = loy-1,hiy+1
-   write(2,*) U(:,i1,1) 
+   !write(2,*) U(:,i1,1) 
   enddo
-   write(2,*) "bcgs", "  mat = 2"
+   !write(2,*) "bcgs", "  mat = 2"
   do i1 = loy-1,hiy+1
-   write(2,*) U(:,i1,2) 
+   !write(2,*) U(:,i1,2) 
   enddo
-  write(2,*) "####################################################################"
+  !write(2,*) "####################################################################"
 
 
 
@@ -1653,7 +1653,6 @@
        if (1.eq.0) then
         print *,"rho1=",rho1
        endif
-       
        restart_flag=0
        if ((sqrt(abs(rho0)).lt.bicgstab_tol*0.01).or. &
            (sqrt(abs(w0)).lt.bicgstab_tol*0.01)) then
@@ -2627,7 +2626,7 @@
           out_time,im,probtypeCG,nmat,alpha,dclt_test)
         err=abs(UNEW(i,j,im)-UEXACT)
 
-        write(2,*) "i=",i,"j=",j,"im=",im,"error",err
+        !write(2,*) "i=",i,"j=",j,"im=",im,"error",err
 
         if (err.gt.linf_error(im)) then
          icrit(im)=i  
