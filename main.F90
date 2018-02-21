@@ -201,10 +201,10 @@ enddo
 
 ! init thermal conductivity
  if (probtype_in.eq.0) then
-  thermal_cond(1)=1.0
-  thermal_cond(2)=0.0
+  thermal_cond(1)=1.0d0
+  thermal_cond(2)=0.1d0
   if (dclt_test_in.eq.1) then
-   thermal_cond(2)=0.0  ! top material
+   thermal_cond(2)=0.1d0  ! top material
   else if (dclt_test_in.eq.0) then
    ! do nothing
   else
@@ -212,12 +212,12 @@ enddo
    stop
   endif
  else if (probtype_in.eq.1) then
-  thermal_cond(1)=0.0 
-  thermal_cond(2)=1.0 
-  thermal_cond(3)=0.0 
+  thermal_cond(1)=0.0d0 
+  thermal_cond(2)=1.0d0 
+  thermal_cond(3)=0.0d0 
  else if (probtype_in.eq.2) then
-  thermal_cond(1)=1.0
-  thermal_cond(2)=0.1
+  thermal_cond(1)=1.0d0
+  thermal_cond(2)=0.1d0
  else 
   print *,"probtype_in invalid"
   stop
@@ -240,7 +240,7 @@ enddo
    ! 1d problem
   if ((probtype_in.eq.0).or.(probtype_in.eq.2)) then
    T(i,j,1)=2.0
-   T(i,j,2)=0.0
+   T(i,j,2)=2.0
    if (1.eq.0) then
     do im = 1,nmat_in
      T(i,j,im)=exact_temperature(xcen,ycen,time_init,im,probtype_in, &

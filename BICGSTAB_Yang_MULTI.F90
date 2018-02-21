@@ -448,19 +448,19 @@
          xsten_cell, &
          diag_local)
 
-        if (dclt_test.eq.1) then
-         if (im_in.eq.2) then
-          if (diag_local.ne.0.0) then
-           print *,"diag_local invalid"
-           stop
-          endif
-         endif
-        else if (dclt_test.eq.0) then
-         ! do nothing
-        else
-         print *,"dclt_test invalid"
-         stop
-        endif
+   !     if (dclt_test.eq.1) then
+   !      if (im_in.eq.2) then
+   !       if (diag_local.ne.0.0) then
+   !        print *,"diag_local invalid"
+   !        stop
+   !       endif
+   !      endif
+   !     else if (dclt_test.eq.0) then
+   !      ! do nothing
+   !     else
+   !      print *,"dclt_test invalid"
+   !      stop
+   !     endif
         vofcomp=(im_in-1)*ngeom_reconCG+1
         vf=mofdata_FAB(i,j,vofcomp)
         if (vf.le.AVGTOL) then
@@ -833,6 +833,7 @@
 
 
       subroutine getBC_TYPE(dir,sidesten,UWALL,bctype)
+        ! set BC for different test
       IMPLICIT NONE
 
       integer dir,sidesten,bctype
@@ -849,8 +850,8 @@
         bctype=1 ! dirichlet
         UWALL=3.0
        else if ((dir.eq.2).and.(sidesten.eq.2)) then
-        bctype=1 ! dirichlet
-        UWALL=0.0
+        bctype=1 ! dirichlet    
+        UWALL=2.0
        else
         print *,"dir or sidesten invalid"
         stop

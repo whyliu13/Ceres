@@ -1230,25 +1230,24 @@ real(kind=8)              :: mypi,delx,dely
      ! TLO+b1 yI+(b1 k1/k2)(yHI-yI)=THI
      ! TLO k2 + b1 (yI k2 + k1 (yHI - yI))=THI k2
      ! b1(yI k2 + k1 (yHI-yI))=(THI-TLO)k2
-
+!
 !  if (dclt_flag.eq.0) then
-!   TLO=3.0d0
-!   THI=2.0d0
-!   yI=0.3d0
-!   yHI=1.0
-!   a1=TLO
-!   b1=(THI-TLO)*alpha(2)/(yI * alpha(2) +alpha(1)*(yHI-yI))
-!   b2=b1*alpha(1)/alpha(2)
-!   a2=a1+b1*yI 
-!  else if (dclt_flag.eq.1) then
    TLO=3.0d0
    THI=2.0d0
+   yI=0.3d0
+   yHI=1.0
    a1=TLO
-   b1=(THI-TLO)/0.3d0
-  !  print *, "b1=", b1
-   yI = 0.0d0           ! NULL the yI
-   a2=0.0d0
-   b2=0.0d0
+   b1=(THI-TLO)*alpha(2)/(yI * alpha(2) +alpha(1)*(yHI-yI))
+   b2=b1*alpha(1)/alpha(2)
+   a2=a1+b1*yI 
+!  else if (dclt_flag.eq.1) then
+!   TLO=3.0d0
+!   THI=2.0d0
+!   a1=TLO
+!   b1=(THI-TLO)/0.3d0
+!   yI = 0.0d0           ! NULL the yI
+!   a2=0.0d0
+!   b2=0.0d0
 !  else
 !   print *,"dclt_flag invalid"
 !   stop
@@ -1268,8 +1267,8 @@ real(kind=8)              :: mypi,delx,dely
     if (im.eq.1) then
      exact_temperature=a1+b1*y
     else if (im.eq.2) then
-!     exact_temperature=a2+b2*(y-yI)
-     exact_temperature = a2
+     exact_temperature=a2+b2*(y-yI)
+!     exact_temperature = a2
     else
      print *,"im invalid 7"
      stop
