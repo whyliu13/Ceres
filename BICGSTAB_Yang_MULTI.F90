@@ -350,7 +350,22 @@
       enddo
       enddo ! i,j
 
-      do i=lox,hix
+      do j=loy,hiy
+       do im1=1,nmat
+       do im2=1,nmat
+       do dir=1,sdim
+       do sidesten=1,2
+        frac_pair_cell_FAB(lox-1,j,im1,im2,dir,sidesten) = &
+         frac_pair_cell_FAB(lox,j,im1,im2,dir,sidesten)
+        frac_pair_cell_FAB(hix+1,j,im1,im2,dir,sidesten) = &
+         frac_pair_cell_FAB(hix,j,im1,im2,dir,sidesten) 
+       enddo
+       enddo
+       enddo
+       enddo
+      enddo
+
+      do i=lox-1,hix+1
        do im1=1,nmat
        do im2=1,nmat
        do dir=1,sdim
@@ -365,20 +380,6 @@
        enddo
       enddo
 
-      do j=loy-1,hiy+1
-       do im1=1,nmat
-       do im2=1,nmat
-       do dir=1,sdim
-       do sidesten=1,2
-        frac_pair_cell_FAB(lox-1,j,im1,im2,dir,sidesten) = &
-         frac_pair_cell_FAB(lox,j,im1,im2,dir,sidesten)
-        frac_pair_cell_FAB(hix+1,j,im1,im2,dir,sidesten) = &
-         frac_pair_cell_FAB(hix,j,im1,im2,dir,sidesten) 
-       enddo
-       enddo
-       enddo
-       enddo
-      enddo
 
       do i=lox,hix
       do j=loy,hiy
@@ -1179,6 +1180,8 @@
       REAL*8 int_face_normal_cell(nmat,nmat,sdim)
       REAL*8 dist_to_int_cell(nmat,nmat)
       REAL*8 div_tot
+      
+      REAL*8 rhs_loc
 
 
 
@@ -1307,7 +1310,7 @@
            int_face_cell, &
            int_face_normal_cell, &
            dist_to_int_cell, &
-           div_tot)
+           div_tot,rhs_loc)
 
          else
           print *,"operator_type invalid"
@@ -1322,6 +1325,7 @@
           AU(i,j,im)=(meshvol/deltat)*U(i,j,im)
          else        
           AU(i,j,im)=(meshvol/deltat)*vf*U(i,j,im) + div_tot 
+          G(i,j,im) = G(i,j,im) + rhs_loc
          endif
 
         enddo ! im

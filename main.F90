@@ -3,6 +3,7 @@ USE GeneralClass
 USE probcommon_module 
 USE MOF_pair_module
 USE mmat_FVM
+!USE multi_solver_module 
 USE bicgstab_module
 
 IMPLICIT NONE
@@ -15,7 +16,7 @@ INTEGER,PARAMETER          :: probtype_in = 0
 INTEGER,PARAMETER          :: operator_type_in = 1 !0=low,1=simple,2=least sqr
 INTEGER,PARAMETER          :: dclt_test_in = 1 ! 1 = Dirichlet test  on
 INTEGER,PARAMETER          :: solvtype = 1 ! 0 = CG  1 = bicgstab
-INTEGER,PARAMETER          :: N = 8 ,M= 1
+INTEGER,PARAMETER          :: N = 32 ,M= 20
 INTEGER,PARAMETER          :: plot_int = 1
 real(kind=8),parameter     :: fixed_dt = 1.25d-2
 real(kind=8),parameter     :: CFL = 0.5d0
@@ -150,7 +151,7 @@ enddo
 
 allocate(vf(-1:N,-1:N,nmat_in)) 
 allocate(mofdata_FAB_in(-1:N,-1:N,ngeom_recon_in*nmat_in)) 
-allocate(CENTROID_FAB(-1:N,-1:N,nmat_in)) 
+allocate(CENTROID_FAB(-1:N,-1:N,nmat_in))  ! type points 
 allocate(centroid_mult(-1:N,-1:N,nmat_in,sdim_in)) 
 allocate(T(-1:N,-1:N,nmat_in)) 
 allocate(T_new(-1:N,-1:N,nmat_in)) 
@@ -226,7 +227,8 @@ enddo
  do i= -1,N
  do j= -1,N
 
-!  xcen=centroid_mult(i,j,2,1)                            !           init centroid   im1 im2 ? ? ? 
+!  xcen=centroid_mult(i,j,2,1) 
+! init centroid   im1 im2 ? ? ? 
 !  ycen=centroid_mult(i,j,2,2)
 
   xcen=centroid_mult(i,j,1,1)
@@ -468,18 +470,3 @@ END PROGRAM
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-dwqdqd

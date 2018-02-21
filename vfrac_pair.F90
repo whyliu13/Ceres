@@ -1017,6 +1017,7 @@ contains
     real(kind=8)             :: dclt_diff(SDIM),dclt_diff1(SDIM)
     real(kind=8)             :: dclt_pp(SDIM),dclt_pp1(SDIM)
 
+
    
   write(2,*)  "new diag cal loop********************************************"
   write(2,*) "**************************************************************"
@@ -1597,7 +1598,7 @@ contains
    int_face, &
    int_face_normal, &
    dist_to_int, &
-   div_tot)
+   div_tot,rhs_loc)
 
     implicit none 
    
@@ -1643,6 +1644,8 @@ contains
     real(kind=8)             :: dclt_diff(SDIM),dclt_diff1(SDIM)
     real(kind=8)             :: dclt_pp(SDIM),dclt_pp1(SDIM)
     real(kind=8),external    :: exact_temperature
+   
+    real(kind=8)             :: rhstemp1,rhstemp2,rhs_loc
 
     LOWTOL=0.01d0
 
@@ -1658,7 +1661,11 @@ contains
      print *,"dclt_test invalid"
      stop
     endif 
-    
+
+   rhstemp1 = 0.0d0
+   rhstemp2 = 0.0d0
+   rhs_loc = 0.0d0
+
 
     div_tot = 0.0d0
     write(2,*) "T profile"
@@ -1993,9 +2000,12 @@ contains
 
       elseif(dclt_test .eq. 1)then
 
-       grad= coef*(rho(0,0,im1) - &
-                  exact_temperature(dclt_pp1(1),dclt_pp1(2),T_in,&
-                  im1,probtype,nmat,alpha,dclt_test))
+!       grad= coef*(rho(0,0,im1) - &
+!                  exact_temperature(dclt_pp1(1),dclt_pp1(2),T_in,&
+!                  im1,probtype,nmat,alpha,dclt_test))
+       grad= coef*rho(0,0,im1)
+       rhstemp2= coef*exact_temperature(dclt_pp1(1),dclt_pp1(2),T_in,&
+                  im1,probtype,nmat,alpha,dclt_test)
        !write(2,*) "time", T_in, "coef",coef
        write(2,*) "Tim1", rho(0,0,im1), "Tdclt",  &
         exact_temperature(dclt_pp1(1),dclt_pp1(2),T_in,&
@@ -2014,6 +2024,7 @@ contains
 
 
        div_tot = div_tot + grad*AFRAC
+       rhs_loc = rhs_loc + rhstemp2*AFRAC
 
         write(2,*) "div after", div_tot
  
