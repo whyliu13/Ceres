@@ -1,0 +1,9 @@
+*.dat
+out
+out_0
+out_1
+*.mod
+*.mpg
+wavedata*
+*.tec
+*.o
