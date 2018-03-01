@@ -350,22 +350,7 @@
       enddo
       enddo ! i,j
 
-      do j=loy,hiy
-       do im1=1,nmat
-       do im2=1,nmat
-       do dir=1,sdim
-       do sidesten=1,2
-        frac_pair_cell_FAB(lox-1,j,im1,im2,dir,sidesten) = &
-         frac_pair_cell_FAB(lox,j,im1,im2,dir,sidesten)
-        frac_pair_cell_FAB(hix+1,j,im1,im2,dir,sidesten) = &
-         frac_pair_cell_FAB(hix,j,im1,im2,dir,sidesten) 
-       enddo
-       enddo
-       enddo
-       enddo
-      enddo
-
-      do i=lox-1,hix+1
+      do i=lox,hix
        do im1=1,nmat
        do im2=1,nmat
        do dir=1,sdim
@@ -373,7 +358,22 @@
         frac_pair_cell_FAB(i,loy-1,im1,im2,dir,sidesten) = &
          frac_pair_cell_FAB(i,loy,im1,im2,dir,sidesten)
         frac_pair_cell_FAB(i,hiy+1,im1,im2,dir,sidesten) = &
-         frac_pair_cell_FAB(i,hiy,im1,im2,dir,sidesten)     
+         frac_pair_cell_FAB(i,hiy,im1,im2,dir,sidesten) 
+       enddo
+       enddo
+       enddo
+       enddo
+      enddo
+
+      do j=loy-1,hiy+1
+       do im1=1,nmat
+       do im2=1,nmat
+       do dir=1,sdim
+       do sidesten=1,2
+        frac_pair_cell_FAB(lox-1,j,im1,im2,dir,sidesten) = &
+         frac_pair_cell_FAB(lox,j,im1,im2,dir,sidesten)
+        frac_pair_cell_FAB(hix+1,j,im1,im2,dir,sidesten) = &
+         frac_pair_cell_FAB(hix,j,im1,im2,dir,sidesten)     
        enddo
        enddo
        enddo

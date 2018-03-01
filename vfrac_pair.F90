@@ -1662,12 +1662,10 @@ contains
      stop
     endif 
 
-   rhstemp1 = 0.0d0
-   rhstemp2 = 0.0d0
+
+
    rhs_loc = 0.0d0
-
-
-    div_tot = 0.0d0
+   div_tot = 0.0d0
     write(2,*) "T profile"
     write(2,*) rho_box(0,0,1),rho_box(0,0,2)
     rho = rho_box
@@ -1697,7 +1695,8 @@ contains
      do im2 = 1,nmat
       do dir = 1,sdim
        do side = 1,2
-
+        
+         rhstemp1 = 0.0d0
         AFRAC=frac_pair_cell(im2,im1,dir,side)
 
         if (abs(AFRAC).le.eps) then
@@ -1801,9 +1800,10 @@ contains
             dclt_pp(dir3) = mat_cen_sten(0,0,im1,dir3) + &
                             dclt_ratio*dclt_diff(dir3)
            enddo 
-           grad = rho(0,0,im1) -  &
-                  exact_temperature(dclt_pp(1),dclt_pp(2), &
+           grad = rho(0,0,im1) 
+           rhstemp1 = exact_temperature(dclt_pp(1),dclt_pp(2), &
                        T_in,im1,probtype, nmat, alpha,dclt_test)
+
          write(2,*) "rho(0 0 im1)", rho(0,0,im1)
          write(2,*) "EXACT",exact_temperature(dclt_pp(1),dclt_pp(2), &
                        T_in,im1,probtype, nmat, alpha,dclt_test)
@@ -1848,7 +1848,9 @@ contains
 
          coef=kappa*abs(dot_product(nf,n1))/(Ltemp*Ltemp)
          grad=grad*coef
-
+         if(dclt_test .eq. 1)then
+          rhstemp1 = rhstemp1*coef
+         endif
          vofcomp2=(im2-1)*ngeom_recon+1
          vf2=mofdata_sten(ii,jj,vofcomp2)
          if ((vf2.lt.-LOWTOL).or.(vf2.gt.one+LOWTOL)) then
@@ -1865,7 +1867,7 @@ contains
  
 
          div_tot = div_tot+grad*AFRAC*dx(dir)
-
+         rhs_loc = rhs_loc + rhstemp1*AFRAC*dx(dir)
         write(2,*) "div after", div_tot
 
          !write(2,*) "div_tot of ext", div_tot
@@ -1886,7 +1888,7 @@ contains
 ! internal interface
      do im2 = 1,nmat
       AFRAC=int_face(im1,im2)
-
+      rhstemp2 = 0.0d0
       if (1.eq.0) then
        if ((vf1.gt.0.0).and.(vf1.lt.1.0)) then
         print *,"x,y,im1,vf ",xsten(0,1),xsten(0,2),im1,vf1

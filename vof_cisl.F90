@@ -6,7 +6,7 @@ IMPLICIT NONE
 
 
 real(kind=8),parameter :: radcen=0.25d0
-real(kind=8),parameter :: radeps=0.1d0 ! thick:0.1d0  thin:0.005d0
+real(kind=8),parameter :: radeps=0.005d0 ! thick:0.1d0  thin:0.005d0
 
 real(kind=8),parameter :: eps = 1e-8
 real(kind=8),parameter :: tol = 1e-6
