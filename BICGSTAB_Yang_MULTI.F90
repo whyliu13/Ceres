@@ -856,7 +856,7 @@
         print *,"dir or sidesten invalid"
         stop
        endif
-      else if (probtypeCG.eq.1) then
+      else if (probtypeCG.eq.1 .or. probtypeCG .eq. 3) then
        if ((dir.eq.1).and.(sidesten.eq.1)) then
         bctype=1 ! dirichlet
         UWALL=0.0

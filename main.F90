@@ -8,17 +8,23 @@ USE bicgstab_module
 
 IMPLICIT NONE
 
-! 0=flat interface  1=annulus  2=vertical interface
+! problem type
+! 0= flat interface  
+! 1= annulus  
+! 2= vertical interface
+! 3= star
+
+
 ! for flat interface, interface is y=0.3.
 ! for dirichlet, top material has k=0 T(y=0.3)=2.0   T(y=0.0)=3.0
 
-INTEGER,PARAMETER          :: probtype_in = 1
+INTEGER,PARAMETER          :: probtype_in = 3
 INTEGER,PARAMETER          :: operator_type_in = 1 !0=low,1=simple,2=least sqr
-INTEGER,PARAMETER          :: dclt_test_in = 1 ! 1 = Dirichlet test  on
+INTEGER,PARAMETER          :: dclt_test_in = 0 ! 1 = Dirichlet test  on
 INTEGER,PARAMETER          :: solvtype = 1 ! 0 = CG  1 = bicgstab
-INTEGER,PARAMETER          :: N = 128 ,M= 4
+INTEGER,PARAMETER          :: N = 64 ,M= 1
 INTEGER,PARAMETER          :: plot_int = 1
-real(kind=8),parameter     :: fixed_dt = 1.25d-2/4.0d0
+real(kind=8),parameter     :: fixed_dt = 1.25d-2
 real(kind=8),parameter     :: CFL = 0.5d0
 real(kind=8),parameter     :: problo= 0.0d0, probhi= 1.0d0
 integer,parameter          :: sdim_in = 2
@@ -99,6 +105,11 @@ else if (probtype_in.eq.1) then
  nmat_in=3
 else if (probtype_in.eq.2) then
  nmat_in=2
+else if(probtype_in .eq. 3)then
+ order_algorithm(1)=1
+ order_algorithm(2)=3
+ order_algorithm(3)=2
+ nmat_in=3
 else
  print *,"probtype_in invalid"
  stop
@@ -211,13 +222,17 @@ enddo
    print *,"dclt_test_in is bad"
    stop
   endif
- else if (probtype_in.eq.1) then
-  thermal_cond(1)=0.0d0 
+ else if (probtype_in.eq. 1) then
+  thermal_cond(1)=0.1d0 
   thermal_cond(2)=1.0d0 
-  thermal_cond(3)=0.0d0 
- else if (probtype_in.eq.2) then
+  thermal_cond(3)=2.0d0 
+ else if (probtype_in.eq. 2) then
   thermal_cond(1)=1.0d0
   thermal_cond(2)=0.1d0
+ elseif(probtype_in .eq. 3)then
+  thermal_cond(1) = 0.0d0
+  thermal_cond(2) = 1.0d0
+  thermal_cond(3) = 0.0d0
  else 
   print *,"probtype_in invalid"
   stop
@@ -248,10 +263,19 @@ enddo
     enddo
    endif
   else if (probtype_in.eq.1) then ! annulus problem
+   T(i,j,1)=2.0
+   T(i,j,2)=2.0
+   T(i,j,3)=2.0
+  if(1 .eq. 0)then
    do im = 1,nmat_in
     T(i,j,im)=exact_temperature(xcen,ycen,time_init,im,probtype_in, &
      nmat_in,thermal_cond,dclt_test_in)
    enddo
+  endif
+  elseif (probtype_in .eq. 3)then
+   T(i,j,1)=2.0
+   T(i,j,2)=2.0
+   T(i,j,3)=2.0   
   else
    print *,"probtype_in invalid"
    stop

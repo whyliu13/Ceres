@@ -29,6 +29,9 @@ integer                          :: i
 real(kind=8)                     :: r1,r2
 real(kind=8)                     :: center(2)
 
+real(kind=8)                     :: x0,y0
+real(kind=8)                     :: c1,c2,tt   !theta
+
 if(probtype_in .eq. 1) then
  center(1) = 0.5d0
  center(2) = 0.5d0
@@ -57,6 +60,47 @@ else
    print *,"wrong number of mat"
    stop
 endif
+
+elseif(probtype_in .eq. 3)then
+ ! convert from (-1,1)  to (0,1)
+ x0 = 2.0d0*x-1.0d0
+ y0 = 2.0d0*y-1.0d0
+
+ c1 = 0.02d0*sqrt(5.0d0)
+ c2 = 0.02d0*sqrt(5.0d0)
+ 
+ tt = atan((y0-c2)/(x0-c1));  
+ if((x0-c1) .ge. 0.0d0 .and. (y0-c2) .ge. 0.0d0)then
+    ! do nothing
+ elseif((x0-c1) .le. 0.0d0 .and. (y0-c2) .gt. 0.0d0)then
+    tt = tt + pi;
+ elseif((x0-c1) .lt. 0.0d0 .and. (y0-c2) .lt. 0.0d0)then
+    tt = tt +pi;
+ else
+    tt = 2.0d0*pi + tt;
+ endif
+
+! if(abs(x0-c1) .lt. 1.0e-10 .and. abs(y0-c2) .lt. 1.0e-10)then 
+!     beta = 0.0d0;
+! end 
+  dist1 = sqrt((x0-c1)**2.0d0 + (y0-c2)**2.0d0) - &
+         (0.5d0 + 0.2d0*sin(5.0d0*tt))
+  dist2 = sqrt((x0-c1)**2.0d0 + (y0-c2)**2.0d0) - &
+         (0.5d0 -radeps + 0.2d0*sin(5.0d0*tt))
+ if(imat .eq. 3) then
+   dist = dist1
+ elseif(imat .eq. 2) then
+   if(dist1 .gt. 0.0d0 .and. dist2 .gt. 0.0d0) then
+    dist = -dist1
+   elseif(dist1 .lt. 0.0d0 .and. dist2 .gt. 0.0d0) then
+    dist = min(abs(dist1),abs(dist2))
+   else
+    dist = dist2
+   endif
+ elseif(imat .eq. 1)then
+   dist = -dist2
+ endif
+   
 
 elseif(probtype_in .eq. 0) then
 
@@ -308,10 +352,7 @@ real(kind=8)                     :: r1,r2
  x = center(1)
  y = center(2)
 
- r1=radcen-radeps
- r2=radcen+radeps
 
- dist1= sqrt((x-0.5d0)**2.0d0+(y-0.5d0)**2.0d0)
 
 ! slope is grad phi/|grad phi|
 
@@ -338,6 +379,11 @@ else if (probtype_in.eq.2) then
  endif
 
 else if (probtype_in.eq.1) then
+
+ r1=radcen-radeps
+ r2=radcen+radeps
+
+ dist1= sqrt((x-0.5d0)**2.0d0+(y-0.5d0)**2.0d0)
  
  if (im.eq. 1) then ! inner material
    dist= r1 - dist1
@@ -361,12 +407,282 @@ else if (probtype_in.eq.1) then
  else
    print *,"wrong number of mat"
  endif
+
+
 else 
  print *,"probtype_in invalid"
  stop
 endif
 
 end subroutine slopecal
+
+!--------------------------------------------------------
+SUBROUTINE triangle_interface_detect(im,probtype_in,v1,v2,v3,area,cen)
+implicit none
+
+integer,intent(in)       :: probtype_in,im
+real(kind=8),intent(in)  :: v1(2),v2(2),v3(2)
+real(kind=8)             :: d1,d2,d3
+real(kind=8)             :: d(3)
+real(kind=8)             :: v(3,2)
+
+real(kind=8)            :: ratio,ratio1,ratio2
+real(kind=8)            :: x1(2),x2(2),xx(2,2)
+
+real(kind=8)            :: area, cen(2)
+real(kind=8)            :: area1,area2
+real(kind=8)            :: cen1(2),cen2(2)
+integer                 :: i,j
+integer                 :: ct
+
+
+ area = 0.0d0
+ cen = 0.0d0
+ x1 = 0.0d0
+ x2 = 0.0d0
+ xx = 0.0d0
+ d = 0.0d0
+ v = 0.0d0
+ area1 = 0.0d0
+ area2 = 0.0d0
+ cen1 = 0.0d0
+ cen2 = 0.0d0
+
+
+
+ do i = 1,2
+  v(1,i) = v1(i)
+ enddo
+ do i = 1,2
+  v(2,i) = v2(i)
+ enddo
+ do i = 1,2
+  v(3,i) = v3(i)
+ enddo
+
+!if(probtype_in .eq. 3)then
+ call dist_concentric(im,v1(1),v1(2),d1,probtype_in)      ! prob_type = 3
+ call dist_concentric(im,v2(1),v2(2),d2,probtype_in)
+ call dist_concentric(im,v3(1),v3(2),d3,probtype_in)
+
+! print *,"v1",v1,v(1,:)
+! print *,"v2",v2,v(2,:)
+! print *,"v3",v3,v(3,:)
+! print *,"d1 d2 d3",d1,d2,d3
+
+ d(1) = d1
+ d(2) = d2
+ d(3) = d3
+
+ if(abs(d1) .lt. 1.0d-10 .and. abs(d2) .lt. 1.0d-10 &                       ! 0  0  0
+    .and. abs(d3) .lt. 1.0d-10)then
+   print *,"invalid d1 d2 d3, check triangle_interface_detect"
+   stop 
+ elseif(d1 .ge. 0.0d0  .and. d2 .ge. 0.0d0 .and. d3 .ge. 0.0d0)then         ! +0  +0  +0
+  call tri_area8(v1,v2,v3,area)
+  call tri_centroid(v1,v2,v3,cen)
+  print *,"case 1", "area",area
+ elseif(d1 .le. 0.0d0  .and. d2 .le. 0.0d0 .and. d3 .le. 0.0d0)then         ! -0  -0  -0   
+  print *,"case 2"
+    ! do nothing
+ elseif(abs(d1) .lt. 1.0e-10 .and. d2*d3 .lt. 0.0d0)then
+  print *,"case 3"
+   ratio = abs(d2)/(abs(d3)+abs(d2))
+   do i = 1,2
+    x1(i)= v2(i) + ratio*(v3(i)-v2(i))
+   enddo
+   if(d2 .gt. 0.0d0) then
+    call tri_area8(x1,v1,v2,area)
+    call tri_centroid(x1,v1,v2,cen)
+   elseif(d3 .gt. 0.0d0)then
+    call tri_area8(x1,v1,v3,area)
+    call tri_centroid(x1,v1,v3,cen)    
+   else
+    print *,"error, volate d2*d3<0,458"
+    stop
+   endif
+ elseif(abs(d2) .lt. 1.0e-10 .and. d1*d3 .lt. 0.0d0)then
+   print *, "case4"
+   ratio = abs(d1)/(abs(d1)+abs(d3))
+   do i = 1,2
+    x1(i)= v1(i) + ratio*(v3(i)-v1(i))
+   enddo
+   if(d1 .gt. 0.0d0) then
+    call tri_area8(x1,v1,v2,area)
+    call tri_centroid(x1,v1,v2,cen)
+   elseif(d3 .gt. 0.0d0)then
+    call tri_area8(x1,v2,v3,area)
+    call tri_centroid(x1,v2,v3,cen)    
+   else
+    print *,"error, volate d2*d3<0,473"
+    stop
+   endif    
+ elseif(abs(d3) .lt. 1.0e-10 .and. d1*d2 .lt. 0.0d0)then
+   print *,"case5"
+   ratio = abs(d1)/(abs(d1)+abs(d2))
+   do i = 1,2
+    x1(i)= v1(i) + ratio*(v2(i)-v1(i))
+   enddo
+   if(d1 .gt. 0.0d0) then
+    call tri_area8(x1,v1,v3,area)
+    call tri_centroid(x1,v1,v3,cen)
+   elseif(d2 .gt. 0.0d0)then
+    call tri_area8(x1,v2,v3,area)
+    call tri_centroid(x1,v2,v3,cen)    
+   else
+    print *,"error, volate d2*d3<0,488"
+    stop
+   endif  
+ else
+  print *,"case6"
+  ct = 0
+  do i = 1,2
+   if(d(i)*d(i+1) .lt. 0.0d0)then
+    ct = ct + 1
+    ratio = abs(d(i))/(abs(d(i))+abs(d(i+1)))
+    do j = 1,2
+     xx(ct,j)= v(i,j) + ratio*(v(i+1,j)-v(i,j))
+    enddo 
+   endif
+  enddo
+   
+  if(ct .eq. 2) then
+    ! do nothing
+  elseif(ct .eq. 1) then
+    if(d(1)*d(3) .gt. 0.0d0)then
+     print *,"ct invalid 525"
+     stop
+    else
+     ratio = abs(d(1))/(abs(d(1))+abs(d(3)))
+     do j = 1,2
+      xx(2,j)= v(1,j) + ratio*(v(3,j)-v(1,j))
+     enddo     
+    endif
+  elseif(ct .eq. 0)then
+   print *,"ct invalid 526"
+   stop
+  else
+   print *,"ct invalid 529"
+   stop
+  endif
+ 
+  if(d(1)*d(2) .lt. 0.0d0 .and. d(1)*d(3) .lt. 0.0d0)then
+    call tri_area8(v1,xx(1,:),xx(2,:),area1)
+    call tri_centroid(v1,xx(1,:),xx(2,:),cen1)
+    if(d(1) .gt. 0.0d0)then
+      area = area1
+      do i = 1,2
+       cen(i) = cen1(i)
+      enddo
+    elseif(d(1) .lt. 0.0d0)then
+      call tri_area8(v1,v2,v3,area2)
+      call tri_centroid(v1,v2,v3,cen2)
+    print *,"area2",area2
+      area = area2-area1
+      do i=1,2
+       cen(i)=(cen2(i)*area2 - cen1(i)*area1)/area 
+      enddo
+    else
+     print *,"d(1) can be zero,  565"
+     stop
+    endif
+  elseif(d(2)*d(3) .lt. 0.0d0 .and. d(2)*d(1) .lt. 0.0d0)then
+    call tri_area8(v2,xx(1,:),xx(2,:),area1)
+    call tri_centroid(v2,xx(1,:),xx(2,:),cen1)
+    if(d(2) .gt. 0.0d0)then
+      area = area1
+      do i = 1,2
+       cen(i) = cen1(i)
+      enddo
+    elseif(d(2) .lt. 0.0d0)then
+      call tri_area8(v1,v2,v3,area2)
+      call tri_centroid(v1,v2,v3,cen2)
+    print *,"area2",area2
+      area = area2-area1
+      do i=1,2
+       cen(i)=(cen2(i)*area2 - cen1(i)*area1)/area 
+      enddo
+    else
+     print *,"d(1) can be zero,  565"
+     stop
+    endif
+
+  elseif(d(3)*d(1) .lt. 0.0d0 .and. d(3)*d(2) .lt. 0.0d0)then
+    call tri_area8(v3,xx(1,:),xx(2,:),area1)
+    call tri_centroid(v3,xx(1,:),xx(2,:),cen1)
+    if(d(3) .gt. 0.0d0)then
+      area = area1
+      do i = 1,2
+       cen(i) = cen1(i)
+      enddo
+    elseif(d(3) .lt. 0.0d0)then
+      call tri_area8(v1,v2,v3,area2)
+      call tri_centroid(v1,v2,v3,cen2)
+    print *,"area2",area2
+      area = area2-area1
+      do i=1,2
+       cen(i)=(cen2(i)*area2 - cen1(i)*area1)/area
+      enddo
+    else
+     print *,"d(1) can be zero,  565"
+     stop
+    endif
+  else
+    print *,"err, check, 611"
+    stop
+  endif
+ endif
+!else
+! print *,"probtype_in error in triangle_interface_detect"
+! stop
+!endif
+
+
+
+end subroutine triangle_interface_detect
+
+
+
+
+SUBROUTINE TRI_AREA8(V1,V2,V3,AREA)
+IMPLICIT NONE
+
+real(kind=8),INTENT(IN)                  :: V1(2),V2(2),V3(2)
+REAL(KIND=8),INTENT(OUT)                 :: AREA
+
+ AREA = 0.5* ABS(V1(1)*(V2(2)-V3(2)) &
+           & - V2(1)*(V1(2)-V3(2)) &
+           & + V3(1)*(V1(2)-V2(2)))
+
+
+END SUBROUTINE tri_area8
+
+subroutine tri_centroid(v1,v2,v3,cen)
+implicit none
+
+real(kind=8),intent(in)      :: v1(2),v2(2),v3(2)
+real(kind=8)                 :: cen(2)
+integer                      :: i
+
+
+do i = 1,2
+ cen(i) = 1.0d0/3.0d0*(v1(i)+v2(i)+v3(i))
+enddo
+
+
+end subroutine tri_centroid
+
+
+!subroutine form_2p_line(v1,v2,mx,my,b)
+!implicit none
+! 
+!real(kind=8),intent(in)  :: v1(2),v2(2)
+!real(kind=8)             :: mx,my,b
+
+
+!end subroutine form_2p_line
+
+
 
 
 !--------------------------------------------------------
@@ -497,6 +813,8 @@ real(kind=8)                  :: vf_check
 
 type(points)                  :: seg(2)
 
+real(kind=8)                  :: v1(2),v2(2),v3(2)
+
 
 x = center(1)
 y = center(2)
@@ -582,6 +900,10 @@ do im = 1,nmat_in
              endif
 
              if(sign_flag .eq. 1) then
+!              if(probtype_in .eq. 0 .or. &
+!                 probtype_in .eq. 1 .or. &
+!                 probtype_in .eq. 2) then
+              if(1 .eq. 0)then
               call slopecal(im,center_hold,mx,my,probtype_in)
                !============================================================        
                ! call LS_LSF(h/32.0d0,centers5(i5,:),G,mx,my,alphadump)
@@ -609,13 +931,38 @@ do im = 1,nmat_in
                ! call outputplg(pos_plg)
   
               CALL POLY_CENTROID(NEG_PLG,cen_temp)
-              CALL poly_area(NEG_PLG,VOL_temp)                   
-                 ! update centroid and volume
+              CALL poly_area(NEG_PLG,VOL_temp) 
+              CALL PLGDEL(POS_PLG)
+              CALL PLGDEL(NEG_PLG)
+
               vol(im) = vol(im) + vol_temp
               cxtemp(im) = cxtemp(im) + vol_temp*cen_temp%val(1) 
               cytemp(im) = cytemp(im) + vol_temp*cen_temp%val(2)
-              CALL PLGDEL(POS_PLG)
-              CALL PLGDEL(NEG_PLG)
+
+              endif
+
+            if(1 .eq. 1)then
+              ! triangulation
+              v1 = vertex(1,:)
+              v2 = vertex(2,:)
+              v3 = vertex(3,:)
+              call triangle_interface_detect(im,probtype_in,v1,v2,v3,vol_temp,cen_temp%val)
+
+              ! update centroid and volume
+              vol(im) = vol(im) + vol_temp
+              cxtemp(im) = cxtemp(im) + vol_temp*cen_temp%val(1) 
+              cytemp(im) = cytemp(im) + vol_temp*cen_temp%val(2)
+            !------------------------------------------------------------------------------
+              v1 = vertex(2,:)
+              v2 = vertex(3,:)
+              v3 = vertex(4,:)
+              call triangle_interface_detect(im,probtype_in,v1,v2,v3,vol_temp,cen_temp%val)
+
+              ! update centroid and volume
+              vol(im) = vol(im) + vol_temp
+              cxtemp(im) = cxtemp(im) + vol_temp*cen_temp%val(1) 
+              cytemp(im) = cytemp(im) + vol_temp*cen_temp%val(2)
+            endif
 
               if (1.eq.0) then
                print *,"im,mx,my,c ",im,mx,my,c
@@ -700,7 +1047,7 @@ if (probtype_in.eq.0) then
  ! do nothing
 else if (probtype_in.eq.2) then
  ! do nothing
-else if (probtype_in.eq.1) then
+else if (probtype_in.eq.1 .or. probtype_in .eq. 3) then
  vf(2) = 1.0d0 - vf(1) -vf(3)
 
  if(abs(vf(2)) .lt. eps)then
@@ -737,7 +1084,7 @@ if (probtype_in.eq.0) then
  ! do nothing
 else if (probtype_in.eq.2) then
  ! do nothing
-else if (probtype_in.eq.1) then
+else if (probtype_in.eq.1 .or. probtype_in .eq. 3) then
  if(vf(2) .gt. eps)then
   do dir=1,2
    centroid(2,dir) =  &
@@ -778,11 +1125,11 @@ if ((probtype_in.eq.0).or. &
  endif
 
  if(vcheck .gt. 1.0d0+eps) then
-  print *,"goes into vf_correct"
+  print *,"goes into vf_correct",vcheck
   stop
  endif
 
-else if (probtype_in.eq.1) then
+else if (probtype_in.eq.1 .or. probtype_in .eq. 3) then
  if (nmat_in.ne.3) then
   print *,"nmat_in invalid"
   stop
@@ -794,7 +1141,7 @@ else if (probtype_in.eq.1) then
  endif
 
  if(vcheck .gt. 1.0d0+eps) then
-  print *,"goes into vf_correct"
+  print *,"goes into vf_correct",vcheck
   if(vf(1) .gt. 1.0d0) then
     print *,"case1"
      vf(1) = 1.0d0
@@ -1077,6 +1424,50 @@ REAL*8 mypi
    stop
   endif
 
+ else if (probtype_in.eq.3) then
+  if ((im.eq.1).or.(im.eq.3)) then
+   G_in=0.0
+  else if (im.eq.2) then
+
+   r1=radcen-radeps
+   r2=radcen+radeps
+
+   delx=x_in(1)-0.5d0
+   dely=x_in(2)-0.5d0
+
+   radius_in = sqrt(delx**2.0d0 +dely**2.0d0)
+
+    ! x=r cos(theta)
+    ! y=r sin(theta)
+   if (radius_in.le.radeps/1000.0) then
+    theta_in=0.0
+   else if ((delx.ge.0.0).and.(dely.ge.0.0)) then
+    theta_in=acos(delx/radius_in)
+   else if ((delx.le.0.0).and.(dely.ge.0.0)) then
+    theta_in=acos(abs(delx)/radius_in)
+    theta_in=mypi-theta_in
+   else if ((delx.le.0.0).and.(dely.le.0.0)) then
+    theta_in=acos(abs(delx)/radius_in)
+    theta_in=mypi+theta_in
+   else if ((delx.ge.0.0).and.(dely.le.0.0)) then
+    theta_in=acos(delx/radius_in)
+    theta_in=2.0d0*mypi-theta_in
+   else
+    print *,"delx or dely invalid"
+    stop
+   endif
+
+   ! T=2+sin(theta) exp(-t/(rc^2))  alpha=1
+   ! T_t - (T_rr + T_r/r + T_theta theta/r^2)=
+   ! exp(-t/rc^2)(-sin(theta)/rc^2+sin(theta)/r^2)
+   G_in=exp(-t_in/(radcen**2))*sin(theta_in)*(-1.0/(radcen**2)+1.0/(radius_in**2))
+  else
+   print *,"im invalid 5"
+   stop
+  endif
+
+
+
  else
   print *,"probtype_in invalid"
   stop
@@ -1173,7 +1564,7 @@ real(kind=8)              :: TLO,THI,yI,yHI,a1,b1,a2,b2
 real(kind=8)              :: mypi,delx,dely
 
  mypi=4.0d0*atan(1.0d0)
- if (probtype_in.eq.1) then
+ if (probtype_in.eq.1 .or. probtype_in .eq. 3) then
   if (nmat_in.ne.3) then
    print *,"nmat_in invalid"
    stop
