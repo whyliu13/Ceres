@@ -856,12 +856,13 @@
         print *,"dir or sidesten invalid"
         stop
        endif
-      else if (probtypeCG.eq.1 .or. probtypeCG .eq. 3) then
+      else if (probtypeCG.eq.1 .or. probtypeCG .eq. 3 &
+               .or. probtypeCG .eq. 4 .or. probtypeCG .eq. 5) then
        if ((dir.eq.1).and.(sidesten.eq.1)) then
         bctype=1 ! dirichlet
         UWALL=0.0
        else if ((dir.eq.1).and.(sidesten.eq.2)) then
-        bctype=0 ! dirichlet
+        bctype=1 ! dirichlet
         UWALL=0.0
        else if ((dir.eq.2).and.(sidesten.eq.1)) then
         bctype=1 ! dirichlet
@@ -890,7 +891,23 @@
         print *,"dir or sidesten invalid"
         stop
        endif
-
+      else if (probtypeCG.eq.6) then
+       if ((dir.eq.1).and.(sidesten.eq.1)) then
+        bctype=0 ! neumann
+        UWALL=0.0
+       else if ((dir.eq.1).and.(sidesten.eq.2)) then
+        bctype=0 ! neumann
+        UWALL=0.0
+       else if ((dir.eq.2).and.(sidesten.eq.1)) then
+        bctype=0 ! neumann
+        UWALL=0.0
+       else if ((dir.eq.2).and.(sidesten.eq.2)) then
+        bctype=1 ! dirichlet
+        UWALL= 10.0
+       else
+        print *,"dir or sidesten invalid"
+        stop
+       endif
       else
        print *,"probtypeCG invalid"
        stop
@@ -2589,7 +2606,7 @@
       integer vofcomp,i,j,im,dir,isten
       integer icrit(nmat)
       integer jcrit(nmat)
-      REAL*8 vf,UEXACT,err
+      REAL*8 vf,UEXACT,err1
       REAL*8 linf_error(nmat)
       REAL*8 l1_error(nmat)
       REAL*8 l2_error(nmat)
@@ -2629,17 +2646,17 @@
        if (vf.gt.AVGTOL) then
         UEXACT=exact_temperature(xref(1),xref(2), &
           out_time,im,probtypeCG,nmat,alpha,dclt_test)
-        err=abs(UNEW(i,j,im)-UEXACT)
+        err1=abs(UNEW(i,j,im)-UEXACT)
 
-        !write(2,*) "i=",i,"j=",j,"im=",im,"error",err
+        !write(2,*) "i=",i,"j=",j,"im=",im,"error",err1
 
-        if (err.gt.linf_error(im)) then
+        if (err1 .gt. linf_error(im)) then
          icrit(im)=i  
          jcrit(im)=j
-         linf_error(im)=err
+         linf_error(im)=err1
         endif
-        l1_error(im)=l1_error(im)+err*meshvol*vf  
-        l2_error(im)=l2_error(im)+(err**2)*meshvol*vf  
+        l1_error(im)=l1_error(im)+err1*meshvol*vf  
+        l2_error(im)=l2_error(im)+(err1**2)*meshvol*vf  
        endif
       enddo ! im
       enddo ! j
@@ -2710,6 +2727,8 @@
        write(11,*) 'VARIABLES="X","Y","U1","U2","F1","F2"'
       else if (nmat.eq.3) then
        write(11,*) 'VARIABLES="X","Y","U1","U2","U3","F1","F2","F3"'
+      else if(nmat .eq. 4)then
+    
       else
        print *,"nmat not supported"
        stop
@@ -2733,6 +2752,8 @@
          VFRAC_MOF(i,j,1), &
          VFRAC_MOF(i,j,2), &
          VFRAC_MOF(i,j,3)
+       elseif(nmat .eq. 4)then
+   
        else
         print *,"nmat not supported"
         stop

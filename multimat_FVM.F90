@@ -17,20 +17,27 @@ use MOF_pair_module
 implicit none
 
 contains
-
 !---------------------------------------------------------
 subroutine dist_concentric(imat,x,y,dist,probtype_in)
 implicit none
 
 integer,intent(in)               :: imat,probtype_in
 real(kind=8)                     :: x,y,dist
-real(kind=8)                     :: dist1,dist2,dist3,dist4
+real(kind=8)                     :: dist1,dist2,dist3,dist4,dist5
+real(kind=8)                     :: d1,d2,d3,d4,d5
+real(kind=8)                     :: xy(2)
+real(kind=8)                     :: x1(2),x2(2),x3(2),x4(2),x5(2)
+real(kind=8)                     :: x6(2)
 integer                          :: i
-real(kind=8)                     :: r1,r2
+real(kind=8)                     :: r1,r2,r3,r4
 real(kind=8)                     :: center(2)
 
 real(kind=8)                     :: x0,y0
-real(kind=8)                     :: c1,c2,tt   !theta
+real(kind=8)                     :: c1,c2,c3,c4,tt   !theta
+real(kind=8)                     :: signtemp
+
+
+
 
 if(probtype_in .eq. 1) then
  center(1) = 0.5d0
@@ -61,8 +68,46 @@ else
    stop
 endif
 
-elseif(probtype_in .eq. 3)then
- ! convert from (-1,1)  to (0,1)
+elseif(probtype_in .eq. 4)then
+! dist1 = 1e+5
+! do i = 1,pcurve_num
+!  dist2 = sqrt((x-(pcurve_ls(1,i)+1.0d0)/2.0d0)**2.0d0 + &
+!               (y-(pcurve_ls(2,i)+1.0d0)/2.0d0)**2.0d0) 
+!  if(dist2 .lt. dist1)then
+!   dist1 = dist2
+!  endif
+! enddo
+ 
+
+! x0 = 2.0d0*x-1.0d0
+! y0 = 2.0d0*y-1.0d0
+
+! c1 = 0.02d0*sqrt(5.0d0)
+! c2 = 0.02d0*sqrt(5.0d0)
+ 
+! tt = atan((y0-c2)/(x0-c1));  
+! if((x0-c1) .ge. 0.0d0 .and. (y0-c2) .ge. 0.0d0)then
+!    ! do nothing
+! elseif((x0-c1) .le. 0.0d0 .and. (y0-c2) .gt. 0.0d0)then
+!    tt = tt + pi;
+! elseif((x0-c1) .lt. 0.0d0 .and. (y0-c2) .lt. 0.0d0)then
+!    tt = tt +pi;
+! else
+!    tt = 2.0d0*pi + tt;
+! endif
+
+! dist3 =(x0-c1)**2.0d0 + (y0-c2)**2.0d0 - &
+!         (0.5d0 + 0.2d0*sin(5.0d0*tt))**2.0d0
+! if(imat .eq. 1)then
+!  dist = -sign(dist1,dist3)
+! elseif(imat .eq. 2) then
+!  dist = sign(dist1,dist3)
+! else
+!  print *,"wrong imat flag in, 130"
+!  stop
+! endif
+
+
  x0 = 2.0d0*x-1.0d0
  y0 = 2.0d0*y-1.0d0
 
@@ -80,27 +125,226 @@ elseif(probtype_in .eq. 3)then
     tt = 2.0d0*pi + tt;
  endif
 
-! if(abs(x0-c1) .lt. 1.0e-10 .and. abs(y0-c2) .lt. 1.0e-10)then 
-!     beta = 0.0d0;
-! end 
-  dist1 = sqrt((x0-c1)**2.0d0 + (y0-c2)**2.0d0) - &
-         (0.5d0 + 0.2d0*sin(5.0d0*tt))
-  dist2 = sqrt((x0-c1)**2.0d0 + (y0-c2)**2.0d0) - &
-         (0.5d0 -radeps + 0.2d0*sin(5.0d0*tt))
- if(imat .eq. 3) then
-   dist = dist1
+ dist1 = -(sqrt((x0-c1)**2.0d0 + (y0-c2)**2.0d0) - &
+         (0.5d0 + 0.2d0*sin(5.0d0*tt)))
+ if(imat .eq. 1)then
+  dist = dist1
  elseif(imat .eq. 2) then
-   if(dist1 .gt. 0.0d0 .and. dist2 .gt. 0.0d0) then
-    dist = -dist1
-   elseif(dist1 .lt. 0.0d0 .and. dist2 .gt. 0.0d0) then
-    dist = min(abs(dist1),abs(dist2))
-   else
-    dist = dist2
-   endif
- elseif(imat .eq. 1)then
-   dist = -dist2
+  dist = -dist1
+ else
+  print *,"wrong imat flag in, 130"
+  stop
  endif
-   
+
+
+
+elseif(probtype_in .eq. 3) then
+ dist1 = 1e+5
+ dist4 = 1e+5
+
+ if(imat .eq. 3)then
+ do i = 1,pcurve_num
+  dist2 = sqrt((x-(pcurve_ls(1,i)+1.0d0)/2.0d0)**2.0d0 + &
+               (y-(pcurve_ls(2,i)+1.0d0)/2.0d0)**2.0d0) 
+  if(dist2 .lt. dist1)then
+   dist1 = dist2
+  endif
+ enddo
+
+ x0 = 2.0d0*x-1.0d0
+ y0 = 2.0d0*y-1.0d0
+
+ c1 = 0.02d0*sqrt(5.0d0)
+ c2 = 0.02d0*sqrt(5.0d0)
+ 
+ tt = atan((y0-c2)/(x0-c1));  
+ if((x0-c1) .ge. 0.0d0 .and. (y0-c2) .ge. 0.0d0)then
+    ! do nothing
+ elseif((x0-c1) .le. 0.0d0 .and. (y0-c2) .gt. 0.0d0)then
+    tt = tt + pi;
+ elseif((x0-c1) .lt. 0.0d0 .and. (y0-c2) .lt. 0.0d0)then
+    tt = tt +pi;
+ else
+    tt = 2.0d0*pi + tt;
+ endif
+
+ dist3 =(x0-c1)**2.0d0 + (y0-c2)**2.0d0 - &
+         (0.5d0 + 0.2d0*sin(5.0d0*tt))**2.0d0
+ dist = sign(dist1,dist3)
+
+
+ elseif(imat .eq. 1)then
+  do i = 1,pcurve_num
+  dist2 = sqrt((x-(pcurve_ls2(1,i)+1.0d0)/2.0d0)**2.0d0 + &
+               (y-(pcurve_ls2(2,i)+1.0d0)/2.0d0)**2.0d0) 
+  if(dist2 .lt. dist1)then
+   dist1 = dist2
+  endif
+ enddo
+
+ x0 = 2.0d0*x-1.0d0
+ y0 = 2.0d0*y-1.0d0
+
+ c1 = 0.02d0*sqrt(5.0d0)
+ c2 = 0.02d0*sqrt(5.0d0)
+ 
+ tt = atan((y0-c2)/(x0-c1));  
+ if((x0-c1) .ge. 0.0d0 .and. (y0-c2) .ge. 0.0d0)then
+    ! do nothing
+ elseif((x0-c1) .le. 0.0d0 .and. (y0-c2) .gt. 0.0d0)then
+    tt = tt + pi;
+ elseif((x0-c1) .lt. 0.0d0 .and. (y0-c2) .lt. 0.0d0)then
+    tt = tt +pi;
+ else
+    tt = 2.0d0*pi + tt;
+ endif
+
+ dist3 =(x0-c1)**2.0d0 + (y0-c2)**2.0d0 - &
+         (0.5d0 + 0.2d0*sin(5.0d0*tt))**2.0d0
+ dist = -sign(dist1,dist3) 
+  
+ elseif(imat .eq. 2)then
+  do i = 1,pcurve_num
+  dist2 = sqrt((x-(pcurve_ls(1,i)+1.0d0)/2.0d0)**2.0d0 + &
+               (y-(pcurve_ls(2,i)+1.0d0)/2.0d0)**2.0d0) 
+  if(dist2 .lt. dist1)then
+   dist1 = dist2
+  endif
+  enddo
+
+  do i = 1,pcurve_num
+  dist2 = sqrt((x-(pcurve_ls2(1,i)+1.0d0)/2.0d0)**2.0d0 + &
+               (y-(pcurve_ls2(2,i)+1.0d0)/2.0d0)**2.0d0) 
+  if(dist2 .lt. dist4)then
+   dist4 = dist2
+  endif
+  enddo
+
+ x0 = 2.0d0*x-1.0d0
+ y0 = 2.0d0*y-1.0d0
+
+ c1 = 0.02d0*sqrt(5.0d0)
+ c2 = 0.02d0*sqrt(5.0d0)
+ 
+ tt = atan((y0-c2)/(x0-c1));  
+ if((x0-c1) .ge. 0.0d0 .and. (y0-c2) .ge. 0.0d0)then
+    ! do nothing
+ elseif((x0-c1) .le. 0.0d0 .and. (y0-c2) .gt. 0.0d0)then
+    tt = tt + pi;
+ elseif((x0-c1) .lt. 0.0d0 .and. (y0-c2) .lt. 0.0d0)then
+    tt = tt +pi;
+ else
+    tt = 2.0d0*pi + tt;
+ endif
+
+ dist3 =(x0-c1)**2.0d0 + (y0-c2)**2.0d0 - &
+         (0.5d0 + 0.2d0*sin(5.0d0*tt))**2.0d0
+ dist5 =(x0-c1)**2.0d0 + (y0-c2)**2.0d0 - &
+         (0.5d0 -radeps + 0.2d0*sin(5.0d0*tt))**2.0d0
+ if(dist3 .lt. 0.0d0 .and. dist5 .gt. 0.0d0)then
+  dist = min(dist1,dist4)
+ else
+  dist = -min(dist1,dist4) 
+ endif
+
+ else
+  print *,"wrong imat flag in, 130","imat=",imat
+  stop
+ endif
+
+elseif(probtype_in .eq. 5)then     ! asteroid
+ crit_dist = 0.0d0
+ dist1 = 1e+5
+ do i = 1,pcurve_num
+  dist2 = sqrt((x-(pcurve_ls(1,i)+1.0d0)/2.0d0)**2.0d0 + &
+               (y-(pcurve_ls(2,i)+1.0d0)/2.0d0)**2.0d0) 
+  if(dist2 .lt. dist1)then
+   crit_dist(1) = (pcurve_ls(1,i)+1.0d0)/2.0d0
+   crit_dist(2) = (pcurve_ls(2,i)+1.0d0)/2.0d0
+   dist1 = dist2
+  endif
+ enddo
+
+! x0 = 2.0d0*x-1.0d0
+! y0 = 2.0d0*y-1.0d0
+
+! c1 = (0.02d0*sqrt(5.0d0)+1.0d0)/2.0d0
+! c2 = (0.02d0*sqrt(5.0d0)+1.0d0)/2.0d0
+! c3 = 0.02d0*sqrt(5.0d0)
+! c4 = 0.02d0*sqrt(5.0d0)
+ 
+! tt = atan((y-c2)/(x-c1));  
+! if((x-c1) .ge. 0.0d0 .and. (y-c2) .ge. 0.0d0)then
+    ! do nothing
+! elseif((x-c1) .le. 0.0d0 .and. (y-c2) .gt. 0.0d0)then
+!    tt = tt + pi;
+! elseif((x-c1) .lt. 0.0d0 .and. (y-c2) .lt. 0.0d0)then
+!    tt = tt +pi;
+! else
+!    tt = 2.0d0*pi + tt;
+! endif
+ 
+! dist3 =sqrt((0.5d0*(0.6d0*cos(tt) + 0.2d0*cos(3.0d0*tt)+c3+1.0d0)-c1)**2.0d0 + &
+!         (0.5d0*(0.6d0*sin(tt) - 0.2d0*sin(3.0d0*tt)+c4+1.0d0)-c2)**2.0d0)
+
+! dist2 = sqrt((x-c1)**2.0d0+(y-c2)**2.0d0)
+  
+
+! if(imat .eq. 1)then
+!  dist = sign(dist1,(dist3-dist2))
+! elseif(imat .eq. 2) then
+!  dist = -sign(dist1,(dist3-dist2))
+! else
+!  print *,"wrong imat flag in, 130"
+!  stop
+! endif
+
+ c1 = (0.02d0*sqrt(5.0d0) + 1.0d0)/2.0d0
+ c2 = (0.02d0*sqrt(5.0d0) + 1.0d0)/2.0d0
+ 
+ dist3= (crit_dist(1)-c1)*(x-crit_dist(1)) +&
+        (crit_dist(2)-c2)*(y-crit_dist(2))
+ if(imat .eq. 1)then
+  dist = -sign(dist1,dist3)
+ elseif(imat .eq. 2) then
+  dist = sign(dist1,dist3)
+ else
+  print *,"wrong imat flag in, 130"
+  stop
+ endif
+
+
+!if(1 .eq. 0)then 
+!elseif(probtype_in .eq. 4)then
+  ! convert from (-1,1)  to (0,1)
+! x0 = 2.0d0*x-1.0d0
+! y0 = 2.0d0*y-1.0d0
+
+! c1 = 0.02d0*sqrt(5.0d0)
+! c2 = 0.02d0*sqrt(5.0d0)
+ 
+! tt = atan((y0-c2)/(x0-c1));  
+! if((x0-c1) .ge. 0.0d0 .and. (y0-c2) .ge. 0.0d0)then
+    ! do nothing
+! elseif((x0-c1) .le. 0.0d0 .and. (y0-c2) .gt. 0.0d0)then
+!    tt = tt + pi;
+! elseif((x0-c1) .lt. 0.0d0 .and. (y0-c2) .lt. 0.0d0)then
+!    tt = tt +pi;
+! else
+!    tt = 2.0d0*pi + tt;
+! endif
+
+! dist1 = -(sqrt((x0-c1)**2.0d0 + (y0-c2)**2.0d0) - &
+!         (0.5d0 + 0.2d0*sin(5.0d0*tt)))
+! if(imat .eq. 1)then
+!  dist = dist1
+! elseif(imat .eq. 2) then
+!  dist = -dist1
+! else
+!  print *,"wrong imat flag in, 130"
+!  stop
+! endif
+!endif
 
 elseif(probtype_in .eq. 0) then
 
@@ -126,6 +370,64 @@ elseif(probtype_in .eq. 2) then
    stop
   endif
 
+elseif(probtype_in .eq. 6)then      ! nucleate boiling set-up
+ xy(1)=x
+ xy(2)=y
+! dist1 
+ x1(1)=0.0d0
+ x1(2)=0.3d0
+ x2(1)=0.3d0
+ x2(2)=0.3d0
+ x3(1)=0.7d0
+ x3(2)=0.3d0
+ x4(1)=1.0d0 
+ x4(2)=0.3d0
+ x5(1)=0.5d0
+ x5(2)=0.3d0
+
+ if(y .ge. 0.3d0)then
+  call dist_point_to_line(x1,x2,xy,d1)
+  call dist_point_to_line(x3,x4,xy,d2)
+  dist1 = -min(d1,d2)
+ else
+  call dist_point_to_line(x1,x2,xy,d1)
+  call dist_point_to_line(x3,x4,xy,d2)
+  call l2normd(2,xy,x5, r1)
+  d3=r1-0.2d0
+  dist1=sign(min(abs(d3),d1,d2),d3)
+ endif 
+
+! dist2
+  x6(1)=0.5d0
+  x6(2)=0.0d0
+  call l2normd(2,xy,x6,r2)
+  dist2= 0.2d0-r2
+  
+! dist3
+  call l2normd(2,xy,x5,r3)
+  dist3= r3-(0.2d0-thermal_delta)
+
+
+
+ if(imat .eq. 1)then
+  dist=dist1
+ elseif(imat .eq. 2)then
+  if(dist2 .ge. 0.0d0 .and. dist3 .le. 0.0d0)then
+   dist=min(abs(dist2),abs(dist3))
+  else
+   dist=-min(abs(dist2),abs(dist3))
+  endif
+ elseif(imat .eq. 3)then
+  if(dist2 .ge. 0.0d0 .and. dist3 .ge. 0.0d0 &
+           .and. dist1 .le. 0.0d0)then
+   dist=min(abs(dist3),abs(dist1))
+  else
+   dist=-min(abs(dist3),abs(dist1))
+  endif
+ elseif(imat .eq. 4)then
+  dist= -max(dist1,dist2)
+ endif
+
 else
  print *,"probtype_in invalid"
  stop
@@ -134,8 +436,178 @@ endif
 
 end subroutine dist_concentric
 !----------------------------------------------------------
+subroutine dist_point_to_line(p1,p2,x,dist)
+implicit none
+! represent the line in parametric form,(v = f(s))
+! v^x = x1 + (x2-x1)s
+! v^y = y1 + (y2-y1)s
+! v^z = z1 + (z2-z1)s
+! 
+! if the closest point on the line to point x  is outside p1 -- p2, 
+! --------> return the distance from x either to p1 or p2 which is shorter.
+! otherwise
+! --------> return the distance from x to the cloest point
+integer,parameter            :: SDIM = 2
+real(kind=8),intent(in)      ::  p1(SDIM),p2(SDIM),x(SDIM)
+real(kind=8)                 ::  dist,dist1,dist2
 
 
+real(kind=8)                 :: diff10,diff21
+real(kind=8)                 :: x10(SDIM), x21(SDIM)
+integer                      :: i
+real(kind=8)                 :: s
+
+
+
+dist = 0.0d0
+
+do i = 1,SDIM
+ x10(i) = p1(i) - x(i)
+ x21(i) = p2(i) - p1(i)
+ 
+ if(abs(x10(i)) .lt. 10e-10)then
+  x10(i) = 0.0d0
+ endif
+ if(abs(x21(i)) .lt. 10e-10)then
+  x21(i) = 0.0d0
+ endif
+ 
+enddo
+
+
+
+if (maxval(abs(x21)) .lt. 10d-8)then
+ print *,"p1 and p2 are coincide with each other",p1,p2
+ stop
+endif
+
+if (maxval(abs(x10)) .lt. 10d-8)then
+ print *,"p1 and x are coincide with each other",p1,p2
+ stop
+endif
+
+call l2normd(2,p1, x, diff10)
+call l2normd(2,p2, p1, diff21)
+
+
+s = -1.0d0*(dot_product(x10,x21))/(diff21**2.0d0)
+
+if(s .le. 1.0d0 .and. s .ge. 0.0)then
+
+ do i = 1,SDIM
+  dist = dist + (x10(i) + x21(i)*s)**2.0d0
+ enddo
+  dist = sqrt(dist)
+else
+ call l2normd(2,p1,x,dist1)
+ call l2normd(2,p2,x,dist2)
+ dist = min(dist1,dist2)
+endif
+
+end subroutine dist_point_to_line
+!---------------------------------------------------------
+subroutine l2normd(sdim,x1,x2, x1x2norm)
+implicit none
+
+integer,intent(in)       :: sdim
+real(kind=8),intent(in)  :: x1(sDim),x2(SDIM)
+real(kind=8)             :: x1x2norm
+
+integer                  :: i
+real(kind=8),allocatable :: diff(:)
+
+x1x2norm = 0.0d0
+allocate(diff(SDIM))
+do i = 1,SDIM
+ diff(i) = x1(i)-x2(i)
+enddo
+
+do i = 1,SDIM
+ x1x2norm = x1x2norm + diff(i)**2.0d0
+enddo
+
+x1x2norm = sqrt(x1x2norm)
+
+deallocate(diff)
+
+end subroutine l2normd
+
+
+
+
+subroutine starshape(xt)
+implicit none
+
+real(kind=8)         :: theta(pcurve_num)
+real(kind=8),intent(out):: xt(2,pcurve_num)
+integer          :: num
+integer :: i
+
+num = pcurve_num
+
+do i = 1,num
+ theta(i) = (i-1)*2.0d0*pi/num
+enddo
+
+do i = 1,num
+ xt(1,i) = 0.02d0*sqrt(5.0d0) + &
+        (0.5d0 + 0.2d0*sin(5.0d0*theta(i)))*cos(theta(i))
+ xt(2,i) = 0.02d0*sqrt(5.0d0) + &
+        (0.5d0 + 0.2d0*sin(5.0d0*theta(i)))*sin(theta(i))
+enddo
+
+
+end subroutine starshape
+
+
+subroutine starshape2(xt)
+implicit none
+
+real(kind=8)         :: theta(pcurve_num)
+real(kind=8),intent(out):: xt(2,pcurve_num)
+integer          :: num
+integer :: i
+
+num = pcurve_num
+
+do i = 1,num
+ theta(i) = (i-1)*2.0d0*pi/num
+enddo
+
+do i = 1,num
+ xt(1,i) = 0.02d0*sqrt(5.0d0) + &
+        (0.5d0 -radeps + 0.2d0*sin(5.0d0*theta(i)))*cos(theta(i))
+ xt(2,i) = 0.02d0*sqrt(5.0d0) + &
+        (0.5d0 -radeps + 0.2d0*sin(5.0d0*theta(i)))*sin(theta(i))
+enddo
+
+
+end subroutine starshape2
+
+
+subroutine asteroidshape(xt)
+implicit none
+
+real(kind=8)         :: theta(pcurve_num)
+real(kind=8),intent(out):: xt(2,pcurve_num)
+integer          :: num
+integer :: i
+
+num = pcurve_num
+
+do i = 1,num
+ theta(i) = (i-1)*2.0d0*pi/num
+enddo
+
+do i = 1,num
+ xt(1,i) = 0.02d0*sqrt(5.0d0) + &
+           0.6d0*cos(theta(i)) + 0.2d0*cos(3.0d0*theta(i))
+ xt(2,i) = 0.02d0*sqrt(5.0d0) + &
+           0.6d0*sin(theta(i)) - 0.2d0*sin(3.0d0*theta(i))
+enddo
+
+
+end subroutine asteroidshape
 !-----------------------------------------------------------------
 subroutine update_volncen(nmat_in,dist,im,center,h,vol,cxtemp,cytemp)
 implicit none
@@ -224,16 +696,17 @@ real(kind=8)              :: c
 end subroutine normalize_cutline
 
 !-------------------------------------------------------
-subroutine check_sign(G,flag)
+subroutine check_sign(G,gtemp,flag)
 implicit none
 
 real(kind=8)         :: g(4)
+real(kind=8)         :: gtemp
 integer              :: flag
 integer              :: i,j
 
 flag = 0
 do i = 1,4
-  if(abs(g(i)) .lt. eps) then
+  if(abs(g(i)) .lt. 1.0e-12) then
      g(i)  = 0.0d0
   endif
 enddo
@@ -245,6 +718,12 @@ do i = 1,4
       endif
    enddo      
 enddo     
+
+do i = 1,4
+  if(g(i)*gtemp .lt. 0.0d0) then
+     flag = 1
+  endif
+enddo
 
 end subroutine check_sign
 !-------------------------------------------------------
@@ -265,7 +744,7 @@ real(kind=8)                     :: center(2), centers(4,2)
   centers = 0.0d0
    flag = 0
    call dist_concentric(im,center(1),center(2),dist,probtype_in)
-   if(abs(dist) .gt. h) then
+   if(abs(dist) .gt. sqrt(2.0d0)*h) then
       ! do nothing
       flag = 0
    else
@@ -481,12 +960,14 @@ integer                 :: ct
  elseif(d1 .ge. 0.0d0  .and. d2 .ge. 0.0d0 .and. d3 .ge. 0.0d0)then         ! +0  +0  +0
   call tri_area8(v1,v2,v3,area)
   call tri_centroid(v1,v2,v3,cen)
-  print *,"case 1", "area",area
+ ! print *,"case 1", "area",area
  elseif(d1 .le. 0.0d0  .and. d2 .le. 0.0d0 .and. d3 .le. 0.0d0)then         ! -0  -0  -0   
-  print *,"case 2"
+ ! print *,"case 2"
+    area = 0.0d0
+    cen = 0.0d0
     ! do nothing
  elseif(abs(d1) .lt. 1.0e-10 .and. d2*d3 .lt. 0.0d0)then
-  print *,"case 3"
+   print *,"case 3"
    ratio = abs(d2)/(abs(d3)+abs(d2))
    do i = 1,2
     x1(i)= v2(i) + ratio*(v3(i)-v2(i))
@@ -534,7 +1015,7 @@ integer                 :: ct
     stop
    endif  
  else
-  print *,"case6"
+!  print *,"case6"
   ct = 0
   do i = 1,2
    if(d(i)*d(i+1) .lt. 0.0d0)then
@@ -549,7 +1030,7 @@ integer                 :: ct
   if(ct .eq. 2) then
     ! do nothing
   elseif(ct .eq. 1) then
-    if(d(1)*d(3) .gt. 0.0d0)then
+    if(d(1)*d(3) .ge. 0.0d0)then
      print *,"ct invalid 525"
      stop
     else
@@ -577,7 +1058,7 @@ integer                 :: ct
     elseif(d(1) .lt. 0.0d0)then
       call tri_area8(v1,v2,v3,area2)
       call tri_centroid(v1,v2,v3,cen2)
-    print *,"area2",area2
+!    print *,"area2",area2
       area = area2-area1
       do i=1,2
        cen(i)=(cen2(i)*area2 - cen1(i)*area1)/area 
@@ -597,7 +1078,7 @@ integer                 :: ct
     elseif(d(2) .lt. 0.0d0)then
       call tri_area8(v1,v2,v3,area2)
       call tri_centroid(v1,v2,v3,cen2)
-    print *,"area2",area2
+ !   print *,"area2",area2
       area = area2-area1
       do i=1,2
        cen(i)=(cen2(i)*area2 - cen1(i)*area1)/area 
@@ -618,7 +1099,7 @@ integer                 :: ct
     elseif(d(3) .lt. 0.0d0)then
       call tri_area8(v1,v2,v3,area2)
       call tri_centroid(v1,v2,v3,cen2)
-    print *,"area2",area2
+!    print *,"area2",area2
       area = area2-area1
       do i=1,2
        cen(i)=(cen2(i)*area2 - cen1(i)*area1)/area
@@ -773,7 +1254,40 @@ endif
 
 END SUBROUTINE LS_LSF
 !----------------------------------------------------------------------
+subroutine inf_lsdetect(probtype_in,im_in,h,center,flag)
+implicit none
 
+integer,intent(in)        :: probtype_in
+integer,intent(in)        :: im_in
+real(kind=8),intent(in)   :: h
+real(kind=8),intent(in)   :: center(2)
+real(kind=8)              :: vertex(4,2)
+
+integer                   :: i,j
+real(kind=8)              :: dist(4)
+
+integer                   :: flag
+
+ flag = 0
+
+ call find_vertex(center, h, vertex)
+ do i = 1,4
+  call dist_concentric(im_in,vertex(i,1),vertex(i,2),dist(i),probtype_in)
+ enddo
+ 
+ do i = 1,3
+  if(dist(1)*dist(i+1) .lt. 0.0d0)then
+   flag = 1
+   exit
+  endif
+ enddo
+
+end subroutine inf_lsdetect
+
+
+
+
+!------------------------------------------------------------------------
 
 subroutine AdaptQuad_2d(iin,jin,nmat_in,dx,center,centroid,vf,probtype_in)
 implicit none
@@ -784,13 +1298,14 @@ real(kind=8),intent(in)       :: center(2)
 integer     ,intent(in)       :: iin,jin
 
 integer,parameter             :: ref_num = 5
-integer                       :: i,im,i1,i2,i3,i4,i5,dir
-integer                       :: ii,jj
+integer                       :: i,j,im,i1,i2,i3,i4,i5,dir,ilev
+integer                       :: ii,jj,ic
 integer                       :: flag,sign_flag
+integer                       :: vcheck, lev_check   ! flags
 real(kind=8)                  :: dist,h2,h3,h4,h5,h6
 real(kind=8)                  :: x,y
 real(kind=8)                  :: h
-real(kind=8)                  :: center_hold(2)
+integer                       :: ncenter
 real(kind=8)                  :: centers1(4,2),centers2(4,2)
 real(kind=8)                  :: centers3(4,2),centers4(4,2),centers5(4,2)
 real(kind=8)                  :: vertex(4,2)
@@ -808,17 +1323,21 @@ real(kind=8)                  :: vol_temp
 
 ! check
 integer                       :: t1,t2
-real(kind=8)                  :: g_center
+real(kind=8)                  :: g_center,gtemp
 real(kind=8)                  :: vf_check
 
 type(points)                  :: seg(2)
 
 real(kind=8)                  :: v1(2),v2(2),v3(2)
 
+real(kind=8),allocatable      :: center_hold(:,:),center_hold1(:,:)
+integer,allocatable           :: center_mark(:)
 
 x = center(1)
 y = center(2)
-h = dx(1)
+h = dx(1)                  !  h squared domain
+
+
 
 if (h.le.0.0) then
  print *,"h invalid"
@@ -826,201 +1345,123 @@ if (h.le.0.0) then
 endif
 
 
- cell%nodesnum = 4 
- allocate(cell%nodes(4))
  vf = 0.0d0
  centroid = 0.0d0
  vol = 0.0d0
  cxtemp = 0.0d0
  cytemp = 0.0d0
- 
-do im = 1,nmat_in
-   call dist_concentric(im,x,y,dist,probtype_in)
 
-   if(abs(dist) .gt. h) then
-     flag = 0
-     call update_volncen(nmat_in,dist,im,center,h,vol,cxtemp,cytemp)
+! inf_lsdetect(probtype_in,im_in,h,center,flag)
+
+do im=1,nmat_in
+ ilev=0
+ lev_check = 0
+
+ ncenter = 1
+ allocate(center_hold(ncenter,2))
+ allocate(center_mark(ncenter))
+ do i=1,2
+  center_hold(1,i) = center(i)
+ enddo
+ lev_check=1
+
+ do while(lev_check .eq. 1 .and. ilev .lt. refine_lev+1)
+  lev_check=0
+  do i=1,ncenter
+   call inf_lsdetect(probtype_in,im,h/(2.0d0**real(ilev,8)),center_hold(i,:),vcheck)
+   if(vcheck .eq. 0)then
+    call dist_concentric(im,center_hold(i,1),center_hold(i,2),dist,probtype_in)
+    call update_volncen(nmat_in,dist,im,center_hold(i,:), &
+                        h/(2.0d0**real(ilev,8)),vol,cxtemp,cytemp)
+    center_mark(i)=0
+   elseif(vcheck .eq. 1)then
+!     print *,"i",iin,"j",jin
+    center_mark(i)=1
+    lev_check=1
    else
-     flag = 1   
-     call AdaptQuad_sub(center, h, centers1)
-   endif 
- 
-   if (flag.eq.0) then
-    ! do nothing  
-   else if(flag .eq. 1) then
-    do i1 = 1,4 
-     do dir=1,2
-      center_hold(dir)=centers1(i1,dir)
-     enddo
-     h2=h/2.0d0
-     call AdaptQuad_sort(im,center_hold,h2,centers2,dist,flag,probtype_in)
-     if(flag .eq. 1) then
-      do i2 = 1,4
-       do dir=1,2
-        center_hold(dir)=centers2(i2,dir)
-       enddo
-       h3=h/4.0d0
-       call AdaptQuad_sort(im,center_hold,h3,centers3,dist,flag, &
-         probtype_in)
-       if(flag .eq. 1) then
-        do i3 = 1,4
-         do dir=1,2
-          center_hold(dir)=centers3(i3,dir)
-         enddo
-         h4=h/8.0d0
-         call AdaptQuad_sort(im,center_hold,h4,centers4,dist, &
-              flag,probtype_in)
-         if(flag .eq. 1) then
-          do i4 = 1,4
-           do dir=1,2
-            center_hold(dir)=centers4(i4,dir)
-           enddo
-           h5=h/16.0d0
-           call AdaptQuad_sort(im,center_hold,h5, centers5, &
-             dist,flag,probtype_in)
-           if(flag .eq. 1)then
-            do i5 = 1,4
-             do dir=1,2
-              center_hold(dir)=centers5(i5,dir)
-             enddo
-             h6=h/32.0d0
-             call find_vertex(center_hold, h6, vertex)
-
-             do ii = 1,4
-              call dist_concentric(im,vertex(ii,1),vertex(ii,2), &
-                G(ii),probtype_in)
-             enddo  ! ii
-             call check_sign(G,sign_flag)
-
-             if (1.eq.0) then
-              print *,"after check_sign  sign_flag=",sign_flag
-              do ii=1,4
-               print *,"ii,vertex,G ",ii,vertex(ii,1),vertex(ii,2),G(ii)
-              enddo
-             endif
-
-             if(sign_flag .eq. 1) then
-!              if(probtype_in .eq. 0 .or. &
-!                 probtype_in .eq. 1 .or. &
-!                 probtype_in .eq. 2) then
-              if(1 .eq. 0)then
-              call slopecal(im,center_hold,mx,my,probtype_in)
-               !============================================================        
-               ! call LS_LSF(h/32.0d0,centers5(i5,:),G,mx,my,alphadump)
-               ! ax + by +alpha = 0
-              call dist_concentric(im,center_hold(1),center_hold(2), &
-                 G_center,probtype_in)
-
-  ! phi=mx x + my y + c
-  ! mx x' + my y' + c = phi'
-  ! c=phi'-mx x' -my y'
-  !              normalize 
-  !              call normalize_cutline(mx,my,alpha)
-  !              c = -mx*center_hold(1)-my*center_hold(2)+alpha
-              c = -mx*center_hold(1)-my*center_hold(2)+ G_center
-
-              call form_cell(vertex,cell)
-              call cell_line_inter(cell,mx,my,c,seg)
-
-              if (1.eq.0) then
-               print *,"x,y,h,im,mx,my,c ",x,y,h,im,mx,my,c
-              endif
-
-              CALL VOL_FRAC_CAL(cell,mx,my,c,POS_PLG,NEG_PLG)
-                       
-               ! call outputplg(pos_plg)
-  
-              CALL POLY_CENTROID(NEG_PLG,cen_temp)
-              CALL poly_area(NEG_PLG,VOL_temp) 
-              CALL PLGDEL(POS_PLG)
-              CALL PLGDEL(NEG_PLG)
-
-              vol(im) = vol(im) + vol_temp
-              cxtemp(im) = cxtemp(im) + vol_temp*cen_temp%val(1) 
-              cytemp(im) = cytemp(im) + vol_temp*cen_temp%val(2)
-
-              endif
-
-            if(1 .eq. 1)then
-              ! triangulation
-              v1 = vertex(1,:)
-              v2 = vertex(2,:)
-              v3 = vertex(3,:)
-              call triangle_interface_detect(im,probtype_in,v1,v2,v3,vol_temp,cen_temp%val)
-
-              ! update centroid and volume
-              vol(im) = vol(im) + vol_temp
-              cxtemp(im) = cxtemp(im) + vol_temp*cen_temp%val(1) 
-              cytemp(im) = cytemp(im) + vol_temp*cen_temp%val(2)
-            !------------------------------------------------------------------------------
-              v1 = vertex(2,:)
-              v2 = vertex(3,:)
-              v3 = vertex(4,:)
-              call triangle_interface_detect(im,probtype_in,v1,v2,v3,vol_temp,cen_temp%val)
-
-              ! update centroid and volume
-              vol(im) = vol(im) + vol_temp
-              cxtemp(im) = cxtemp(im) + vol_temp*cen_temp%val(1) 
-              cytemp(im) = cytemp(im) + vol_temp*cen_temp%val(2)
-            endif
-
-              if (1.eq.0) then
-               print *,"im,mx,my,c ",im,mx,my,c
-               do ii=1,4
-                print *,"ii,vertex,G ",ii,vertex(ii,1),vertex(ii,2),G(ii)
-               enddo
-               print *,"vfrac ",vol_temp/(h6*h6)
-               print *,"cenx,ceny ",cen_temp%val(1),cen_temp%val(2)
-              endif
-
-             elseif(sign_flag .eq. 0) then 
-              CALL dist_concentric(im,center_hold(1),center_hold(2), &
-                 dist,probtype_in)
-              CALL update_volncen(nmat_in,dist,im,center_hold, &
-                 h/32.0d0,vol,cxtemp,cytemp)
-             else
-              print *,"sign_flag = ", sign_flag
-              stop
-             endif
-            enddo  ! i5
-           elseif(flag .eq. 0) then
-            call update_volncen(nmat_in,dist,im,center_hold, &
-              h/16.0d0,vol,cxtemp,cytemp)  
-           else
-            print *,"flag error in AdaptQuad_2d"
-            stop
-           endif
-          enddo ! i4
-         elseif(flag .eq. 0) then
-          call update_volncen(nmat_in,dist,im,center_hold,h/8.0d0, &
-            vol,cxtemp,cytemp)  
-         else
-          print *,"flag error in AdaptQuad_2d"
-          stop
-         endif
-        enddo  ! i3
-       elseif(flag .eq. 0) then
-        call update_volncen(nmat_in,dist,im,center_hold,h/4.0d0, &
-          vol,cxtemp,cytemp)  
-       else
-        print *,"flag error in AdaptQuad_2d" 
-        stop
-       endif
-      enddo ! i2
-     elseif(flag .eq. 0) then
-      call update_volncen(nmat_in,dist,im,center_hold,h/2.0d0,vol, &
-         cxtemp,cytemp)  
-     else
-       print *,"flag error in AdaptQuad_2d"    
-     endif
-    enddo ! i1
-
-   else 
-    print *,"flag invalid"
+    print *,"vcheck flag invalid 1191"
     stop
    endif
+  enddo
+  if(lev_check .eq. 1)then
+   ilev=ilev+1
+   allocate(center_hold1(4**(ilev),2))
+   ic=0 
+   do i=1,ncenter
+    if(center_mark(i) .eq. 1)then
+     call AdaptQuad_sub(center_hold(i,:), h/(2.0d0**real(ilev-1,8)), centers1)
+     do ii=1,4
+      ic=ic+1
+      do j=1,2
+       center_hold1(ic,j)=centers1(ii,j)
+      enddo
+     enddo
+    endif
+   enddo
+   deallocate(center_hold)
+   deallocate(center_mark)
+   allocate(center_hold(ic,2))
+   allocate(center_mark(ic))
+   do i=1,ic
+   do j=1,2
+    center_hold(i,j) = center_hold1(i,j)
+   enddo
+   enddo
+   deallocate(center_hold1)
+   ncenter=ic
+  elseif(lev_check .eq. 0)then
+   ! do nothing
+  else
+   print *,"lev_check flag invalid 1225"
+   stop
+  endif
+   
+ enddo  ! do while
+ 
+ if(lev_check .ne. 0)then
+  do i=1,ic
+   call find_vertex(center_hold(i,:), h/(2.0d0**real(ilev,8)), vertex)
+
+     ! triangulation
+     v1 = vertex(1,:)
+     v2 = vertex(2,:)
+     v3 = vertex(4,:)
+     call triangle_interface_detect(im,probtype_in,v1,v2,v3,vol_temp,cen_temp%val)
+     ! update centroid and volume
+     vol(im) = vol(im) + vol_temp
+     cxtemp(im) = cxtemp(im) + vol_temp*cen_temp%val(1) 
+     cytemp(im) = cytemp(im) + vol_temp*cen_temp%val(2)
+     !------------------------------------------------------------------------------
+     vol_temp = 0.0d0
+     cen_temp%val = 0.0d0
+     v1 = vertex(1,:)
+     v2 = vertex(4,:)
+     v3 = vertex(3,:)
+     call triangle_interface_detect(im,probtype_in,v1,v2,v3,vol_temp,cen_temp%val)
+
+     ! update centroid and volume
+     vol(im) = vol(im) + vol_temp
+     cxtemp(im) = cxtemp(im) + vol_temp*cen_temp%val(1) 
+     cytemp(im) = cytemp(im) + vol_temp*cen_temp%val(2)
+
+     if (1.eq.0) then
+      write(11,*) iin,jin
+      write(11,*) "center",center
+      write(11,*) "im,mx,my,c ",im,mx,my,c
+      do ii=1,4
+       write(11,*) "ii,vertex,G ",ii,vertex(ii,1),vertex(ii,2),G(ii)
+      enddo
+       write(11,*) "vfrac ",vol_temp/(h6*h6)
+       write(11,*) "cenx,ceny ",cen_temp%val(1),cen_temp%val(2)
+     endif
+  enddo
+ endif
+
+ deallocate(center_hold)
+ deallocate(center_mark) 
 
 enddo ! im
+
 
 if (h.le.0.0) then
  print *,"h invalid"
@@ -1029,7 +1470,8 @@ endif
 
 
 do im = 1,nmat_in
-   if(vol(im) .gt. eps)then
+   if(vol(im) .ne. 0.0d0)then
+ !  if(vol(im) .gt. eps)then
     centroid(im,1) = cxtemp(im)/vol(im)
     centroid(im,2) = cytemp(im)/vol(im)
    else
@@ -1037,7 +1479,18 @@ do im = 1,nmat_in
      centroid(im,:) = 0.0d0
    endif
    vf(im) = vol(im)/(h*h)
-
+   if(im .eq. 1)then
+    write(4,*) centroid(im,:)
+   elseif(im .eq. 2)then
+    write(5,*) centroid(im,:)
+   elseif(im .eq. 3)then
+    write(21,*) centroid(im,:)
+   elseif(im .eq. 4)then
+    write(22,*) centroid(im,:) 
+   else
+    print *,"err 1075"
+    stop
+ endif   
 enddo
 
 
@@ -1047,16 +1500,20 @@ if (probtype_in.eq.0) then
  ! do nothing
 else if (probtype_in.eq.2) then
  ! do nothing
+elseif(probtype_in .eq. 4 .or. probtype_in .eq. 5)then
+ ! do nothing
 else if (probtype_in.eq.1 .or. probtype_in .eq. 3) then
  vf(2) = 1.0d0 - vf(1) -vf(3)
 
  if(abs(vf(2)) .lt. eps)then
   vf(2) = 0.0d0
  endif
-
  if(vf(2) .lt. -eps) then
   print *,"vf(2) is negative"
  endif
+
+elseif(probtype_in .eq. 6)then
+ ! do nothing
 else
  print *,"probtype_in invalid"
  stop
@@ -1076,13 +1533,15 @@ do im = 1,nmat_in
     print *, "Error in vf 2" 
     stop
    endif
-
+  
 enddo ! im
 
 
 if (probtype_in.eq.0) then
  ! do nothing
 else if (probtype_in.eq.2) then
+ ! do nothing
+elseif(probtype_in .eq. 4 .or. probtype_in .eq. 5) then
  ! do nothing
 else if (probtype_in.eq.1 .or. probtype_in .eq. 3) then
  if(vf(2) .gt. eps)then
@@ -1091,13 +1550,15 @@ else if (probtype_in.eq.1 .or. probtype_in .eq. 3) then
     (center(dir) - vf(1)*centroid(1,dir) - vf(3)*centroid(3,dir))/vf(2)
   enddo
  endif
+elseif(probtype_in .eq. 6)then
+ ! do nothing
 else
  print *,"probtype_in invalid"
  stop
 endif
 
 
-call renormalize_vf(nmat_in,vf) 
+! call renormalize_vf(nmat_in,vf) 
 
 
 end subroutine AdaptQuad_2d
@@ -1112,7 +1573,9 @@ integer                    :: i,j
 real(kind=8)               :: vcheck
 
 if ((probtype_in.eq.0).or. &
-    (probtype_in.eq.2)) then
+    (probtype_in.eq.2) .or. &
+    (probtype_in .eq. 4) .or. &
+    (probtype_in .eq. 5)) then
 
  if (nmat_in.ne.2) then
   print *,"nmat_in invalid"
@@ -1162,6 +1625,19 @@ else if (probtype_in.eq.1 .or. probtype_in .eq. 3) then
     endif
   endif
  endif
+elseif(probtype_in .eq. 6)then
+ vcheck = vf(1)+vf(2) +vf(3)+ vf(4)
+ if(abs(vcheck-1.0d0) .lt. 1.0e-8)then
+  ! do nothing
+ else
+  print *,"i",iin,"jin",jin
+  print *,"vf",vf(1),vf(2),vf(3),vf(4)
+  vf(1) = vf(1)/vcheck
+  vf(2) = vf(2)/vcheck
+  vf(3) = vf(3)/vcheck
+  vf(4) = vf(4)/vcheck
+ endif  
+
 else
  print *,"probtype_in invalid"
  stop
@@ -1214,7 +1690,7 @@ real(kind=8)                       :: vf(-1:N,-1:N,nmat_in)
      vf(i,j,im) = vf_temp(im)
 
      if (1.eq.0) then
-      print *,"i,j,im,vf,cenx,ceny ",i,j,im,vf_temp(im), &
+      write(11,*) "i,j,im,vf,cenx,ceny ",i,j,im,vf_temp(im), &
         cen_temp(im,1),cen_temp(im,2)
      endif  
     enddo ! im
@@ -1224,6 +1700,7 @@ real(kind=8)                       :: vf(-1:N,-1:N,nmat_in)
 
 END SUBROUTINE init_vfncen
 !---------------------------------------------------------------------------
+
 !--------------------------------------------------------------
 subroutine init_mofdata(N,sdim,dx,nmat_in,nten,CELL,vf,CENTROID,mofdata)
 implicit none
@@ -1336,7 +1813,6 @@ enddo
 end subroutine init_mofdata
 
 !-------------------------------------------------------------------
-
 
 subroutine get_filament_source(x_in,t_in,probtype_in,im,sdim,G_in)
 IMPLICIT NONE
@@ -1466,8 +1942,30 @@ REAL*8 mypi
    stop
   endif
 
+ elseif(probtype_in .eq.4 .or. probtype_in .eq. 5)then
+   G_in = (4.0d0 -(x_in(1)**2.0d0+x_in(2)**2.0d0))*exp(-t_in)
 
+!  if(im .eq. 1)then
+!   G_in = 4.0d0  
+!  elseif(im .eq. 2)then
+!   G_in = 16.0d0*(x_in(1)*x_in(1) + x_in(2)*x_in(2))
+!  else
+!   print *,"wrong im 1509"
+!   stop
+!  endif
 
+! elseif(probtype_in .eq.5)then
+!  if(im .eq. 1)then
+!   G_in = 4.0d0  
+!  elseif(im .eq. 2)then
+!   G_in = 16.0d0*(x_in(1)*x_in(1) + x_in(2)*x_in(2))
+!  else
+!   print *,"wrong im 1509"
+!   stop
+!  endif
+ elseif(probtype_in .eq. 6)then
+  ! do nothing
+  G_in = (4.0d0 -(x_in(1)**2.0d0+x_in(2)**2.0d0))*exp(-t_in)
  else
   print *,"probtype_in invalid"
   stop
@@ -1684,6 +2182,34 @@ real(kind=8)              :: mypi,delx,dely
    stop
   endif
 
+ elseif(probtype_in .eq. 4 .or. probtype_in .eq. 5)then
+   exact_temperature = (x*x + y*y)*exp(-t)
+
+
+!  if(im .eq. 1)then
+!   exact_temperature = (x*x + y*y)*exp(-t)
+!  elseif(im .eq. 2)then
+!   exact_temperature = (0.1d0*(x**2.0d0+y**2.0d0)**2.0d0- &
+!       0.01d0*log(2.0d0*sqrt(x**2.0d0+y**2.0d0)))*exp(-t)
+!  else
+!   print *,"wrong im, 1736"
+!   stop
+!  endif
+
+! elseif(probtype_in .eq. 5)then
+!  if(im .eq. 1)then
+!   exact_temperature = x*x + y*y
+!  elseif(im .eq. 2)then
+!   exact_temperature = 0.1d0*(x**2.0d0+y**2.0d0)**2.0d0- &
+!       0.01d0*log(2.0d0*sqrt(x**2.0d0+y**2.0d0))
+!  else
+!   print *,"wrong im, 1736"
+!   stop
+!  endif
+
+ elseif(probtype_in .eq. 6)then
+  ! do nothing
+  exact_temperature = (x*x + y*y)*exp(-t)
  else
   print *,"probtype_in invalid2",probtype_in
   stop

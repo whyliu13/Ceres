@@ -12,17 +12,17 @@ IMPLICIT NONE
 ! 0= flat interface  
 ! 1= annulus  
 ! 2= vertical interface
-! 3= star
-
+! 3= star for thin filament
+! 4 = star for two material canity check
 
 ! for flat interface, interface is y=0.3.
 ! for dirichlet, top material has k=0 T(y=0.3)=2.0   T(y=0.0)=3.0
 
-INTEGER,PARAMETER          :: probtype_in = 3
+INTEGER,PARAMETER          :: probtype_in = 6
 INTEGER,PARAMETER          :: operator_type_in = 1 !0=low,1=simple,2=least sqr
 INTEGER,PARAMETER          :: dclt_test_in = 0 ! 1 = Dirichlet test  on
 INTEGER,PARAMETER          :: solvtype = 1 ! 0 = CG  1 = bicgstab
-INTEGER,PARAMETER          :: N = 64 ,M= 1
+INTEGER,PARAMETER          :: N = 32 ,M= 1
 INTEGER,PARAMETER          :: plot_int = 1
 real(kind=8),parameter     :: fixed_dt = 1.25d-2
 real(kind=8),parameter     :: CFL = 0.5d0
@@ -88,11 +88,45 @@ real(kind=8),dimension(:,:,:),allocatable :: T
 real(kind=8),dimension(:,:,:),allocatable :: T_new
 
 
+real(kind=8)  ::dtest(N+1,N+1),dtest1(N+1,N+1),dtest2(N+1,N+1)             
+
+
 if(dclt_test_in .eq. 1) then
  open(unit = 2, file = "out_1")
 elseif(dclt_test_in .eq. 0)then
  open(unit= 2 , file= "out_0")
 endif
+ open(unit=3,file="vf.dat")
+ open(unit=4,file="cen.dat")
+ open(unit=5,file="cen1.dat")
+ open(unit=21,file="cen2.dat")
+ open(unit=22,file="cen3.dat")
+ open(unit=10,file="levelset.dat")
+ open(unit=31,file="levelset1.dat")
+ open(unit=32,file="levelset2.dat")
+ open(unit=11,file="check.dat")
+ open(unit=12,file="para.dat")
+
+
+
+
+
+if(probtype_in .eq. 4 .or. probtype_in .eq. 3)then
+ pcurve_ls = 0.0d0
+ call starshape(pcurve_ls)
+   do i = 1,pcurve_num
+    write(12,*) (pcurve_ls(:,i)+1.0d0)/2.0d0
+   enddo
+ call starshape2(pcurve_ls2)
+
+elseif(probtype_in .eq. 5)then
+ pcurve_ls = 0.0d0
+ call asteroidshape(pcurve_ls)
+   do i = 1,pcurve_num
+    write(12,*) (pcurve_ls(:,i)+1.0d0)/2.0d0
+   enddo
+endif
+
 
 probtype=probtype_in  ! defined in probdataf95.H (probcommon)
 order_algorithm = 0
@@ -110,6 +144,16 @@ else if(probtype_in .eq. 3)then
  order_algorithm(2)=3
  order_algorithm(3)=2
  nmat_in=3
+elseif(probtype_in .eq. 4)then
+ nmat_in=2 
+elseif(probtype_in .eq. 5)then
+ nmat_in=2
+elseif(probtype_in .eq. 6)then
+ nmat_in=4
+ order_algorithm(1)=1
+ order_algorithm(2)=2
+ order_algorithm(3)=3
+ order_algorithm(4)=4 
 else
  print *,"probtype_in invalid"
  stop
@@ -136,6 +180,7 @@ print *,"M= ",M
 print *,"fixed_dt= ",fixed_dt
 print *,"radcen= ",radcen
 print *,"radeps= ",radeps
+
 
 h_in = (probhi-problo)/N
 do dir=1,sdim_in
@@ -190,6 +235,10 @@ enddo
 
   ! TYPE(POINTS),DIMENSION(:,:,:),allocatable :: CENTROID_FAB 
  call init_vfncen(N,CELL_FAB,nmat_in,dx_in,CENTROID_FAB,vf,probtype_in)
+ do j = 0,N-1
+  write(3,*) vf(0:N-1,j,1)
+ enddo
+
 
   ! real(kind=8),dimension(:,:,:,:),allocatable :: centroid_mult
  call convert_cen(nmat_in,sdim_in,N,CENTROID_FAB,centroid_mult)
@@ -212,8 +261,8 @@ enddo
 
 ! init thermal conductivity
  if (probtype_in.eq.0) then
-  thermal_cond(1)=1.0d0
-  thermal_cond(2)=0.1d0
+  thermal_cond(1)=10.0d0
+  thermal_cond(2)=1.0d0
   if (dclt_test_in.eq.1) then
    thermal_cond(2)=0.1d0  ! top material
   else if (dclt_test_in.eq.0) then
@@ -223,9 +272,9 @@ enddo
    stop
   endif
  else if (probtype_in.eq. 1) then
-  thermal_cond(1)=0.1d0 
+  thermal_cond(1)=0.0d0 
   thermal_cond(2)=1.0d0 
-  thermal_cond(3)=2.0d0 
+  thermal_cond(3)=0.0d0 
  else if (probtype_in.eq. 2) then
   thermal_cond(1)=1.0d0
   thermal_cond(2)=0.1d0
@@ -233,6 +282,17 @@ enddo
   thermal_cond(1) = 0.0d0
   thermal_cond(2) = 1.0d0
   thermal_cond(3) = 0.0d0
+ elseif(probtype_in .eq. 4)then
+  thermal_cond(1) = 1.0d0           ! interior region
+  thermal_cond(2) = 2.0d0          ! exterior region
+ elseif(probtype_in .eq. 5)then
+  thermal_cond(1) = 1.0d0           ! interior region
+  thermal_cond(2) = 10.0d0          ! exterior region
+ elseif(probtype_in .eq. 6)then
+  thermal_cond(1) = 3.0d0
+  thermal_cond(2) = 2.0d0 
+  thermal_cond(3) = 1.0d0
+  thermal_cond(4) = 0.1d0
  else 
   print *,"probtype_in invalid"
   stop
@@ -263,9 +323,9 @@ enddo
     enddo
    endif
   else if (probtype_in.eq.1) then ! annulus problem
-   T(i,j,1)=2.0
+   T(i,j,1)=0.0
    T(i,j,2)=2.0
-   T(i,j,3)=2.0
+   T(i,j,3)=0.0
   if(1 .eq. 0)then
    do im = 1,nmat_in
     T(i,j,im)=exact_temperature(xcen,ycen,time_init,im,probtype_in, &
@@ -275,7 +335,18 @@ enddo
   elseif (probtype_in .eq. 3)then
    T(i,j,1)=2.0
    T(i,j,2)=2.0
-   T(i,j,3)=2.0   
+   T(i,j,3)=2.0
+  elseif(probtype_in .eq. 4)then
+   T(i,j,1)=2.0
+   T(i,j,2)=2.0  
+  elseif(probtype_in .eq. 5)then
+   T(i,j,1)=2.0
+   T(i,j,2)=2.0  
+  elseif(probtype_in .eq. 6)then
+   T(i,j,1)=2.0
+   T(i,j,2)=2.0    
+   T(i,j,3)=2.0
+   T(i,j,4)=2.0    
   else
    print *,"probtype_in invalid"
    stop
@@ -476,6 +547,34 @@ do tm  = 1, M
 
 enddo ! tm=1,...,M
 
+
+!do i=0,N-1
+! do j = 0,N-1
+!  call dist_concentric(1,cell_FAB(i,j)%center%val(1),cell_FAB(i,j)%center%val(2),dtest(i+1,j+1),4)
+! enddo
+!enddo
+
+
+if(probtype_in .eq. 6)then
+ do i=0,N
+ do j = 0,N
+  call dist_concentric(1,xline(i),yline(j),dtest(i+1,j+1),probtype_in)
+  call dist_concentric(2,xline(i),yline(j),dtest1(i+1,j+1),probtype_in)
+  call dist_concentric(3,xline(i),yline(j),dtest2(i+1,j+1),probtype_in)
+ enddo
+ enddo
+ do j=1,N+1
+  write(10,*) dtest(:,j) 
+ enddo
+ do j=1,N+1
+  write(31,*) dtest1(:,j) 
+ enddo
+ do j=1,N+1
+  write(32,*) dtest2(:,j) 
+ enddo
+endif
+
+
 deallocate(vf)
 deallocate(mofdata_FAB_in)
 deallocate(CENTROID_FAB)
@@ -484,6 +583,16 @@ deallocate(T)
 deallocate(T_new)
 
  close(2)
+ close(3)
+ close(4)
+ close(5)
+ close(10)
+ close(11)
+ close(12)
+ close(21)
+ close(22)
+ close(31)
+ close(32)
 
 END PROGRAM
 
