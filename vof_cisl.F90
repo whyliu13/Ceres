@@ -6,13 +6,13 @@ IMPLICIT NONE
 
 
 real(kind=8),parameter :: radcen=0.25d0
-real(kind=8),parameter :: radeps=0.1d0 ! thick:0.1d0  thin:0.005d0
-real(kind=8),parameter :: thermal_delta= 0.05d0
+real(kind=8),parameter :: radeps=0.005d0 ! thick:0.1d0  thin:0.005d0
+real(kind=8),parameter :: thermal_delta= 0.05d0  ! prhobtype=6 thickness of the thermal layer
 integer,parameter      :: refine_lev = 4
 
 real(kind=8),parameter :: eps = 1e-10
 real(kind=8),parameter :: tol = 1e-6
-real(kind=8),parameter :: pi  = 4.0d0 * atan(1.0d0)
+real(kind=8),parameter :: pi  = 4.0d0*atan(1.0d0)
 
 integer,parameter      :: pcurve_num = 1000
 real(kind=8)           :: pcurve_ls(2,pcurve_num)

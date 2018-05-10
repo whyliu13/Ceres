@@ -899,11 +899,11 @@
         bctype=0 ! neumann
         UWALL=0.0
        else if ((dir.eq.2).and.(sidesten.eq.1)) then
-        bctype=0 ! neumann
-        UWALL=0.0
+        bctype=1 ! d
+        UWALL=10.0
        else if ((dir.eq.2).and.(sidesten.eq.2)) then
-        bctype=1 ! dirichlet
-        UWALL= 10.0
+        bctype=0 ! n
+        UWALL= 0.0
        else
         print *,"dir or sidesten invalid"
         stop

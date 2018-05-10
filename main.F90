@@ -110,7 +110,7 @@ endif
 
 
 
-
+if( 1 .eq. 0)then
 if(probtype_in .eq. 4 .or. probtype_in .eq. 3)then
  pcurve_ls = 0.0d0
  call starshape(pcurve_ls)
@@ -126,7 +126,7 @@ elseif(probtype_in .eq. 5)then
     write(12,*) (pcurve_ls(:,i)+1.0d0)/2.0d0
    enddo
 endif
-
+endif
 
 probtype=probtype_in  ! defined in probdataf95.H (probcommon)
 order_algorithm = 0
@@ -149,11 +149,10 @@ elseif(probtype_in .eq. 4)then
 elseif(probtype_in .eq. 5)then
  nmat_in=2
 elseif(probtype_in .eq. 6)then
- nmat_in=4
+ nmat_in=3
  order_algorithm(1)=1
  order_algorithm(2)=2
  order_algorithm(3)=3
- order_algorithm(4)=4 
 else
  print *,"probtype_in invalid"
  stop
@@ -235,8 +234,8 @@ enddo
 
   ! TYPE(POINTS),DIMENSION(:,:,:),allocatable :: CENTROID_FAB 
  call init_vfncen(N,CELL_FAB,nmat_in,dx_in,CENTROID_FAB,vf,probtype_in)
- do j = 0,N-1
-  write(3,*) vf(0:N-1,j,1)
+ do j = 0,N
+  write(3,*) vf(0:N,j,3)
  enddo
 
 
@@ -289,10 +288,9 @@ enddo
   thermal_cond(1) = 1.0d0           ! interior region
   thermal_cond(2) = 10.0d0          ! exterior region
  elseif(probtype_in .eq. 6)then
-  thermal_cond(1) = 3.0d0
-  thermal_cond(2) = 2.0d0 
+  thermal_cond(1) = 1.0d0
+  thermal_cond(2) = 10.0d0 
   thermal_cond(3) = 1.0d0
-  thermal_cond(4) = 0.1d0
  else 
   print *,"probtype_in invalid"
   stop
@@ -345,8 +343,7 @@ enddo
   elseif(probtype_in .eq. 6)then
    T(i,j,1)=2.0
    T(i,j,2)=2.0    
-   T(i,j,3)=2.0
-   T(i,j,4)=2.0    
+   T(i,j,3)=2.0  
   else
    print *,"probtype_in invalid"
    stop
@@ -550,7 +547,7 @@ enddo ! tm=1,...,M
 
 !do i=0,N-1
 ! do j = 0,N-1
-!  call dist_concentric(1,cell_FAB(i,j)%center%val(1),cell_FAB(i,j)%center%val(2),dtest(i+1,j+1),4)
+!  call dist_fns(1,cell_FAB(i,j)%center%val(1),cell_FAB(i,j)%center%val(2),dtest(i+1,j+1),4)
 ! enddo
 !enddo
 
@@ -558,9 +555,9 @@ enddo ! tm=1,...,M
 if(probtype_in .eq. 6)then
  do i=0,N
  do j = 0,N
-  call dist_concentric(1,xline(i),yline(j),dtest(i+1,j+1),probtype_in)
-  call dist_concentric(2,xline(i),yline(j),dtest1(i+1,j+1),probtype_in)
-  call dist_concentric(3,xline(i),yline(j),dtest2(i+1,j+1),probtype_in)
+  call dist_fns(1,xline(i),yline(j),dtest(i+1,j+1),probtype_in)
+  call dist_fns(2,xline(i),yline(j),dtest1(i+1,j+1),probtype_in)
+  call dist_fns(3,xline(i),yline(j),dtest2(i+1,j+1),probtype_in)
  enddo
  enddo
  do j=1,N+1

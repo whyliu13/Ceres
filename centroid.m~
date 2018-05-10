@@ -182,9 +182,9 @@ load 'vf.dat';
 %  end
 % end
 hold on;
-surf(X,Y,vf);
-view(2);
-%contour(X,Y,vf);
+%surf(X,Y,vf);
+
+contour(X,Y,vf);
 
 
 
