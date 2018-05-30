@@ -18,11 +18,11 @@ IMPLICIT NONE
 ! for flat interface, interface is y=0.3.
 ! for dirichlet, top material has k=0 T(y=0.3)=2.0   T(y=0.0)=3.0
 
-INTEGER,PARAMETER          :: probtype_in = 6
+INTEGER,PARAMETER          :: probtype_in = 5
 INTEGER,PARAMETER          :: operator_type_in = 1 !0=low,1=simple,2=least sqr
 INTEGER,PARAMETER          :: dclt_test_in = 0 ! 1 = Dirichlet test  on
 INTEGER,PARAMETER          :: solvtype = 1 ! 0 = CG  1 = bicgstab
-INTEGER,PARAMETER          :: N = 32 ,M= 1
+INTEGER,PARAMETER          :: N = 64 ,M= 1
 INTEGER,PARAMETER          :: plot_int = 1
 real(kind=8),parameter     :: fixed_dt = 1.25d-2
 real(kind=8),parameter     :: CFL = 0.5d0
@@ -60,6 +60,8 @@ real(kind=8)                :: sumT,sumvf
 !---------------------------------------------------
 REAL(KIND=8)                :: thermal_cond(100)
 integer                     :: nten
+
+real(kind=8)                :: flxtot
 
 !----------------------------------------
 INTEGER order_algorithm(1000)
@@ -324,7 +326,7 @@ enddo
    T(i,j,1)=0.0
    T(i,j,2)=2.0
    T(i,j,3)=0.0
-  if(1 .eq. 0)then
+  if(1 .eq. 1)then
    do im = 1,nmat_in
     T(i,j,im)=exact_temperature(xcen,ycen,time_init,im,probtype_in, &
      nmat_in,thermal_cond,dclt_test_in)
@@ -539,11 +541,25 @@ do tm  = 1, M
   enddo
   write(2,*) "#######################################################################"
 
-
-
-
+  
 enddo ! tm=1,...,M
 
+If(probtype_in .eq. 6)then
+ flxtot=0.0d0 
+ IF(N .eq. 32) then
+  do i = 0,31   
+   flxtot=flxtot+ (T(i,27,3)-T(i,26,3))/h
+  enddo
+ elseif(N .eq. 64)then
+  do i = 0,63  
+   flxtot=flxtot+ (T(i,54,3)-T(i,53,3))/h
+  enddo 
+  do i = 0,127  
+   flxtot=flxtot+ (T(i,108,3)-T(i,107,3))/h
+  enddo 
+
+ ENDIF
+endif
 
 !do i=0,N-1
 ! do j = 0,N-1
@@ -552,7 +568,7 @@ enddo ! tm=1,...,M
 !enddo
 
 
-if(probtype_in .eq. 6)then
+if(probtype_in .eq. 6 .or. probtype_in .eq. 3)then
  do i=0,N
  do j = 0,N
   call dist_fns(1,xline(i),yline(j),dtest(i+1,j+1),probtype_in)

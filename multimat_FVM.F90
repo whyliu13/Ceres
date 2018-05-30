@@ -34,10 +34,9 @@ real(kind=8)                     :: r1,r2,r3,r4
 real(kind=8)                     :: center(2)
 
 real(kind=8)                     :: x0,y0
-real(kind=8)                     :: c1,c2,c3,c4,tt   !theta
+real(kind=8)                     :: c1,c2,c3,c4,tt,tcrit  !theta
 real(kind=8)                     :: signtemp
-
-
+real(kind=8)                     :: xtheta,ytheta
 
 
 if(probtype_in .eq. 1) then
@@ -70,44 +69,6 @@ else
 endif
 
 elseif(probtype_in .eq. 4)then
-! dist1 = 1e+5
-! do i = 1,pcurve_num
-!  dist2 = sqrt((x-(pcurve_ls(1,i)+1.0d0)/2.0d0)**2.0d0 + &
-!               (y-(pcurve_ls(2,i)+1.0d0)/2.0d0)**2.0d0) 
-!  if(dist2 .lt. dist1)then
-!   dist1 = dist2
-!  endif
-! enddo
- 
-
-! x0 = 2.0d0*x-1.0d0
-! y0 = 2.0d0*y-1.0d0
-
-! c1 = 0.02d0*sqrt(5.0d0)
-! c2 = 0.02d0*sqrt(5.0d0)
- 
-! tt = atan((y0-c2)/(x0-c1));  
-! if((x0-c1) .ge. 0.0d0 .and. (y0-c2) .ge. 0.0d0)then
-!    ! do nothing
-! elseif((x0-c1) .le. 0.0d0 .and. (y0-c2) .gt. 0.0d0)then
-!    tt = tt + pi;
-! elseif((x0-c1) .lt. 0.0d0 .and. (y0-c2) .lt. 0.0d0)then
-!    tt = tt +pi;
-! else
-!    tt = 2.0d0*pi + tt;
-! endif
-
-! dist3 =(x0-c1)**2.0d0 + (y0-c2)**2.0d0 - &
-!         (0.5d0 + 0.2d0*sin(5.0d0*tt))**2.0d0
-! if(imat .eq. 1)then
-!  dist = -sign(dist1,dist3)
-! elseif(imat .eq. 2) then
-!  dist = sign(dist1,dist3)
-! else
-!  print *,"wrong imat flag in, 130"
-!  stop
-! endif
-
 
  x0 = 2.0d0*x-1.0d0
  y0 = 2.0d0*y-1.0d0
@@ -140,17 +101,6 @@ elseif(probtype_in .eq. 4)then
 
 
 elseif(probtype_in .eq. 3) then
- dist1 = 1e+5
- dist4 = 1e+5
-
- if(imat .eq. 3)then
- do i = 1,pcurve_num
-  dist2 = sqrt((x-(pcurve_ls(1,i)+1.0d0)/2.0d0)**2.0d0 + &
-               (y-(pcurve_ls(2,i)+1.0d0)/2.0d0)**2.0d0) 
-  if(dist2 .lt. dist1)then
-   dist1 = dist2
-  endif
- enddo
 
  x0 = 2.0d0*x-1.0d0
  y0 = 2.0d0*y-1.0d0
@@ -169,102 +119,27 @@ elseif(probtype_in .eq. 3) then
     tt = 2.0d0*pi + tt;
  endif
 
- dist3 =(x0-c1)**2.0d0 + (y0-c2)**2.0d0 - &
-         (0.5d0 + 0.2d0*sin(5.0d0*tt))**2.0d0
- dist = sign(dist1,dist3)
+ dist1 = -(sqrt((x0-c1)**2.0d0 + (y0-c2)**2.0d0) - &
+         (0.5d0 + 0.2d0*sin(5.0d0*tt)))
+ dist2 = -(sqrt((x0-c1)**2.0d0 + (y0-c2)**2.0d0) - &
+         (0.5d0 + radeps + 0.2d0*sin(5.0d0*tt)))
 
-
- elseif(imat .eq. 1)then
-  do i = 1,pcurve_num
-  dist2 = sqrt((x-(pcurve_ls2(1,i)+1.0d0)/2.0d0)**2.0d0 + &
-               (y-(pcurve_ls2(2,i)+1.0d0)/2.0d0)**2.0d0) 
-  if(dist2 .lt. dist1)then
-   dist1 = dist2
-  endif
- enddo
-
- x0 = 2.0d0*x-1.0d0
- y0 = 2.0d0*y-1.0d0
-
- c1 = 0.02d0*sqrt(5.0d0)
- c2 = 0.02d0*sqrt(5.0d0)
- 
- tt = atan((y0-c2)/(x0-c1));  
- if((x0-c1) .ge. 0.0d0 .and. (y0-c2) .ge. 0.0d0)then
-    ! do nothing
- elseif((x0-c1) .le. 0.0d0 .and. (y0-c2) .gt. 0.0d0)then
-    tt = tt + pi;
- elseif((x0-c1) .lt. 0.0d0 .and. (y0-c2) .lt. 0.0d0)then
-    tt = tt +pi;
- else
-    tt = 2.0d0*pi + tt;
- endif
-
- dist3 =(x0-c1)**2.0d0 + (y0-c2)**2.0d0 - &
-         (0.5d0 + 0.2d0*sin(5.0d0*tt))**2.0d0
- dist = -sign(dist1,dist3) 
-  
+ if(imat .eq. 1)then
+  dist = dist1  
+ elseif(imat .eq. 3)then
+  dist = -dist2
  elseif(imat .eq. 2)then
-  do i = 1,pcurve_num
-  dist2 = sqrt((x-(pcurve_ls(1,i)+1.0d0)/2.0d0)**2.0d0 + &
-               (y-(pcurve_ls(2,i)+1.0d0)/2.0d0)**2.0d0) 
-  if(dist2 .lt. dist1)then
-   dist1 = dist2
+  if(dist1 .lt. 0.0d0 .and. dist2 .gt. 0.0d0)then
+   dist = min(abs(dist1),abs(dist2))
+  else
+   dist = -min(abs(dist1),abs(dist2))
   endif
-  enddo
-
-  do i = 1,pcurve_num
-  dist2 = sqrt((x-(pcurve_ls2(1,i)+1.0d0)/2.0d0)**2.0d0 + &
-               (y-(pcurve_ls2(2,i)+1.0d0)/2.0d0)**2.0d0) 
-  if(dist2 .lt. dist4)then
-   dist4 = dist2
-  endif
-  enddo
-
- x0 = 2.0d0*x-1.0d0
- y0 = 2.0d0*y-1.0d0
-
- c1 = 0.02d0*sqrt(5.0d0)
- c2 = 0.02d0*sqrt(5.0d0)
- 
- tt = atan((y0-c2)/(x0-c1));  
- if((x0-c1) .ge. 0.0d0 .and. (y0-c2) .ge. 0.0d0)then
-    ! do nothing
- elseif((x0-c1) .le. 0.0d0 .and. (y0-c2) .gt. 0.0d0)then
-    tt = tt + pi;
- elseif((x0-c1) .lt. 0.0d0 .and. (y0-c2) .lt. 0.0d0)then
-    tt = tt +pi;
  else
-    tt = 2.0d0*pi + tt;
+  print *,"error 143"
  endif
 
- dist3 =(x0-c1)**2.0d0 + (y0-c2)**2.0d0 - &
-         (0.5d0 + 0.2d0*sin(5.0d0*tt))**2.0d0
- dist5 =(x0-c1)**2.0d0 + (y0-c2)**2.0d0 - &
-         (0.5d0 -radeps + 0.2d0*sin(5.0d0*tt))**2.0d0
- if(dist3 .lt. 0.0d0 .and. dist5 .gt. 0.0d0)then
-  dist = min(dist1,dist4)
- else
-  dist = -min(dist1,dist4) 
- endif
-
- else
-  print *,"wrong imat flag in, 130","imat=",imat
-  stop
- endif
 
 elseif(probtype_in .eq. 5)then     ! asteroid
- crit_dist = 0.0d0
- dist1 = 1e+5
- do i = 1,pcurve_num
-  dist2 = sqrt((x-(pcurve_ls(1,i)+1.0d0)/2.0d0)**2.0d0 + &
-               (y-(pcurve_ls(2,i)+1.0d0)/2.0d0)**2.0d0) 
-  if(dist2 .lt. dist1)then
-   crit_dist(1) = (pcurve_ls(1,i)+1.0d0)/2.0d0
-   crit_dist(2) = (pcurve_ls(2,i)+1.0d0)/2.0d0
-   dist1 = dist2
-  endif
- enddo
 
 ! x0 = 2.0d0*x-1.0d0
 ! y0 = 2.0d0*y-1.0d0
@@ -299,12 +174,42 @@ elseif(probtype_in .eq. 5)then     ! asteroid
 !  print *,"wrong imat flag in, 130"
 !  stop
 ! endif
-
- c1 = (0.02d0*sqrt(5.0d0) + 1.0d0)/2.0d0
- c2 = (0.02d0*sqrt(5.0d0) + 1.0d0)/2.0d0
+ xy(1)=x
+ xy(2)=y
+ center(1) = (0.02d0*sqrt(5.0d0) + 1.0d0)/2.0d0
+ center(2) = (0.02d0*sqrt(5.0d0) + 1.0d0)/2.0d0
  
- dist3= (crit_dist(1)-c1)*(x-crit_dist(1)) +&
-        (crit_dist(2)-c2)*(y-crit_dist(2))
+ call rad_cal(xy,center,tt)
+ if(tt .ge. 0.0d0 .and. tt .le. 0.25d0*pi)then
+  call dist_hypocycloid(xy,0.0d0,0.25d0*pi,tcrit)
+ elseif(tt .le. 0.5d0*pi)then
+  call dist_hypocycloid(xy,0.25d0*pi,0.5d0*pi,tcrit)
+ elseif(tt .le. 0.75d0*pi)then
+  call dist_hypocycloid(xy,0.5d0*pi,0.75d0*pi,tcrit)
+ elseif(tt .le. pi)then
+  call dist_hypocycloid(xy,0.75d0*pi,pi,tcrit)
+ elseif(tt .le. 1.25d0*pi)then
+  call dist_hypocycloid(xy,pi,1.25d0*pi,tcrit)
+ elseif(tt .le. 1.5d0*pi)then
+  call dist_hypocycloid(xy,1.25*pi,1.5d0*pi,tcrit)
+ elseif(tt .le. 1.75d0*pi)then
+  call dist_hypocycloid(xy,1.5d0*pi,1.75d0*pi,tcrit)
+ elseif(tt .le. 2.0d0*pi)then
+  call dist_hypocycloid(xy,1.75d0*pi,2.0d0*pi,tcrit)
+ else
+  print *,"invalid tt", tt
+  stop
+ endif   
+
+  xtheta=(0.6d0*cos(tcrit)+0.2d0*cos(3.0d0*tcrit) &
+           + center(1)+1.0d0)/2.0d0 
+  ytheta=(0.6d0*sin(tcrit)-0.2d0*sin(3.0d0*tcrit) &
+           + center(2)+1.0d0)/2.0d0
+  dist1=sqrt((xtheta-x)**2.0d0+(ytheta-y)**2.0d0)
+
+ 
+ dist3= (xtheta-c1)*(x-xtheta) +&
+        (ytheta-c2)*(y-ytheta)
  if(imat .eq. 1)then
   dist = -sign(dist1,dist3)
  elseif(imat .eq. 2) then
@@ -641,6 +546,90 @@ x1x2norm = sqrt(x1x2norm)
 deallocate(diff)
 
 end subroutine l2normd
+
+
+subroutine dist_hypocycloid(xin,tt1,tt2,tt)
+implicit none
+
+real(kind=8),intent(in) :: xin(2)
+real(kind=8)  :: tt1,tt2
+
+real(kind=8)            :: dist
+real(kind=8)            :: c1,c2
+real(kind=8)            :: x(2)
+integer                 :: i
+real(kind=8)            :: res
+real(kind=8)            :: val1,val2,val3
+real(kind=8)            :: tt
+real(kind=8)            :: xtheta,ytheta
+
+ c1 = (0.02d0*sqrt(5.0d0) + 1.0d0)/2.0d0
+ c2 = (0.02d0*sqrt(5.0d0) + 1.0d0)/2.0d0
+ do i=1,2
+  x(i)=xin(i) 
+ enddo
+ res=1.0e+5 
+ do while(res .gt. 1.0e-8)
+  call fund_hypocycloid(x,tt1,val1)
+  call fund_hypocycloid(x,tt2,val2)
+
+  if(val1*val2 .ge. 0.0d0)then
+   tt=0.5d0*(tt1+tt2)
+   call fund_hypocycloid(x,tt,val3)  
+   print *,"theta",tt1,tt2,tt
+   print *,"val1 and val2 same sign 667",val1,val2,val3
+   if(val3*val1 .lt. 0.0d0)then
+    tt2=tt
+   elseif(val3*val2 .lt. 0.0d0)then
+    tt1=tt
+   else
+    print *,"check val1 and val2", val1,val2,val3
+    stop
+   endif
+   res=val3
+  else
+   tt=0.5d0*(tt1+tt2)
+   call fund_hypocycloid(x,tt,val3)
+   if(val3*val1 .lt. 0.0d0)then
+    tt2=tt
+   elseif(val3*val2 .lt. 0.0d0)then
+    tt1=tt
+   else
+    print *,"check val1 and val2", val1,val2,val3
+    stop
+   endif
+   res=val3
+  endif
+ enddo
+
+
+end subroutine dist_hypocycloid
+
+
+subroutine fund_hypocycloid(x,theta,val)
+! x in domain [0,1]
+implicit none
+
+real(kind=8),intent(in)  :: x(2)
+real(kind=8),intent(in)  :: theta
+real(kind=8)             :: val
+
+real(kind=8)             :: c1,c2
+real(kind=8)             :: xtheta,ytheta
+
+ c1 = (0.02d0*sqrt(5.0d0) + 1.0d0)/2.0d0
+ c2 = (0.02d0*sqrt(5.0d0) + 1.0d0)/2.0d0
+
+ xtheta=(0.6d0*cos(theta)+0.2d0*cos(3.0d0*theta) &
+           + c1+1.0d0)/2.0d0 
+ ytheta=(0.6d0*sin(theta)-0.2d0*sin(3.0d0*theta) &
+           + c2+1.0d0)/2.0d0
+
+ val=(xtheta-x(1))*(-sin(theta)-sin(3.0d0*theta))+ &
+     (ytheta-x(2))*(cos(theta)-cos(3.0d0*theta))
+
+
+end subroutine fund_hypocycloid
 
 
 

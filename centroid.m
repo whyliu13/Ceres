@@ -2,7 +2,7 @@ clear;
 
 lo = 0;
 hi = 1;
-N = 32;
+N = 64;
 h = (hi-lo)/N;
 
 for i = 0:N
@@ -52,10 +52,10 @@ end
   scatter (y1,y2,'.g');
   
 %   hold on;
-%   p =  load('cen3.dat');
-%   y1 = p(:,1);
-%   y2 = p(:,2);
-%   scatter (y1,y2,'.y');
+%    p =  load('cen3.dat');
+%    y1 = p(:,1);
+%    y2 = p(:,2);
+%    scatter (y1,y2,'.y');
 
 hold on;
 
@@ -162,9 +162,9 @@ hold on;
 load 'levelset1.dat';
 contour(X,Y,levelset1,v);
 
-% hold on;
-% load 'levelset2.dat';
-% contour(X,Y,levelset2,v);
+hold on;
+ load 'levelset2.dat';
+ contour(X,Y,levelset2,v);
 
 
 
