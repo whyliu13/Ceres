@@ -1897,7 +1897,7 @@ contains
 
       if(AFRAC.gt.eps*dx(1)) then
       write(2,*) "in interface calvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv"
-      write(2,*) "im1", im1, "im2", im2, "A*FRAC", AFRAC 
+      write(2,*) "im1", im1, "im2", im2, "AFRAC", AFRAC 
        if (im1.eq.im2) then
         print *,"im1==im2 cannot happen"
         stop

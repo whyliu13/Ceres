@@ -34,10 +34,12 @@ real(kind=8)                     :: r1,r2,r3,r4
 real(kind=8)                     :: center(2)
 
 real(kind=8)                     :: x0,y0
-real(kind=8)                     :: c1,c2,c3,c4,tt,tcrit  !theta
+real(kind=8)                     :: c1,c2,c3,c4,tt
+real(kind-8)                     :: tcrit,tcrit1,tcrit2  !theta
 real(kind=8)                     :: signtemp
 real(kind=8)                     :: xtheta,ytheta
-
+real(kind=8)                     :: xtheta1,ytheta1,xtheta2,ytheta2
+integer                          :: flag
 
 if(probtype_in .eq. 1) then
  center(1) = 0.5d0
@@ -176,37 +178,93 @@ elseif(probtype_in .eq. 5)then     ! asteroid
 ! endif
  xy(1)=x
  xy(2)=y
- center(1) = (0.02d0*sqrt(5.0d0) + 1.0d0)/2.0d0
- center(2) = (0.02d0*sqrt(5.0d0) + 1.0d0)/2.0d0
- 
+ center(1) = 0.02d0*sqrt(5.0d0)
+ center(2) = 0.02d0*sqrt(5.0d0) 
+
+  print *,"xy",xy
  call rad_cal(xy,center,tt)
- if(tt .ge. 0.0d0 .and. tt .le. 0.25d0*pi)then
-  call dist_hypocycloid(xy,0.0d0,0.25d0*pi,tcrit)
- elseif(tt .le. 0.5d0*pi)then
-  call dist_hypocycloid(xy,0.25d0*pi,0.5d0*pi,tcrit)
- elseif(tt .le. 0.75d0*pi)then
-  call dist_hypocycloid(xy,0.5d0*pi,0.75d0*pi,tcrit)
+! if(tt .ge. 0.0d0 .and. tt .le. 0.25d0*pi)then
+!  print *,"p1"
+!  call dist_hypocycloid(xy,0.0d0,0.25d0*pi,tcrit)
+! elseif(tt .le. 0.5d0*pi)then
+!  print *,"p2"
+!  call dist_hypocycloid(xy,0.25d0*pi,0.5d0*pi,tcrit)
+! elseif(tt .le. 0.75d0*pi)then
+!  print *,"p3"
+!  call dist_hypocycloid(xy,0.5d0*pi,0.75d0*pi,tcrit)
+! elseif(tt .le. pi)then
+!  print *,"p4"
+!  call dist_hypocycloid(xy,0.75d0*pi,pi,tcrit)
+! elseif(tt .le. 1.25d0*pi)then
+!  print *,"p5"
+!  call dist_hypocycloid(xy,pi,1.25d0*pi,tcrit)
+! elseif(tt .le. 1.5d0*pi)then
+!  print *,"p6"
+!  call dist_hypocycloid(xy,1.25*pi,1.5d0*pi,tcrit)
+! elseif(tt .le. 1.75d0*pi)then
+!  print *,"p7"
+!  call dist_hypocycloid(xy,1.5d0*pi,1.75d0*pi,tcrit)
+! elseif(tt .le. 2.0d0*pi)then
+!  print *,"p8"
+!  call dist_hypocycloid(xy,1.75d0*pi,2.0d0*pi,tcrit)
+! else
+!  print *,"invalid tt", tt
+!  stop
+! endif   
+
+ if(tt .ge. 0.0d0 .and. tt .le. 0.5d0*pi)then
+  call dist_hypocycloid(xy,1,flag,tcrit)
+  tcrit1=0.0d0
+  tcrit2=0.5d0*pi
  elseif(tt .le. pi)then
-  call dist_hypocycloid(xy,0.75d0*pi,pi,tcrit)
- elseif(tt .le. 1.25d0*pi)then
-  call dist_hypocycloid(xy,pi,1.25d0*pi,tcrit)
+  call dist_hypocycloid(xy,2,flag,tcrit)
+  tcrit1=0.5d0*pi
+  tcrit2=pi
  elseif(tt .le. 1.5d0*pi)then
-  call dist_hypocycloid(xy,1.25*pi,1.5d0*pi,tcrit)
- elseif(tt .le. 1.75d0*pi)then
-  call dist_hypocycloid(xy,1.5d0*pi,1.75d0*pi,tcrit)
+  call dist_hypocycloid(xy,3,flag,tcrit)
+  tcrit1=pi
+  tcrit2=1.5d0*pi
  elseif(tt .le. 2.0d0*pi)then
-  call dist_hypocycloid(xy,1.75d0*pi,2.0d0*pi,tcrit)
+  call dist_hypocycloid(xy,4,flag,tcrit)
+  tcrit1=1.5d0*pi
+  tcrit2=2.0d0*pi
  else
   print *,"invalid tt", tt
   stop
- endif   
+ endif 
 
+ if(flag .eq. 0)then
   xtheta=(0.6d0*cos(tcrit)+0.2d0*cos(3.0d0*tcrit) &
            + center(1)+1.0d0)/2.0d0 
   ytheta=(0.6d0*sin(tcrit)-0.2d0*sin(3.0d0*tcrit) &
            + center(2)+1.0d0)/2.0d0
   dist1=sqrt((xtheta-x)**2.0d0+(ytheta-y)**2.0d0)
+ elseif(flag .eq. 1)then
+  xtheta1=(0.6d0*cos(tcrit1)+0.2d0*cos(3.0d0*tcrit1) &
+           + center(1)+1.0d0)/2.0d0 
+  ytheta1=(0.6d0*sin(tcrit1)-0.2d0*sin(3.0d0*tcrit1) &
+           + center(2)+1.0d0)/2.0d0
+  dist4=sqrt((xtheta1-x)**2.0d0+(ytheta1-y)**2.0d0)
+  xtheta2=(0.6d0*cos(tcrit2)+0.2d0*cos(3.0d0*tcrit2) &
+           + center(1)+1.0d0)/2.0d0 
+  ytheta2=(0.6d0*sin(tcrit2)-0.2d0*sin(3.0d0*tcrit2) &
+           + center(2)+1.0d0)/2.0d0
+  dist5=sqrt((xtheta2-x)**2.0d0+(ytheta2-y)**2.0d0)  
 
+  if(dist4 .gt. dist5)then
+   xtheta=xtheta2
+   ytheta=ytheta2
+   dist1=dist5
+  else
+   xtheta=xtheta1
+   ytheta=ytheta1
+   dist1=dist4   
+  endif
+
+ else
+  print *,"flag error 236"
+  stop
+ endif
  
  dist3= (xtheta-c1)*(x-xtheta) +&
         (ytheta-c2)*(y-ytheta)
@@ -548,7 +606,7 @@ deallocate(diff)
 end subroutine l2normd
 
 
-subroutine dist_hypocycloid(xin,tt1,tt2,tt)
+subroutine dist_hypocycloid_back(xin,tt1,tt2,tt)
 implicit none
 
 real(kind=8),intent(in) :: xin(2)
@@ -563,16 +621,29 @@ real(kind=8)            :: val1,val2,val3
 real(kind=8)            :: tt
 real(kind=8)            :: xtheta,ytheta
 
- c1 = (0.02d0*sqrt(5.0d0) + 1.0d0)/2.0d0
- c2 = (0.02d0*sqrt(5.0d0) + 1.0d0)/2.0d0
+
  do i=1,2
   x(i)=xin(i) 
  enddo
- res=1.0e+5 
+ print *,"xin",x
+
+  call fund_hypocycloid(x,tt1,val1)
+  call fund_hypocycloid(x,tt2,val2)
+ if(abs(val1) .lt. 1.0e-8 .and. abs(val1).lt. abs(val2))then
+  print *,"1",val1
+  tt=tt1
+ elseif(abs(val2) .lt. 1.0e-8 .and. abs(val2) .lt. abs(val1))then
+  print *,"2",val2
+  tt=tt2
+ else 
+ print *,"3"
+ res=1.0e+5
  do while(res .gt. 1.0e-8)
   call fund_hypocycloid(x,tt1,val1)
   call fund_hypocycloid(x,tt2,val2)
 
+  print *,"val1",tt1,val1
+  print *,"val2",tt2,val2
   if(val1*val2 .ge. 0.0d0)then
    tt=0.5d0*(tt1+tt2)
    call fund_hypocycloid(x,tt,val3)  
@@ -588,8 +659,10 @@ real(kind=8)            :: xtheta,ytheta
    endif
    res=val3
   else
+   print *,"in bisection"
    tt=0.5d0*(tt1+tt2)
    call fund_hypocycloid(x,tt,val3)
+!   print *,"val3",tt,val3
    if(val3*val1 .lt. 0.0d0)then
     tt2=tt
    elseif(val3*val2 .lt. 0.0d0)then
@@ -601,6 +674,96 @@ real(kind=8)            :: xtheta,ytheta
    res=val3
   endif
  enddo
+ endif
+
+
+end subroutine dist_hypocycloid_back
+
+
+subroutine dist_hypocycloid(xin,quadf,flag,tt)
+implicit none
+
+real(kind=8),intent(in) :: xin(2)
+integer,intent(in)      :: quadf
+
+real(kind=8)            :: dist
+real(kind=8)            :: c1,c2
+real(kind=8)            :: x(2)
+integer                 :: i
+real(kind=8)            :: res
+real(kind=8)            :: val1,val2,val3
+real(kind=8)            :: tt
+real(kind=8)            :: tt1,tt2
+integer                 :: flag
+
+ flag = 0
+ do i=1,2
+  x(i)=xin(i) 
+ enddo
+ print *,"xin",x
+
+ if(quadf .eq. 1) then
+  tt1=0.25d0*pi
+  tt2=0.0d0
+  res = tt1
+  do while(res .gt. 1.0e-10)
+   call fund_hypocycloid(x,tt1,val1)
+   call fundd_hypocycloid(x,tt1,val2)
+   tt2=tt1- val1/val2 
+   if(tt2 .gt. 0.5d0*pi .or. tt2 .lt. 0.0d0)then
+    flag = 1
+   endif
+   res=abs(tt1-tt2)
+   tt1=tt2
+  enddo
+ elseif(quadf .eq. 2) then
+  tt1=0.75d0*pi
+  tt2=0.0d0
+  res = tt1
+  do while(res .gt. 1.0e-10)
+   call fund_hypocycloid(x,tt1,val1)
+   call fundd_hypocycloid(x,tt1,val2)
+   tt2=tt1- val1/val2 
+   if(tt2 .gt. pi .or. tt2 .lt. 0.5d0*pi)then
+    flag = 1
+   endif
+   res=abs(tt1-tt2)
+   tt1=tt2
+  enddo
+ elseif(quadf .eq. 3) then
+  tt1=1.25d0*pi
+  tt2=0.0d0
+  res = tt1
+  do while(res .gt. 1.0e-10)
+   call fund_hypocycloid(x,tt1,val1)
+   call fundd_hypocycloid(x,tt1,val2)
+   tt2=tt1- val1/val2 
+   if(tt2 .gt. 1.5d0*pi .or. tt2 .lt. pi)then
+    flag = 1
+   endif
+   res=abs(tt1-tt2)
+   tt1=tt2
+  enddo
+
+ elseif(quadf .eq. 4) then
+  tt1=1.75d0*pi
+  tt2=0.0d0
+  res = tt1
+  do while(res .gt. 1.0e-10)
+   call fund_hypocycloid(x,tt1,val1)
+   call fundd_hypocycloid(x,tt1,val2)
+   tt2=tt1- val1/val2 
+   if(tt2 .gt. 2.0d0*pi .or. tt2 .lt. 1.5d0*pi)then
+    flag = 1
+   endif
+   res=abs(tt1-tt2)
+   tt1=tt2
+  enddo
+
+ else
+  print *,"qudf flag error 728"
+  stop
+ endif
 
 
 end subroutine dist_hypocycloid
@@ -617,19 +780,46 @@ real(kind=8)             :: val
 real(kind=8)             :: c1,c2
 real(kind=8)             :: xtheta,ytheta
 
- c1 = (0.02d0*sqrt(5.0d0) + 1.0d0)/2.0d0
- c2 = (0.02d0*sqrt(5.0d0) + 1.0d0)/2.0d0
+ c1 = 0.02d0*sqrt(5.0d0)
+ c2 = 0.02d0*sqrt(5.0d0)
 
  xtheta=(0.6d0*cos(theta)+0.2d0*cos(3.0d0*theta) &
            + c1+1.0d0)/2.0d0 
  ytheta=(0.6d0*sin(theta)-0.2d0*sin(3.0d0*theta) &
            + c2+1.0d0)/2.0d0
 
- val=(xtheta-x(1))*(-sin(theta)-sin(3.0d0*theta))+ &
-     (ytheta-x(2))*(cos(theta)-cos(3.0d0*theta))
+ val=0.6d0*(xtheta-x(1))*(-sin(theta)-sin(3.0d0*theta))+ &
+     0.6d0*(ytheta-x(2))*(cos(theta)-cos(3.0d0*theta))
 
 
 end subroutine fund_hypocycloid
+
+
+subroutine fundd_hypocycloid(x,theta,val)
+implicit none
+
+real(kind=8),intent(in)  :: x(2)
+real(kind=8),intent(in)  :: theta
+real(kind=8)             :: val
+
+real(kind=8)             :: c1,c2
+real(kind=8)             :: xtheta,ytheta
+
+ c1 = 0.02d0*sqrt(5.0d0)
+ c2 = 0.02d0*sqrt(5.0d0)
+
+ xtheta=(0.6d0*cos(theta)+0.2d0*cos(3.0d0*theta) &
+           + c1+1.0d0)/2.0d0 
+ ytheta=(0.6d0*sin(theta)-0.2d0*sin(3.0d0*theta) &
+           + c2+1.0d0)/2.0d0
+
+ val=0.5d0*(-0.6d0*sin(theta)-0.6d0*sin(3.0d0*theta))**2.0d0 + &
+     (xtheta-x(1))*(-0.6d0*cos(theta)-1.8d0*cos(3.0d0*theta)) + &
+     0.5d0*(0.6d0*cos(theta)-0.6d0*cos(3.0d0*theta))**2.0d0 + &
+     (ytheta-x(2))*(-0.6d0*sin(theta)+1.8d0*sin(3.0d0*theta)) 
+
+
+end subroutine
 
 
 
