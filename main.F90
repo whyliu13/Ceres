@@ -18,13 +18,13 @@ IMPLICIT NONE
 ! for flat interface, interface is y=0.3.
 ! for dirichlet, top material has k=0 T(y=0.3)=2.0   T(y=0.0)=3.0
 
-INTEGER,PARAMETER          :: probtype_in = 5
+INTEGER,PARAMETER          :: probtype_in = 3
 INTEGER,PARAMETER          :: operator_type_in = 1 !0=low,1=simple,2=least sqr
 INTEGER,PARAMETER          :: dclt_test_in = 0 ! 1 = Dirichlet test  on
 INTEGER,PARAMETER          :: solvtype = 1 ! 0 = CG  1 = bicgstab
-INTEGER,PARAMETER          :: N = 64 ,M= 1
+INTEGER,PARAMETER          :: N = 64 ,M= 10
 INTEGER,PARAMETER          :: plot_int = 1
-real(kind=8),parameter     :: fixed_dt = 1.25d-2
+real(kind=8),parameter     :: fixed_dt = 1.25d-2*4.0     ! !!!!!!!!!!!!!!!!!!
 real(kind=8),parameter     :: CFL = 0.5d0
 real(kind=8),parameter     :: problo= 0.0d0, probhi= 1.0d0
 integer,parameter          :: sdim_in = 2
@@ -108,6 +108,11 @@ endif
  open(unit=32,file="levelset2.dat")
  open(unit=11,file="check.dat")
  open(unit=12,file="para.dat")
+
+ open(unit=41,file="output1.dat")
+ open(unit=42,file="output2.dat")
+ open(unit=43,file="output3.dat")
+
 
 
 
@@ -279,7 +284,7 @@ enddo
  else if (probtype_in.eq. 2) then
   thermal_cond(1)=1.0d0
   thermal_cond(2)=0.1d0
- elseif(probtype_in .eq. 3)then
+ elseif(probtype_in .eq. 3)then   ! penta foil with filament
   thermal_cond(1) = 0.0d0
   thermal_cond(2) = 1.0d0
   thermal_cond(3) = 0.0d0
@@ -291,8 +296,8 @@ enddo
   thermal_cond(2) = 10.0d0          ! exterior region
  elseif(probtype_in .eq. 6)then
   thermal_cond(1) = 1.0d0
-  thermal_cond(2) = 10.0d0 
-  thermal_cond(3) = 1.0d0
+  thermal_cond(2) = 0.1d0 
+  thermal_cond(3) = 0.01d0
  else 
   print *,"probtype_in invalid"
   stop
@@ -332,10 +337,12 @@ enddo
      nmat_in,thermal_cond,dclt_test_in)
    enddo
   endif
+
   elseif (probtype_in .eq. 3)then
-   T(i,j,1)=2.0
-   T(i,j,2)=2.0
-   T(i,j,3)=2.0
+   do im = 1,nmat_in
+    T(i,j,im)=exact_temperature(xcen,ycen,time_init,im,probtype_in, &
+     nmat_in,thermal_cond,dclt_test_in)
+   enddo
   elseif(probtype_in .eq. 4)then
    T(i,j,1)=2.0
    T(i,j,2)=2.0  
@@ -471,12 +478,16 @@ do tm  = 1, M
   write(2,*) "T1", "  mat = 1"
   do i1 = loy_in-1,hiy_in+1
    write(2,*) Unew_in(:,i1,1) 
+   write(41,*) Unew_in(:,i1,1) 
   enddo
    write(2,*) "T1", "  mat = 2"
   do i1 = loy_in-1,hiy_in+1
    write(2,*) Unew_in(:,i1,2) 
+   write(42,*) Unew_in(:,i1,2) 
   enddo
   write(2,*) "####################################################################"
+
+
 
 
 
@@ -494,10 +505,12 @@ do tm  = 1, M
   write(2,*) "T2", "  mat = 1"
   do i1 = loy_in-1,hiy_in+1
    write(2,*) Unew_in(:,i1,1) 
+   write(41,*) Unew_in(:,i1,1) 
   enddo
    write(2,*) "T2", "  mat = 2"
   do i1 = loy_in-1,hiy_in+1
    write(2,*) Unew_in(:,i1,2) 
+   write(42,*) Unew_in(:,i1,2) 
   enddo
   write(2,*) "####################################################################"
 
@@ -606,6 +619,9 @@ deallocate(T_new)
  close(22)
  close(31)
  close(32)
+ close(41)
+ close(42)
+ close(43)
 
 END PROGRAM
 

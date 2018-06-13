@@ -856,8 +856,8 @@
         print *,"dir or sidesten invalid"
         stop
        endif
-      else if (probtypeCG.eq.1 .or. probtypeCG .eq. 3 &
-               .or. probtypeCG .eq. 4 .or. probtypeCG .eq. 5) then
+      else if (probtypeCG.eq.1 .or. &
+               probtypeCG .eq. 4 .or. probtypeCG .eq. 5) then
        if ((dir.eq.1).and.(sidesten.eq.1)) then
         bctype=1 ! dirichlet
         UWALL=0.0
@@ -908,6 +908,25 @@
         print *,"dir or sidesten invalid"
         stop
        endif
+      else if (probtypeCG.eq.3) then
+       if ((dir.eq.1).and.(sidesten.eq.1)) then
+        bctype=0 ! neumann
+        UWALL=0.0
+       else if ((dir.eq.1).and.(sidesten.eq.2)) then
+        bctype=0 ! neumann
+        UWALL=0.0
+       else if ((dir.eq.2).and.(sidesten.eq.1)) then
+        bctype=0 ! neumann
+        UWALL=0.0
+       else if ((dir.eq.2).and.(sidesten.eq.2)) then
+        bctype=0 ! neumann
+        UWALL= 0.0
+       else
+        print *,"dir or sidesten invalid"
+        stop
+       endif
+
+
       else
        print *,"probtypeCG invalid"
        stop

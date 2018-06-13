@@ -31,11 +31,11 @@ real(kind=8)                     :: x6(2)
 real(kind=8)                     :: xxl(2),xxr(2)
 integer                          :: i
 real(kind=8)                     :: r1,r2,r3,r4
-real(kind=8)                     :: center(2)
+real(kind=8)                     :: center(2),cc(2)
 
 real(kind=8)                     :: x0,y0
 real(kind=8)                     :: c1,c2,c3,c4,tt
-real(kind-8)                     :: tcrit,tcrit1,tcrit2  !theta
+real(kind=8)                     :: tcrit,tcrit1,tcrit2  !theta
 real(kind=8)                     :: signtemp
 real(kind=8)                     :: xtheta,ytheta
 real(kind=8)                     :: xtheta1,ytheta1,xtheta2,ytheta2
@@ -180,8 +180,9 @@ elseif(probtype_in .eq. 5)then     ! asteroid
  xy(2)=y
  center(1) = 0.02d0*sqrt(5.0d0)
  center(2) = 0.02d0*sqrt(5.0d0) 
-
-  print *,"xy",xy
+ cc(1)=(0.02d0*sqrt(5.0d0)+1.0d0)/2.0d0
+ cc(2)=(0.02d0*sqrt(5.0d0)+1.0d0)/2.0d0
+!  print *,"xy",xy
  call rad_cal(xy,center,tt)
 ! if(tt .ge. 0.0d0 .and. tt .le. 0.25d0*pi)then
 !  print *,"p1"
@@ -233,12 +234,15 @@ elseif(probtype_in .eq. 5)then     ! asteroid
   stop
  endif 
 
+ dist3=sqrt((x-cc(1))**2.0d0+(y-cc(2))**2.0d0)
  if(flag .eq. 0)then
   xtheta=(0.6d0*cos(tcrit)+0.2d0*cos(3.0d0*tcrit) &
            + center(1)+1.0d0)/2.0d0 
   ytheta=(0.6d0*sin(tcrit)-0.2d0*sin(3.0d0*tcrit) &
            + center(2)+1.0d0)/2.0d0
   dist1=sqrt((xtheta-x)**2.0d0+(ytheta-y)**2.0d0)
+  dist2=sqrt((xtheta-cc(1))**2.0d0+(ytheta-cc(2))**2.0d0)
+
  elseif(flag .eq. 1)then
   xtheta1=(0.6d0*cos(tcrit1)+0.2d0*cos(3.0d0*tcrit1) &
            + center(1)+1.0d0)/2.0d0 
@@ -255,23 +259,34 @@ elseif(probtype_in .eq. 5)then     ! asteroid
    xtheta=xtheta2
    ytheta=ytheta2
    dist1=dist5
+
   else
    xtheta=xtheta1
    ytheta=ytheta1
    dist1=dist4   
+   
   endif
-
+   dist2=sqrt((xtheta-cc(1))**2.0d0+(ytheta-cc(2))**2.0d0)
  else
   print *,"flag error 236"
   stop
  endif
  
- dist3= (xtheta-c1)*(x-xtheta) +&
-        (ytheta-c2)*(y-ytheta)
+! dist3= (xtheta-c1)*(x-xtheta) +&
+!        (ytheta-c2)*(y-ytheta)
+
  if(imat .eq. 1)then
-  dist = -sign(dist1,dist3)
+  if(dist3 .le. dist2)then
+   dist =dist1
+  else
+   dist=-dist1
+  endif
  elseif(imat .eq. 2) then
-  dist = sign(dist1,dist3)
+  if(dist3 .le. dist2)then
+   dist=-dist1
+  else
+   dist=dist1
+  endif
  else
   print *,"wrong imat flag in, 130"
   stop
@@ -694,24 +709,29 @@ real(kind=8)            :: res
 real(kind=8)            :: val1,val2,val3
 real(kind=8)            :: tt
 real(kind=8)            :: tt1,tt2
-integer                 :: flag
+integer                 :: flag,step
 
  flag = 0
  do i=1,2
   x(i)=xin(i) 
  enddo
- print *,"xin",x
-
+! print *,"xin",x
+ step=0
  if(quadf .eq. 1) then
   tt1=0.25d0*pi
   tt2=0.0d0
   res = tt1
-  do while(res .gt. 1.0e-10)
+  do while(res .gt. 1.0e-10 .and. step .lt. 1000)
+   step =step +1
+   if(step .gt. 100)then
+   print *,"quad",quadf,"step",step,"res",res
+   endif
    call fund_hypocycloid(x,tt1,val1)
    call fundd_hypocycloid(x,tt1,val2)
-   tt2=tt1- val1/val2 
+   tt2=tt1- 0.5d0*val1/val2 
    if(tt2 .gt. 0.5d0*pi .or. tt2 .lt. 0.0d0)then
     flag = 1
+    exit
    endif
    res=abs(tt1-tt2)
    tt1=tt2
@@ -720,12 +740,17 @@ integer                 :: flag
   tt1=0.75d0*pi
   tt2=0.0d0
   res = tt1
-  do while(res .gt. 1.0e-10)
+  do while(res .gt. 1.0e-10 .and. step .lt. 1000)
+   step = step+1
+   if(step .gt. 100)then
+   print *,"quad",quadf,"step",step,"res",res
+   endif
    call fund_hypocycloid(x,tt1,val1)
    call fundd_hypocycloid(x,tt1,val2)
-   tt2=tt1- val1/val2 
-   if(tt2 .gt. pi .or. tt2 .lt. 0.5d0*pi)then
+   tt2=tt1- 0.5d0*val1/val2 
+   if(tt2 .gt. pi .or. tt2 .le. 0.5d0*pi)then
     flag = 1
+    exit
    endif
    res=abs(tt1-tt2)
    tt1=tt2
@@ -734,12 +759,21 @@ integer                 :: flag
   tt1=1.25d0*pi
   tt2=0.0d0
   res = tt1
-  do while(res .gt. 1.0e-10)
+  do while(res .gt. 1.0e-10 .and. step .lt. 1000)
+   step=step+1
+   if(step .gt. 100)then
+   print *,"quad",quadf,"step",step,"res",res
+   print *,"x",x
+   endif
    call fund_hypocycloid(x,tt1,val1)
    call fundd_hypocycloid(x,tt1,val2)
-   tt2=tt1- val1/val2 
-   if(tt2 .gt. 1.5d0*pi .or. tt2 .lt. pi)then
+!   print *,"val1",val1,"val2",val2
+   tt2=tt1- 0.5d0*val1/val2 
+!   print *,"tt1",tt1,"tt2",tt2
+
+   if(tt2 .gt. 1.5d0*pi .or. tt2 .le. pi)then
     flag = 1
+    exit
    endif
    res=abs(tt1-tt2)
    tt1=tt2
@@ -749,12 +783,17 @@ integer                 :: flag
   tt1=1.75d0*pi
   tt2=0.0d0
   res = tt1
-  do while(res .gt. 1.0e-10)
+  do while(res .gt. 1.0e-10 .and. step .lt. 1000)
+   step=step+1
+   if(step .gt. 100)then
+   print *,"quad",quadf,"step",step,"res",res
+   endif
    call fund_hypocycloid(x,tt1,val1)
    call fundd_hypocycloid(x,tt1,val2)
-   tt2=tt1- val1/val2 
-   if(tt2 .gt. 2.0d0*pi .or. tt2 .lt. 1.5d0*pi)then
+   tt2=tt1- 0.5d0*val1/val2 
+   if(tt2 .gt. 2.0d0*pi .or. tt2 .le. 1.5d0*pi)then
     flag = 1
+    exit
    endif
    res=abs(tt1-tt2)
    tt1=tt2
@@ -1893,7 +1932,7 @@ if ((probtype_in.eq.0).or. &
  endif
 
  if(vcheck .gt. 1.0d0+eps) then
-  print *,"goes into vf_correct",vcheck
+  print *,"goes into vf_correct1",vcheck
   stop
  endif
 
@@ -1909,7 +1948,7 @@ else if (probtype_in.eq.1 .or. probtype_in .eq. 3) then
  endif
 
  if(vcheck .gt. 1.0d0+eps) then
-  print *,"goes into vf_correct",vcheck
+  print *,"goes into vf_correct2",vcheck
   if(vf(1) .gt. 1.0d0) then
     print *,"case1"
      vf(1) = 1.0d0
@@ -1937,7 +1976,7 @@ elseif(probtype_in .eq. 6)then
  endif
 
  if(vcheck .gt. 1.0d0+eps) then
-  print *,"goes into vf_correct",vcheck
+  print *,"goes into vf_correct3",vcheck
   if(vf(1) .gt. 1.0d0) then
     print *,"case1"
      vf(1) = 1.0d0
@@ -2190,6 +2229,7 @@ REAL*8 mypi
    delx=x_in(1)-0.5d0
    dely=x_in(2)-0.5d0
 
+
    radius_in = sqrt(delx**2.0d0 +dely**2.0d0)
 
     ! x=r cos(theta)
@@ -2215,7 +2255,7 @@ REAL*8 mypi
    ! T=2+sin(theta) exp(-t/(rc^2))  alpha=1
    ! T_t - (T_rr + T_r/r + T_theta theta/r^2)=
    ! exp(-t/rc^2)(-sin(theta)/rc^2+sin(theta)/r^2)
-   G_in=exp(-t_in/(radcen**2))*sin(theta_in)*(-1.0/(radcen**2)+1.0/(radius_in**2))
+   G_in=exp(-t_in/(radius_in **2))*sin(theta_in)*(-1.0/(radius_in **2)+1.0/(radius_in**2))
   else
    print *,"im invalid 5"
    stop
@@ -2229,8 +2269,10 @@ REAL*8 mypi
    r1=radcen-radeps
    r2=radcen+radeps
 
-   delx=x_in(1)-0.5d0
-   dely=x_in(2)-0.5d0
+
+    delx=x_in(1)-0.5d0-0.02d0*sqrt(5.0)
+    dely=x_in(2)-0.5d0-0.02d0*sqrt(5.0)  
+
 
    radius_in = sqrt(delx**2.0d0 +dely**2.0d0)
 
@@ -2254,10 +2296,10 @@ REAL*8 mypi
     stop
    endif
 
-   ! T=2+sin(theta) exp(-t/(rc^2))  alpha=1
+   ! T=2+sin(theta) exp(-t)  alpha=1
    ! T_t - (T_rr + T_r/r + T_theta theta/r^2)=
    ! exp(-t/rc^2)(-sin(theta)/rc^2+sin(theta)/r^2)
-   G_in=exp(-t_in/(radcen**2))*sin(theta_in)*(-1.0/(radcen**2)+1.0/(radius_in**2))
+   G_in=exp(-t_in)*sin(theta_in)*(-1.0d0+1.0d0/(radius_in**2))
   else
    print *,"im invalid 5"
    stop
@@ -2384,7 +2426,7 @@ real(kind=8)              :: TLO,THI,yI,yHI,a1,b1,a2,b2
 real(kind=8)              :: mypi,delx,dely
 
  mypi=4.0d0*atan(1.0d0)
- if (probtype_in.eq.1 .or. probtype_in .eq. 3) then
+ if (probtype_in.eq.1) then
   if (nmat_in.ne.3) then
    print *,"nmat_in invalid"
    stop
@@ -2424,6 +2466,48 @@ real(kind=8)              :: mypi,delx,dely
    print *,"im invalid 6"
    stop
   endif
+
+ elseif(probtype_in .eq. 3)then
+
+  if (nmat_in.ne.3) then
+   print *,"nmat_in invalid"
+   stop
+  endif
+  if (im.eq.2) then
+      
+   delx=x-0.5d0-sqrt(5.0)*0.02d0
+   dely=y-0.5d0-sqrt(5.0)*0.02d0
+   radius = sqrt(delx**2.0d0 +dely**2.0d0)
+ 
+       ! x=r cos(theta)
+       ! y=r sin(theta)
+   if (radius.le.radeps/1000.0) then
+    theta=0.0
+   else if ((delx.ge.0.0).and.(dely.ge.0.0)) then
+    theta=acos(delx/radius)
+   else if ((delx.le.0.0).and.(dely.ge.0.0)) then
+    theta=acos(abs(delx)/radius)
+    theta=mypi-theta
+   else if ((delx.le.0.0).and.(dely.le.0.0)) then
+    theta=acos(abs(delx)/radius)
+    theta=mypi+theta
+   else if ((delx.ge.0.0).and.(dely.le.0.0)) then
+    theta=acos(delx/radius)
+    theta=2.0d0*mypi-theta
+   else
+    print *,"delx or dely invalid"
+    stop
+   endif
+
+   exact_temperature=2.0d0+sin(theta)*exp(-t)
+  else if ((im.eq.1).or.(im.eq.3)) then
+   exact_temperature=0.0
+  else
+   print *,"im invalid 6"
+   stop
+  endif
+
+
 
  else if ((probtype_in.eq.0).or.(probtype_in.eq.2)) then
   if (nmat_in.ne.2) then
