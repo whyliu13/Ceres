@@ -24,6 +24,7 @@ implicit none
 integer,intent(in)               :: imat,probtype_in
 real(kind=8)                     :: x,y,dist
 real(kind=8)                     :: dist1,dist2,dist3,dist4,dist5
+real(kind=8)                     :: dist6,dist7,dist8
 real(kind=8)                     :: d1,d2,d3,d4,d5
 real(kind=8)                     :: xy(2)
 real(kind=8)                     :: x1(2),x2(2),x3(2),x4(2),x5(2)
@@ -40,6 +41,9 @@ real(kind=8)                     :: signtemp
 real(kind=8)                     :: xtheta,ytheta
 real(kind=8)                     :: xtheta1,ytheta1,xtheta2,ytheta2
 integer                          :: flag
+integer                          :: pp1,pp2
+real(kind=8)                     :: pcurve_crit(2)
+integer                          :: cenflag,cccflag
 
 if(probtype_in .eq. 1) then
  center(1) = 0.5d0
@@ -142,188 +146,264 @@ elseif(probtype_in .eq. 3) then
 
 
 elseif(probtype_in .eq. 5)then     ! asteroid
-
-! x0 = 2.0d0*x-1.0d0
-! y0 = 2.0d0*y-1.0d0
-
-! c1 = (0.02d0*sqrt(5.0d0)+1.0d0)/2.0d0
-! c2 = (0.02d0*sqrt(5.0d0)+1.0d0)/2.0d0
-! c3 = 0.02d0*sqrt(5.0d0)
-! c4 = 0.02d0*sqrt(5.0d0)
- 
-! tt = atan((y-c2)/(x-c1));  
-! if((x-c1) .ge. 0.0d0 .and. (y-c2) .ge. 0.0d0)then
-    ! do nothing
-! elseif((x-c1) .le. 0.0d0 .and. (y-c2) .gt. 0.0d0)then
-!    tt = tt + pi;
-! elseif((x-c1) .lt. 0.0d0 .and. (y-c2) .lt. 0.0d0)then
-!    tt = tt +pi;
-! else
-!    tt = 2.0d0*pi + tt;
-! endif
- 
-! dist3 =sqrt((0.5d0*(0.6d0*cos(tt) + 0.2d0*cos(3.0d0*tt)+c3+1.0d0)-c1)**2.0d0 + &
-!         (0.5d0*(0.6d0*sin(tt) - 0.2d0*sin(3.0d0*tt)+c4+1.0d0)-c2)**2.0d0)
-
-! dist2 = sqrt((x-c1)**2.0d0+(y-c2)**2.0d0)
-  
-
-! if(imat .eq. 1)then
-!  dist = sign(dist1,(dist3-dist2))
-! elseif(imat .eq. 2) then
-!  dist = -sign(dist1,(dist3-dist2))
-! else
-!  print *,"wrong imat flag in, 130"
-!  stop
-! endif
  xy(1)=x
  xy(2)=y
  center(1) = 0.02d0*sqrt(5.0d0)
- center(2) = 0.02d0*sqrt(5.0d0) 
- cc(1)=(0.02d0*sqrt(5.0d0)+1.0d0)/2.0d0
- cc(2)=(0.02d0*sqrt(5.0d0)+1.0d0)/2.0d0
+ center(2) = 0.02d0*sqrt(5.0d0)
+ cc(1)=(center(1)+1.0d0)/2.0d0
+ cc(2)=(center(2)+1.0d0)/2.0d0
 !  print *,"xy",xy
- call rad_cal(xy,center,tt)
-! if(tt .ge. 0.0d0 .and. tt .le. 0.25d0*pi)then
-!  print *,"p1"
-!  call dist_hypocycloid(xy,0.0d0,0.25d0*pi,tcrit)
-! elseif(tt .le. 0.5d0*pi)then
-!  print *,"p2"
-!  call dist_hypocycloid(xy,0.25d0*pi,0.5d0*pi,tcrit)
-! elseif(tt .le. 0.75d0*pi)then
-!  print *,"p3"
-!  call dist_hypocycloid(xy,0.5d0*pi,0.75d0*pi,tcrit)
-! elseif(tt .le. pi)then
-!  print *,"p4"
-!  call dist_hypocycloid(xy,0.75d0*pi,pi,tcrit)
-! elseif(tt .le. 1.25d0*pi)then
-!  print *,"p5"
-!  call dist_hypocycloid(xy,pi,1.25d0*pi,tcrit)
-! elseif(tt .le. 1.5d0*pi)then
-!  print *,"p6"
-!  call dist_hypocycloid(xy,1.25*pi,1.5d0*pi,tcrit)
-! elseif(tt .le. 1.75d0*pi)then
-!  print *,"p7"
-!  call dist_hypocycloid(xy,1.5d0*pi,1.75d0*pi,tcrit)
-! elseif(tt .le. 2.0d0*pi)then
-!  print *,"p8"
-!  call dist_hypocycloid(xy,1.75d0*pi,2.0d0*pi,tcrit)
-! else
-!  print *,"invalid tt", tt
-!  stop
-! endif   
-
+ call rad_cal(xy,cc,tt)
  if(tt .ge. 0.0d0 .and. tt .le. 0.5d0*pi)then
-  call dist_hypocycloid(xy,1,flag,tcrit)
-  tcrit1=0.0d0
-  tcrit2=0.5d0*pi
+   pp1=1
+   pp2=250
  elseif(tt .le. pi)then
-  call dist_hypocycloid(xy,2,flag,tcrit)
-  tcrit1=0.5d0*pi
-  tcrit2=pi
+   pp1=251
+   pp2=500
  elseif(tt .le. 1.5d0*pi)then
-  call dist_hypocycloid(xy,3,flag,tcrit)
-  tcrit1=pi
-  tcrit2=1.5d0*pi
- elseif(tt .le. 2.0d0*pi)then
-  call dist_hypocycloid(xy,4,flag,tcrit)
-  tcrit1=1.5d0*pi
-  tcrit2=2.0d0*pi
+   pp1=501
+   pp2=750
+ elseif(tt .lt. 2.0d0*pi)then
+   pp1=751
+   pp2=1000
  else
   print *,"invalid tt", tt
   stop
  endif 
-
- dist3=sqrt((x-cc(1))**2.0d0+(y-cc(2))**2.0d0)
- if(flag .eq. 0)then
-  xtheta=(0.6d0*cos(tcrit)+0.2d0*cos(3.0d0*tcrit) &
-           + center(1)+1.0d0)/2.0d0 
-  ytheta=(0.6d0*sin(tcrit)-0.2d0*sin(3.0d0*tcrit) &
-           + center(2)+1.0d0)/2.0d0
-  dist1=sqrt((xtheta-x)**2.0d0+(ytheta-y)**2.0d0)
-  dist2=sqrt((xtheta-cc(1))**2.0d0+(ytheta-cc(2))**2.0d0)
-
- elseif(flag .eq. 1)then
-  xtheta1=(0.6d0*cos(tcrit1)+0.2d0*cos(3.0d0*tcrit1) &
-           + center(1)+1.0d0)/2.0d0 
-  ytheta1=(0.6d0*sin(tcrit1)-0.2d0*sin(3.0d0*tcrit1) &
-           + center(2)+1.0d0)/2.0d0
-  dist4=sqrt((xtheta1-x)**2.0d0+(ytheta1-y)**2.0d0)
-  xtheta2=(0.6d0*cos(tcrit2)+0.2d0*cos(3.0d0*tcrit2) &
-           + center(1)+1.0d0)/2.0d0 
-  ytheta2=(0.6d0*sin(tcrit2)-0.2d0*sin(3.0d0*tcrit2) &
-           + center(2)+1.0d0)/2.0d0
-  dist5=sqrt((xtheta2-x)**2.0d0+(ytheta2-y)**2.0d0)  
-
-  if(dist4 .gt. dist5)then
-   xtheta=xtheta2
-   ytheta=ytheta2
-   dist1=dist5
-
-  else
-   xtheta=xtheta1
-   ytheta=ytheta1
-   dist1=dist4   
+ dist1=1000.0d0
+ do i=pp1,pp2
+  call l2normd(2,xy,pcurve_ls(:,i),dist2)
+  if(dist2 .lt. dist1)then
+   pcurve_crit=pcurve_ls(:,i)
+   dist1=dist2
+  endif
+ enddo
+  call l2normd(2,cc,pcurve_crit,dist3)
+  call l2normd(2,cc,xy,dist2)
    
-  endif
-   dist2=sqrt((xtheta-cc(1))**2.0d0+(ytheta-cc(2))**2.0d0)
- else
-  print *,"flag error 236"
-  stop
- endif
- 
-! dist3= (xtheta-c1)*(x-xtheta) +&
-!        (ytheta-c2)*(y-ytheta)
-
  if(imat .eq. 1)then
-  if(dist3 .le. dist2)then
-   dist =dist1
-  else
-   dist=-dist1
-  endif
- elseif(imat .eq. 2) then
-  if(dist3 .le. dist2)then
-   dist=-dist1
-  else
-   dist=dist1
-  endif
+  dist=sign(dist1,(dist3-dist2))
+ elseif(imat .eq. 2)then
+  dist=-sign(dist1,(dist3-dist2))
  else
-  print *,"wrong imat flag in, 130"
+  print *,"wrong num of material, 187"
+  stop
+ endif
+elseif(probtype_in .eq. 7)then     ! 5 materials 
+ xy(1)=x
+ xy(2)=y
+ cenflag=0    ! 0= axis symmetry aligned with grid
+              ! 1= not aligned with grid
+ cccflag=0    ! 0= sigular at center
+              ! 1= nonsigular
+ if(cenflag .eq. 1)then 
+  center(1) = 0.02d0*sqrt(5.0d0)
+  center(2) = 0.02d0*sqrt(5.0d0)
+ elseif(cenflag .eq. 0)then
+  center(1) = 0.0d0
+  center(2) = 0.0d0
+ else
+  print *,"cenflag error"
   stop
  endif
 
+ cc(1)=(center(1)+1.0d0)/2.0d0
+ cc(2)=(center(2)+1.0d0)/2.0d0
+!  print *,"center",cc
+ if(cenflag .eq. 0)then              ! center aligned with grid
+  if(abs(xy(1) - cc(1)) .lt. 1.0e-12 &
+     .and. abs(xy(2)-cc(2)) .lt. 1.0e-12)then
+   cccflag=1    
+  else
+   call rad_cal(xy,cc,tt)
+  endif 
+ elseif(cenflag .eq. 1)then    ! center not aligned with grid
+  call rad_cal(xy,cc,tt)
+ endif
 
-!if(1 .eq. 0)then 
-!elseif(probtype_in .eq. 4)then
-  ! convert from (-1,1)  to (0,1)
-! x0 = 2.0d0*x-1.0d0
-! y0 = 2.0d0*y-1.0d0
-
-! c1 = 0.02d0*sqrt(5.0d0)
-! c2 = 0.02d0*sqrt(5.0d0)
+if(cccflag .eq. 0)then
+ if(tt .ge. 0.0d0 .and. tt .le. 0.5d0*pi)then
+   pp1=1
+   pp2=251
+ elseif(tt .le. pi)then
+   pp1=251
+   pp2=501
+ elseif(tt .le. 1.5d0*pi)then
+   pp1=501
+   pp2=751
+ elseif(tt .le. 2.0d0*pi)then
+   pp1=751
+   pp2=1001
+ else
+  print *,"invalid tt", tt
+  stop
+ endif 
+ dist1=1000.0d0
+ do i=pp1,pp2
+  call l2normd(2,xy,pcurve_ls(:,i),dist2)
+  if(dist2 .lt. dist1)then
+   pcurve_crit=pcurve_ls(:,i)
+   dist1=dist2
+  endif
+ enddo
  
-! tt = atan((y0-c2)/(x0-c1));  
-! if((x0-c1) .ge. 0.0d0 .and. (y0-c2) .ge. 0.0d0)then
-    ! do nothing
-! elseif((x0-c1) .le. 0.0d0 .and. (y0-c2) .gt. 0.0d0)then
-!    tt = tt + pi;
-! elseif((x0-c1) .lt. 0.0d0 .and. (y0-c2) .lt. 0.0d0)then
-!    tt = tt +pi;
-! else
-!    tt = 2.0d0*pi + tt;
-! endif
+ if(abs(dist1) .lt. 1.0e-8)then
+  dist1=0.0d0
+ endif
+  
 
-! dist1 = -(sqrt((x0-c1)**2.0d0 + (y0-c2)**2.0d0) - &
-!         (0.5d0 + 0.2d0*sin(5.0d0*tt)))
-! if(imat .eq. 1)then
-!  dist = dist1
-! elseif(imat .eq. 2) then
-!  dist = -dist1
-! else
-!  print *,"wrong imat flag in, 130"
-!  stop
-! endif
-!endif
+ call l2normd(2,cc,pcurve_crit,dist3)
+  call l2normd(2,cc,xy,dist2)
+   
+! if(tt .eq. 0.0d0)then                              ! theta= 0
+!  if(imat .eq. 1)then
+!    dist=xy(1)-(cc(1)+0.4d0) 
+!  elseif(imat .eq. 2 .or. imat .eq. 5)then
+!    dist=0.0d0
+!  elseif(imat .eq. 3 .or. imat .eq. 4)then
+!    dist=-1.0d0*xy(1)
+! elseif
+
+ if(tt .ge. 0.0d0 .and. tt .lt. 0.5d0*pi)then   !  0 <= theta < pi/2 
+  if(imat .eq. 1)then
+   dist=-sign(dist1,(dist3-dist2))
+  elseif(imat .eq. 2)then
+   dist4=xy(1)-cc(1)
+   dist5=xy(2)-cc(2)
+   dist= min(dist4,dist5,sign(dist1,(dist3-dist2)))
+  elseif(imat .eq. 3)then
+   x1(1)=cc(1)
+   x1(2)=cc(2)+0.4d0
+!   print *,"x1",x1,"cc",cc,"xy",xy
+   call dist_point_to_lined(2,cc,x1,xy,dist4)
+!   print *,"dist4",dist4
+   dist=-dist4
+   if(abs(dist) .lt. 1.0e-8)then
+    dist=0.0d0
+   endif
+  elseif(imat .eq. 4)then
+   call l2normd(2,xy,cc,dist4)
+   dist=-dist4
+   if(abs(dist) .lt. 1.0e-8)then
+    dist=0.0d0
+   endif
+  elseif(imat .eq. 5)then
+   x1(1)=cc(1)+0.4d0
+   x1(2)=cc(2)
+   call dist_point_to_lined(2,cc,x1,xy,dist4)
+   dist=-dist4 
+   if(abs(dist) .lt. 1.0e-8)then
+    dist=0.0d0
+   endif  
+  else
+   print *,"wrong number of material"
+   stop 
+  endif
+
+
+ elseif(tt .le. pi)then
+  if(imat .eq. 1)then
+   dist=-sign(dist1,(dist3-dist2))
+  elseif(imat .eq. 3)then
+   dist4=xy(2)-cc(2)
+   dist5=cc(1)-xy(1)
+   dist=min(dist4,dist5,sign(dist1,(dist3-dist2)))
+  elseif(imat .eq. 2)then
+   x1(1)=cc(1)
+   x1(2)=cc(2)+0.4d0
+   call dist_point_to_lined(2,cc,x1,xy,dist4)
+   dist=-dist4
+   if(abs(dist) .lt. 1.0e-8)then
+    dist=0.0d0
+   endif
+  elseif(imat .eq. 5)then
+   call l2normd(2,xy,cc,dist4)
+   dist=-dist4
+   if(abs(dist) .lt. 1.0e-8)then
+    dist=0.0d0
+   endif
+  elseif(imat .eq. 4)then
+   x1(1)=cc(1)-0.4d0
+   x1(2)=cc(2)
+   call dist_point_to_lined(2,cc,x1,xy,dist4)
+   dist=-dist4 
+   if(abs(dist) .lt. 1.0e-8)then
+    dist=0.0d0
+   endif  
+  else
+   print *,"wrong number of material"
+   stop 
+  endif 
+
+ elseif(tt .le. 1.5d0*pi)then
+  if(imat .eq. 1)then
+   dist=-sign(dist1,(dist3-dist2))
+  elseif(imat .eq. 4)then
+   dist4=cc(1)-xy(1)
+   dist5=cc(2)-xy(2)
+   dist=min(dist4,dist5,sign(dist1,(dist3-dist2)))
+  elseif(imat .eq. 5)then
+   x1(1)=cc(1)
+   x1(2)=cc(2)-0.4d0
+   call dist_point_to_lined(2,cc,x1,xy,dist4)
+   dist=-dist4
+  elseif(imat .eq. 2)then
+   call l2normd(2,xy,cc,dist4)
+   dist=-dist4
+  elseif(imat .eq. 3)then
+   x1(1)=cc(1)-0.4d0
+   x1(2)=cc(2)
+   call dist_point_to_lined(2,cc,x1,xy,dist4)
+   dist=-dist4 
+  else
+   print *,"wrong number of material"
+   stop   
+  endif 
+  if(abs(dist) .lt. 1.0e-8)then
+    dist=0.0d0
+   endif
+ elseif(tt .le. 2.0d0*pi)then
+  if(imat .eq. 1)then
+   dist=-sign(dist1,(dist3-dist2))
+  elseif(imat .eq. 5)then
+   dist=sign(dist1,(dist3-dist2))
+  elseif(imat .eq. 4)then
+   x1(1)=cc(1)
+   x1(2)=cc(2)-0.4d0
+   call dist_point_to_lined(2,cc,x1,xy,dist4)
+   dist=-dist4
+  elseif(imat .eq. 3)then
+   call l2normd(2,xy,cc,dist4)
+   dist=-dist4
+  elseif(imat .eq. 2)then
+   x1(1)=cc(1)+0.4d0
+   x1(2)=cc(2)
+   call dist_point_to_lined(2,cc,x1,xy,dist4)
+   dist=-dist4 
+  else
+   print *,"wrong number of material"
+   stop  
+  endif 
+ else
+  print *,"invalid tt", tt
+  stop
+ endif  
+
+elseif(cccflag .eq. 1)then
+
+
+!if(xy(2) .gt. cc()
+ if(imat .eq. 1)then
+  dist=-0.2d0
+ else
+  dist=0.0d0
+ endif
+else
+ print *,"cccflag invald 353"
+ stop
+endif
+
+
 
 elseif(probtype_in .eq. 0) then
 
@@ -451,9 +531,157 @@ elseif(probtype_in .eq. 6)then      ! nucleate boiling set-up
 ! elseif(imat .eq. 4)then
 !  dist= -max(dist1,dist2)
 ! endif
- elseif(probtype_in .eq. 7)then
+ elseif(probtype_in .eq. 10)then  ! old hypercycloid
   
+ xy(1)=x
+ xy(2)=y
+ center(1) = 0.02d0*sqrt(5.0d0)
+ center(2) = 0.02d0*sqrt(5.0d0)
+ cc(1)=(center(1)+1.0d0)/2.0d0
+ cc(2)=(center(2)+1.0d0)/2.0d0
+!  print *,"xy",xy
+  call rad_cal(xy,cc,tt)
 
+! if(tt .ge. 0.0d0 .and. tt .le. 0.25d0*pi)then
+!  print *,"p1"
+!  call dist_hypocycloid(xy,0.0d0,0.25d0*pi,tcrit)
+! elseif(tt .le. 0.5d0*pi)then
+!  print *,"p2"
+!  call dist_hypocycloid(xy,0.25d0*pi,0.5d0*pi,tcrit)
+! elseif(tt .le. 0.75d0*pi)then
+!  print *,"p3"
+!  call dist_hypocycloid(xy,0.5d0*pi,0.75d0*pi,tcrit)
+! elseif(tt .le. pi)then
+!  print *,"p4"
+!  call dist_hypocycloid(xy,0.75d0*pi,pi,tcrit)
+! elseif(tt .le. 1.25d0*pi)then
+!  print *,"p5"
+!  call dist_hypocycloid(xy,pi,1.25d0*pi,tcrit)
+! elseif(tt .le. 1.5d0*pi)then
+!  print *,"p6"
+!  call dist_hypocycloid(xy,1.25*pi,1.5d0*pi,tcrit)
+! elseif(tt .le. 1.75d0*pi)then
+!  print *,"p7"
+!  call dist_hypocycloid(xy,1.5d0*pi,1.75d0*pi,tcrit)
+! elseif(tt .le. 2.0d0*pi)then
+!  print *,"p8"
+!  call dist_hypocycloid(xy,1.75d0*pi,2.0d0*pi,tcrit)
+! else
+!  print *,"invalid tt", tt
+!  stop
+! endif   
+
+ if(tt .ge. 0.0d0 .and. tt .le. 0.5d0*pi)then
+  call dist_hypocycloid(xy,1,flag,tcrit)
+   tcrit1=0.0d0
+   tcrit2=0.5d0*pi
+ elseif(tt .le. pi)then
+  call dist_hypocycloid(xy,2,flag,tcrit)
+  tcrit1=0.5d0*pi
+  tcrit2=pi
+ elseif(tt .le. 1.5d0*pi)then
+  call dist_hypocycloid(xy,3,flag,tcrit)
+  tcrit1=pi
+  tcrit2=1.5d0*pi
+ elseif(tt .le. 2.0d0*pi)then
+  call dist_hypocycloid(xy,4,flag,tcrit)
+  tcrit1=1.5d0*pi
+  tcrit2=2.0d0*pi
+ else
+  print *,"invalid tt", tt
+  stop
+ endif 
+
+ dist3=sqrt((x-cc(1))**2.0d0+(y-cc(2))**2.0d0)
+ if(flag .eq. 0)then
+  xtheta=(0.6d0*cos(tcrit)+0.2d0*cos(3.0d0*tcrit) &
+           + center(1)+1.0d0)/2.0d0 
+  ytheta=(0.6d0*sin(tcrit)-0.2d0*sin(3.0d0*tcrit) &
+           + center(2)+1.0d0)/2.0d0
+  dist1=sqrt((xtheta-x)**2.0d0+(ytheta-y)**2.0d0)
+  dist2=sqrt((xtheta-cc(1))**2.0d0+(ytheta-cc(2))**2.0d0)
+
+ elseif(flag .eq. 1)then
+  xtheta1=(0.6d0*cos(tcrit1)+0.2d0*cos(3.0d0*tcrit1) &
+           + center(1)+1.0d0)/2.0d0 
+  ytheta1=(0.6d0*sin(tcrit1)-0.2d0*sin(3.0d0*tcrit1) &
+           + center(2)+1.0d0)/2.0d0
+  dist4=sqrt((xtheta1-x)**2.0d0+(ytheta1-y)**2.0d0)
+  xtheta2=(0.6d0*cos(tcrit2)+0.2d0*cos(3.0d0*tcrit2) &
+           + center(1)+1.0d0)/2.0d0 
+  ytheta2=(0.6d0*sin(tcrit2)-0.2d0*sin(3.0d0*tcrit2) &
+           + center(2)+1.0d0)/2.0d0
+  dist5=sqrt((xtheta2-x)**2.0d0+(ytheta2-y)**2.0d0)  
+
+  if(dist4 .gt. dist5)then
+   xtheta=xtheta2
+   ytheta=ytheta2
+   dist1=dist5
+
+  else
+   xtheta=xtheta1
+   ytheta=ytheta1
+   dist1=dist4   
+   
+  endif
+   dist2=sqrt((xtheta-cc(1))**2.0d0+(ytheta-cc(2))**2.0d0)
+ else
+  print *,"flag error 236"
+  stop
+ endif
+ 
+! dist3= (xtheta-c1)*(x-xtheta) +&
+!        (ytheta-c2)*(y-ytheta)
+
+ if(imat .eq. 1)then
+  if(dist3 .le. dist2)then
+   dist =dist1
+  else
+   dist=-dist1
+  endif
+ elseif(imat .eq. 2) then
+  if(dist3 .le. dist2)then
+   dist=-dist1
+  else
+   dist=dist1
+  endif
+ else
+  print *,"wrong imat flag in, 130"
+  stop
+ endif
+
+
+!if(1 .eq. 0)then 
+!elseif(probtype_in .eq. 4)then
+  ! convert from (-1,1)  to (0,1)
+! x0 = 2.0d0*x-1.0d0
+! y0 = 2.0d0*y-1.0d0
+
+! c1 = 0.02d0*sqrt(5.0d0)
+! c2 = 0.02d0*sqrt(5.0d0)
+ 
+! tt = atan((y0-c2)/(x0-c1));  
+! if((x0-c1) .ge. 0.0d0 .and. (y0-c2) .ge. 0.0d0)then
+    ! do nothing
+! elseif((x0-c1) .le. 0.0d0 .and. (y0-c2) .gt. 0.0d0)then
+!    tt = tt + pi;
+! elseif((x0-c1) .lt. 0.0d0 .and. (y0-c2) .lt. 0.0d0)then
+!    tt = tt +pi;
+! else
+!    tt = 2.0d0*pi + tt;
+! endif
+
+! dist1 = -(sqrt((x0-c1)**2.0d0 + (y0-c2)**2.0d0) - &
+!         (0.5d0 + 0.2d0*sin(5.0d0*tt)))
+! if(imat .eq. 1)then
+!  dist = dist1
+! elseif(imat .eq. 2) then
+!  dist = -dist1
+! else
+!  print *,"wrong imat flag in, 130"
+!  stop
+! endif
+!endif
 
 
 
@@ -464,6 +692,161 @@ endif
 
 
 end subroutine dist_fns
+
+subroutine dist_point_to_lined(sdim,p1,p2,x,dist)
+implicit none
+! represent the line in parametric form,(v = f(s))
+! v^x = x1 + (x2-x1)s
+! v^y = y1 + (y2-y1)s
+! v^z = z1 + (z2-z1)s
+! 
+! if the closest point on the line to point x  is outside p1 -- p2, 
+! --------> return the distance from x either to p1 or p2 which is shorter.
+! otherwise
+! --------> return the distance from x to the cloest point
+
+integer,intent(in)           :: sdim
+real(kind=8),intent(in)      ::  p1(sdim),p2(sdim),x(sdim)
+real(kind=8)                 ::  dist
+
+
+real(kind=8)                 :: diff10,diff21,diffx
+real(kind=8),allocatable     :: x10(:), x21(:)
+integer                      :: i
+real(kind=8)                 :: s
+
+
+dist = 0.0d0
+
+allocate(x10(sdim),x21(sdim))
+do i = 1,sdim
+ x10(i) = p1(i) - x(i)
+ x21(i) = p2(i) - p1(i)
+enddo
+
+if (maxval(abs(x21)) .lt. 10d-8)then
+ print *,"p1 and p2 are coincide with each other",p1,p2
+ stop
+endif
+
+call l2normd(sdim, p1, x, diff10)
+call l2normd(sdim, p2, p1, diff21)
+
+!print *,"diff10",diff10
+!print *,"diff21",diff21
+
+s = -1.0d0*(dot_product(x10,x21))/(diff21**2.0d0)
+
+!print *,"s=",s
+
+if(s .gt. 1.0d0)then
+ call l2normd(sdim, p2, x,dist)
+elseif(s .lt. 0.0d0)then
+ call l2normd(sdim,p1,x,dist)
+else
+ if(abs((diff10**2.0d0 )*(diff21**2.0d0) - & 
+        (dot_product(x10,x21))**2.0d0) .lt. 1.0e-10)then
+   dist= 0.0d0
+ else
+  dist = sqrt(((diff10**2.0d0 )*(diff21**2.0d0) - & 
+        (dot_product(x10,x21))**2.0d0)/ &
+        (diff21**2.0d0))
+ endif
+endif
+
+deallocate(x10,x21) 
+
+end subroutine dist_point_to_lined
+
+
+
+subroutine starshape(xt)
+implicit none
+
+real(kind=8)         :: theta(pcurve_num)
+real(kind=8),intent(out):: xt(2,pcurve_num)
+integer          :: num
+integer :: i
+
+num = pcurve_num
+
+do i = 1,num
+ theta(i) = (i-1)*2.0d0*pi/num
+enddo
+
+do i = 1,num
+ xt(1,i) = 0.02d0*sqrt(5.0d0) + &
+        (0.5d0 + 0.2d0*sin(5.0d0*theta(i)))*cos(theta(i))
+ xt(2,i) = 0.02d0*sqrt(5.0d0) + &
+        (0.5d0 + 0.2d0*sin(5.0d0*theta(i)))*sin(theta(i))
+enddo
+
+
+end subroutine starshape
+
+
+subroutine starshape2(xt)
+implicit none
+
+real(kind=8)         :: theta(pcurve_num)
+real(kind=8),intent(out):: xt(2,pcurve_num)
+integer          :: num
+integer :: i
+
+num = pcurve_num
+
+do i = 1,num
+ theta(i) = (i-1)*2.0d0*pi/num
+enddo
+
+do i = 1,num
+ xt(1,i) = 0.02d0*sqrt(5.0d0) + &
+        (0.5d0 -radeps + 0.2d0*sin(5.0d0*theta(i)))*cos(theta(i))
+ xt(2,i) = 0.02d0*sqrt(5.0d0) + &
+        (0.5d0 -radeps + 0.2d0*sin(5.0d0*theta(i)))*sin(theta(i))
+enddo
+
+
+end subroutine starshape2
+
+
+subroutine asteroidshape(xt)
+implicit none
+
+real(kind=8)         :: theta(pcurve_num+1)
+real(kind=8),intent(out):: xt(2,pcurve_num+1)
+integer          :: num
+integer :: i
+integer :: cenflag
+
+
+num = pcurve_num
+ cenflag= 0
+
+do i = 1,num+1
+ theta(i) = (i-1)*2.0d0*pi/num
+enddo
+
+if(cenflag .eq. 1)then
+ do i = 1,num+1
+  xt(1,i) = 0.02d0*sqrt(5.0d0) + &
+           0.6d0*cos(theta(i)) + 0.2d0*cos(3.0d0*theta(i))
+  xt(2,i) = 0.02d0*sqrt(5.0d0) + &
+           0.6d0*sin(theta(i)) - 0.2d0*sin(3.0d0*theta(i))
+ enddo
+elseif(cenflag .eq. 0)then
+ do i = 1,num+1
+  xt(1,i) = 0.6d0*cos(theta(i)) + 0.2d0*cos(3.0d0*theta(i))
+  xt(2,i) = 0.6d0*sin(theta(i)) - 0.2d0*sin(3.0d0*theta(i))
+ enddo
+else
+ print *,"wrong cenflag"
+ stop
+endif
+
+end subroutine asteroidshape
+
+
 
 
 subroutine dist_point_to_arc(x,arc1,arc2,arcc,dist)
@@ -504,19 +887,29 @@ endif
 end subroutine dist_point_to_arc
 !-------------------------------------------------------
 subroutine rad_cal(x,c,theta)
-! theta = [0,2pi]
+! theta = [0,2pi)
 implicit none
 
 real(kind=8),intent(in)    :: x(2),c(2)
-real(kind=8)               :: theta
+real(kind=8)               :: theta             
 
- theta = atan((x(2)-c(2))/(x(1)-c(1)));  
- if((x(1)-c(1)) .ge. 0.0d0 .and. (x(2)-c(2)) .ge. 0.0d0)then
+ theta = atan((x(2)-c(2))/(x(1)-c(1))); 
+ if(x(2) .eq. c(2) .and. x(1)-c(1) .gt. 0.0d0)then
+   theta=0.0d0 
+ elseif((x(1)-c(1)) .gt. 0.0d0 .and. (x(2)-c(2)) .gt. 0.0d0)then
     ! do nothing
- elseif((x(1)-c(1)) .le. 0.0d0 .and. (x(2)-c(2)) .gt. 0.0d0)then
+ elseif(x(1) .eq. c(1) .and. x(2) .gt. c(2))then
+   theta=0.5d0*pi
+ elseif((x(1)-c(1)) .lt. 0.0d0 .and. (x(2)-c(2)) .gt. 0.0d0)then
     theta = theta + pi;
+ elseif(x(2) .eq. c(2) .and. (x(1)-c(1)) .lt. 0.0d0)then
+   theta=pi
  elseif((x(1)-c(1)) .lt. 0.0d0 .and. (x(2)-c(2)) .lt. 0.0d0)then
     theta = theta +pi;
+ elseif(x(1) .eq. c(1) .and. x(2) .lt. c(2))then
+   theta=1.5d0*pi 
+ elseif(x(1) .eq. c(1) .and. x(2) .eq. c(2))then
+   theta=0.0d0
  else
     theta = 2.0d0*pi + theta;
  endif
@@ -711,6 +1104,8 @@ real(kind=8)            :: tt
 real(kind=8)            :: tt1,tt2
 integer                 :: flag,step
 
+real(kind=8),parameter  :: zdelta=1.0e-8
+
  flag = 0
  do i=1,2
   x(i)=xin(i) 
@@ -718,91 +1113,125 @@ integer                 :: flag,step
 ! print *,"xin",x
  step=0
  if(quadf .eq. 1) then
-  tt1=0.25d0*pi
-  tt2=0.0d0
-  res = tt1
-  do while(res .gt. 1.0e-10 .and. step .lt. 1000)
-   step =step +1
-   if(step .gt. 100)then
-   print *,"quad",quadf,"step",step,"res",res
-   endif
-   call fund_hypocycloid(x,tt1,val1)
-   call fundd_hypocycloid(x,tt1,val2)
-   tt2=tt1- 0.5d0*val1/val2 
-   if(tt2 .gt. 0.5d0*pi .or. tt2 .lt. 0.0d0)then
-    flag = 1
-    exit
-   endif
-   res=abs(tt1-tt2)
-   tt1=tt2
-  enddo
- elseif(quadf .eq. 2) then
-  tt1=0.75d0*pi
-  tt2=0.0d0
-  res = tt1
-  do while(res .gt. 1.0e-10 .and. step .lt. 1000)
-   step = step+1
-   if(step .gt. 100)then
-   print *,"quad",quadf,"step",step,"res",res
-   endif
-   call fund_hypocycloid(x,tt1,val1)
-   call fundd_hypocycloid(x,tt1,val2)
-   tt2=tt1- 0.5d0*val1/val2 
-   if(tt2 .gt. pi .or. tt2 .le. 0.5d0*pi)then
-    flag = 1
-    exit
-   endif
-   res=abs(tt1-tt2)
-   tt1=tt2
-  enddo
- elseif(quadf .eq. 3) then
-  tt1=1.25d0*pi
-  tt2=0.0d0
-  res = tt1
-  do while(res .gt. 1.0e-10 .and. step .lt. 1000)
-   step=step+1
-   if(step .gt. 100)then
-   print *,"quad",quadf,"step",step,"res",res
-   print *,"x",x
-   endif
-   call fund_hypocycloid(x,tt1,val1)
-   call fundd_hypocycloid(x,tt1,val2)
-!   print *,"val1",val1,"val2",val2
-   tt2=tt1- 0.5d0*val1/val2 
-!   print *,"tt1",tt1,"tt2",tt2
+  tt1= zdelta
+  tt2= pi/2.0d0-zdelta
+ elseif(quadf .eq. 2)then
+  tt1=pi/2.0d0+zdelta 
+  tt2=pi-zdelta
+ elseif(quadf .eq. 3)then
+  tt1=pi+zdelta 
+  tt2=1.5d0*pi-zdelta
+ elseif(quadf .eq. 4)then
+  tt1=1.5d0*pi+zdelta 
+  tt2=2.0d0*pi-zdelta  
+ else
+  print *,"wrong quadrant flag"
+  stop
+ endif
 
-   if(tt2 .gt. 1.5d0*pi .or. tt2 .le. pi)then
-    flag = 1
-    exit
-   endif
-   res=abs(tt1-tt2)
-   tt1=tt2
-  enddo
 
- elseif(quadf .eq. 4) then
-  tt1=1.75d0*pi
-  tt2=0.0d0
-  res = tt1
+ call fund_hypocycloid(x,tt1,val1)
+ call fund_hypocycloid(x,tt2,val2)  
+ if(val1 .eq. 0.0d0)then
+  tt=tt1
+ elseif(val2 .eq. 0.0d0)then
+  tt=tt2
+ elseif(val1*val2 .gt. 0.0d0)then
+  flag=1
+ elseif(val1*val2 .lt. 0.0d0)then
+  res=1.0e+5
+  step=0
   do while(res .gt. 1.0e-10 .and. step .lt. 1000)
-   step=step+1
-   if(step .gt. 100)then
-   print *,"quad",quadf,"step",step,"res",res
+  print *,"iter step",step 
+  
+  call fund_hypocycloid(x,tt1,val1)
+  call fund_hypocycloid(x,tt2,val2)
+   tt=0.5d0*(tt1+tt2)
+   call fund_hypocycloid(x,tt,val3)
+!   print *,"val3",tt,val3
+   if(val3 .eq. 0.0d0)then
+    !  do nothing
+   elseif(val3*val1 .lt. 0.0d0)then
+    tt2=tt
+   elseif(val3*val2 .lt. 0.0d0)then
+    tt1=tt
+   else
+    print *,"check val1 and val2", val1,val2,val3
+    stop
    endif
-   call fund_hypocycloid(x,tt1,val1)
-   call fundd_hypocycloid(x,tt1,val2)
-   tt2=tt1- 0.5d0*val1/val2 
-   if(tt2 .gt. 2.0d0*pi .or. tt2 .le. 1.5d0*pi)then
-    flag = 1
-    exit
-   endif
-   res=abs(tt1-tt2)
-   tt1=tt2
+   res=val3
+   step=step+1 
   enddo
 
  else
-  print *,"qudf flag error 728"
+  print *,"out of cases"
   stop
- endif
+ endif  
+
+
+! elseif(quadf .eq. 2) then
+!  tt1=0.75d0*pi
+!  tt2=0.0d0
+!  res = tt1
+!  do while(res .gt. 1.0e-10 .and. step .lt. 1000)
+!   step = step+1
+!   if(step .gt. 100)then
+!   print *,"quad",quadf,"step",step,"res",res
+!   endif
+!   call fund_hypocycloid(x,tt1,val1)
+!   call fundd_hypocycloid(x,tt1,val2)
+!   tt2=tt1- 0.5d0*val1/val2 
+!   if(tt2 .gt. pi .or. tt2 .le. 0.5d0*pi)then
+!    flag = 1
+!    exit
+!   endif
+!   res=abs(tt1-tt2)
+!   tt1=tt2
+!  enddo
+! elseif(quadf .eq. 3) then
+!  tt1=1.25d0*pi
+!  tt2=0.0d0
+!  res = tt1
+!  do while(res .gt. 1.0e-10 .and. step .lt. 1000)
+!   step=step+1
+!   if(step .gt. 100)then
+ !  print *,"quad",quadf,"step",step,"res",res
+!   print *,"x",x
+!   endif
+!   call fund_hypocycloid(x,tt1,val1)
+!   call fundd_hypocycloid(x,tt1,val2)
+!   print *,"val1",val1,"val2",val2
+!   tt2=tt1- 0.5d0*val1/val2 
+!   print *,"tt1",tt1,"tt2",tt2
+
+!   if(tt2 .gt. 1.5d0*pi .or. tt2 .le. pi)then
+!    flag = 1
+!    exit
+!   endif
+!   res=abs(tt1-tt2)
+!   tt1=tt2
+!  enddo
+
+! elseif(quadf .eq. 4) then
+!  tt1=1.75d0*pi
+!  tt2=0.0d0
+!  res = tt1
+!  do while(res .gt. 1.0e-10 .and. step .lt. 1000)
+!   step=step+1
+!   if(step .gt. 100)then
+!   print *,"quad",quadf,"step",step,"res",res
+!   endif
+!   call fund_hypocycloid(x,tt1,val1)
+!   call fundd_hypocycloid(x,tt1,val2)
+!   tt2=tt1- 0.5d0*val1/val2 
+!   if(tt2 .gt. 2.0d0*pi .or. tt2 .le. 1.5d0*pi)then
+!    flag = 1
+!    exit
+!   endif
+!   res=abs(tt1-tt2)
+!   tt1=tt2
+!  enddo
+
 
 
 end subroutine dist_hypocycloid
@@ -863,79 +1292,7 @@ end subroutine
 
 
 
-subroutine starshape(xt)
-implicit none
 
-real(kind=8)         :: theta(pcurve_num)
-real(kind=8),intent(out):: xt(2,pcurve_num)
-integer          :: num
-integer :: i
-
-num = pcurve_num
-
-do i = 1,num
- theta(i) = (i-1)*2.0d0*pi/num
-enddo
-
-do i = 1,num
- xt(1,i) = 0.02d0*sqrt(5.0d0) + &
-        (0.5d0 + 0.2d0*sin(5.0d0*theta(i)))*cos(theta(i))
- xt(2,i) = 0.02d0*sqrt(5.0d0) + &
-        (0.5d0 + 0.2d0*sin(5.0d0*theta(i)))*sin(theta(i))
-enddo
-
-
-end subroutine starshape
-
-
-subroutine starshape2(xt)
-implicit none
-
-real(kind=8)         :: theta(pcurve_num)
-real(kind=8),intent(out):: xt(2,pcurve_num)
-integer          :: num
-integer :: i
-
-num = pcurve_num
-
-do i = 1,num
- theta(i) = (i-1)*2.0d0*pi/num
-enddo
-
-do i = 1,num
- xt(1,i) = 0.02d0*sqrt(5.0d0) + &
-        (0.5d0 -radeps + 0.2d0*sin(5.0d0*theta(i)))*cos(theta(i))
- xt(2,i) = 0.02d0*sqrt(5.0d0) + &
-        (0.5d0 -radeps + 0.2d0*sin(5.0d0*theta(i)))*sin(theta(i))
-enddo
-
-
-end subroutine starshape2
-
-
-subroutine asteroidshape(xt)
-implicit none
-
-real(kind=8)         :: theta(pcurve_num)
-real(kind=8),intent(out):: xt(2,pcurve_num)
-integer          :: num
-integer :: i
-
-num = pcurve_num
-
-do i = 1,num
- theta(i) = (i-1)*2.0d0*pi/num
-enddo
-
-do i = 1,num
- xt(1,i) = 0.02d0*sqrt(5.0d0) + &
-           0.6d0*cos(theta(i)) + 0.2d0*cos(3.0d0*theta(i))
- xt(2,i) = 0.02d0*sqrt(5.0d0) + &
-           0.6d0*sin(theta(i)) - 0.2d0*sin(3.0d0*theta(i))
-enddo
-
-
-end subroutine asteroidshape
 !-----------------------------------------------------------------
 subroutine update_volncen(nmat_in,dist,im,center,h,vol,cxtemp,cytemp)
 implicit none
@@ -1437,7 +1794,12 @@ integer                 :: ct
      stop
     endif
   else
-    print *,"err, check, 611"
+    print *,"err, check, 611",d
+    print *,"imat=",im
+    print *,"vertices:"
+    print *,"v1",v1
+    print *,"v2",v2
+    print *,"v3",v3
     stop
   endif
  endif
@@ -1838,6 +2200,60 @@ elseif(probtype_in .eq. 6)then
   print *,"vf(3) is negative"
  endif
 
+elseif(probtype_in .eq. 7)then
+
+ if(center(1) .gt. 0.5d0 .and. center(2) .gt. 0.5d0)then
+  vf(2) = 1.0d0-vf(1)
+ elseif(center(1) .lt. 0.5d0 .and. center(2) .gt. 0.5d0)then
+  vf(3) = 1.0d0-vf(1)  
+ elseif(center(1) .lt. 0.5d0 .and. center(2) .lt. 0.5d0)then
+  vf(4) = 1.0d0-vf(1)  
+ elseif(center(1) .gt. 0.5d0 .and. center(2) .lt. 0.5d0)then
+  vf(5) = 1.0d0-vf(1)  
+ else
+  print *,"center is not aligned with grid"
+  stop
+ endif
+
+
+! do nothing
+ if(1 .eq. 0)then
+ if(vf(1) .ne. 0.0d0 .and. vf(2) .ne. 0.0d0 .and. vf(3) .ne. 0.0d0  &
+    .and. vf(4) .eq. 0.0d0 .and. vf(5) .eq. 0.0d0)then
+   vf(3)=1.0d0-vf(1)-vf(2)
+   do dir=1,2
+    centroid(3,dir) =  &
+     (center(dir) - vf(1)*centroid(1,dir) - vf(2)*centroid(2,dir))/vf(3)
+   enddo
+ elseif(vf(1) .ne. 0.0d0 .and. vf(2) .ne. 0.0d0 .and. vf(5) .ne. 0.0d0 &
+    .and. vf(4) .eq. 0.0d0 .and. vf(3) .eq. 0.0d0)then
+   vf(5)=1.0d0-vf(1)-vf(2)
+   do dir=1,2
+    centroid(5,dir) =  &
+     (center(dir) - vf(1)*centroid(1,dir) - vf(2)*centroid(2,dir))/vf(5)
+   enddo
+ elseif(vf(1) .ne. 0.0d0 .and. vf(4) .ne. 0.0d0 .and. vf(3) .ne. 0.0d0 &
+    .and. vf(2) .eq. 0.0d0 .and. vf(5) .eq. 0.0d0)then
+   vf(4)=1.0d0-vf(1)-vf(3)
+   do dir=1,2
+    centroid(4,dir) =  &
+     (center(dir) - vf(1)*centroid(1,dir) - vf(3)*centroid(3,dir))/vf(4)
+   enddo
+ elseif(vf(1) .ne. 0.0d0 .and. vf(4) .ne. 0.0d0 .and. vf(5) .ne. 0.0d0 &
+    .and. vf(2) .eq. 0.0d0 .and. vf(3) .eq. 0.0d0)then
+   vf(4)=1.0d0-vf(1)-vf(5)
+   do dir=1,2
+    centroid(4,dir) =  &
+     (center(dir) - vf(1)*centroid(1,dir) - vf(5)*centroid(5,dir))/vf(4)
+   enddo
+ else
+   ! do nothing
+ endif
+ endif
+
+
+
+
 else
  print *,"probtype_in invalid"
  stop
@@ -1881,6 +2297,30 @@ elseif(probtype_in .eq. 6)then
     (center(dir) - vf(1)*centroid(1,dir) - vf(2)*centroid(2,dir))/vf(3)
   enddo
  endif
+else if (probtype_in.eq.7) then
+ if(vf(2) .gt. eps .and. vf(2) .lt. 1.0d0)then
+  do dir=1,2
+   centroid(2,dir) =  &
+    (center(dir) - vf(1)*centroid(1,dir))/vf(2)
+  enddo
+ elseif(vf(3) .gt. eps .and. vf(3) .lt. 1.0d0)then
+  do dir=1,2
+   centroid(3,dir) =  &
+    (center(dir) - vf(1)*centroid(1,dir))/vf(3)
+  enddo
+ elseif(vf(4) .gt. eps .and. vf(4) .lt. 1.0d0)then
+  do dir=1,2
+   centroid(4,dir) =  &
+    (center(dir) - vf(1)*centroid(1,dir))/vf(4)
+  enddo
+ elseif(vf(5) .gt. eps .and. vf(5) .lt. 1.0d0)then
+  do dir=1,2
+   centroid(5,dir) =  &
+    (center(dir) - vf(1)*centroid(1,dir))/vf(5)
+  enddo 
+
+ endif
+
 else
  print *,"probtype_in invalid"
  stop
@@ -1895,6 +2335,9 @@ do im = 1,nmat_in
     write(21,*) centroid(im,:)
    elseif(im .eq. 4)then
     write(22,*) centroid(im,:) 
+   elseif(im .eq. 5)then
+    write(23,*) centroid(im,:) 
+
    else
     print *,"err 1075"
     stop
@@ -1915,6 +2358,7 @@ integer       ,intent(in)  :: nmat_in,iin,jin,probtype_in
 real(kind=8)               :: vf(nmat_in)
 integer                    :: i,j
 real(kind=8)               :: vcheck
+
 
 if ((probtype_in.eq.0).or. &
     (probtype_in.eq.2) .or. &
@@ -1997,7 +2441,52 @@ elseif(probtype_in .eq. 6)then
     endif
   endif
  endif
+elseif(probtype_in .eq. 7)then
+! vcheck = vf(1) + vf(2)+vf(3)+vf(4)+vf(5)
+!  if(vcheck .gt. 1.0d0+eps) then
+!  print *,"goes into vf_correct4",vcheck,vf
+! endif
+ do i=1,5
+  if(vf(i) .lt. 0.0d0)then
+   print *,"vf is negtive"
+   stop
+  endif
+ enddo
 
+ if(vf(1) .gt. 1.0d0)then
+  vf(1)=1.0d0
+  vf(2)=0.0d0
+  vf(3)=0.0d0
+  vf(4)=0.0d0
+  vf(5)=0.0d0
+ elseif(vf(2) .gt. 1.0d0)then
+  vf(1)=0.0d0
+  vf(2)=1.0d0
+  vf(3)=0.0d0
+  vf(4)=0.0d0
+  vf(5)=0.0d0
+ elseif(vf(3) .gt. 1.0d0)then
+  vf(1)=0.0d0
+  vf(2)=0.0d0
+  vf(3)=1.0d0
+  vf(4)=0.0d0
+  vf(5)=0.0d0
+ elseif(vf(4) .gt. 1.0d0)then
+  vf(1)=0.0d0
+  vf(2)=0.0d0
+  vf(3)=0.0d0
+  vf(4)=1.0d0
+  vf(5)=0.0d0
+ elseif(vf(5) .gt. 1.0d0)then
+  vf(1)=0.0d0
+  vf(2)=0.0d0
+  vf(3)=0.0d0
+  vf(4)=0.0d0
+  vf(5)=1.0d0
+ else
+  ! do nothing
+   
+ endif
 else
  print *,"probtype_in invalid"
  stop
@@ -2330,6 +2819,8 @@ REAL*8 mypi
   ! do nothing
   !G_in = (4.0d0 -(x_in(1)**2.0d0+x_in(2)**2.0d0))*exp(-t_in)
    G_in = 0.0d0
+ elseif(probtype_in .eq. 7)then
+   G_in = 0.0d0
  else
   print *,"probtype_in invalid"
   stop
@@ -2617,8 +3108,11 @@ real(kind=8)              :: mypi,delx,dely
   ! do nothing
   ! print *,"into exact"
   ! exact_temperature = (x*x + y*y)*exp(-t)
+ elseif(probtype_in .eq. 7)then
+  ! do nothing
+
  else
-  print *,"probtype_in invalid2",probtype_in
+  print *,"probtype_in invalid2 3016",probtype_in
   stop
  endif
 

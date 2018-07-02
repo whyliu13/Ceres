@@ -857,7 +857,8 @@
         stop
        endif
       else if (probtypeCG.eq.1 .or. &
-               probtypeCG .eq. 4 .or. probtypeCG .eq. 5) then
+               probtypeCG .eq. 4 .or. probtypeCG .eq. 5 &
+               .or. probtypeCG .eq. 7) then
        if ((dir.eq.1).and.(sidesten.eq.1)) then
         bctype=1 ! dirichlet
         UWALL=0.0
@@ -2748,6 +2749,9 @@
        write(11,*) 'VARIABLES="X","Y","U1","U2","U3","F1","F2","F3"'
       else if(nmat .eq. 4)then
     
+      elseif(nmat .eq. 5)then
+       write(11,*) 'VARIABLES="X","Y","U1","U2","U3","U4","U5", &
+                   "F1","F2","F3","F4","F5"'
       else
        print *,"nmat not supported"
        stop
@@ -2772,7 +2776,18 @@
          VFRAC_MOF(i,j,2), &
          VFRAC_MOF(i,j,3)
        elseif(nmat .eq. 4)then
-   
+
+       elseif(nmat .eq. 5)then
+         write(11,*) xpoint,ypoint,UNEW(i,j,1), &
+         UNEW(i,j,2), &
+         UNEW(i,j,3), &
+         UNEW(i,j,4), &
+         UNEW(i,j,5), &
+         VFRAC_MOF(i,j,1), &
+         VFRAC_MOF(i,j,2), &
+         VFRAC_MOF(i,j,3), & 
+         VFRAC_MOF(i,j,4), & 
+         VFRAC_MOF(i,j,5)  
        else
         print *,"nmat not supported"
         stop

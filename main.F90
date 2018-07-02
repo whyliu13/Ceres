@@ -14,17 +14,22 @@ IMPLICIT NONE
 ! 2= vertical interface
 ! 3= star for thin filament
 ! 4 = star for two material canity check
+! 5 = hypocycloid with 2 materials
+! 6 = nucleate boiling diffusion with thin filament between vapor bubble and substrate
+! 7 = hypocycloid with 5 materials
+! 8 = nucleate boiling diffusion without filament
+
 
 ! for flat interface, interface is y=0.3.
 ! for dirichlet, top material has k=0 T(y=0.3)=2.0   T(y=0.0)=3.0
 
-INTEGER,PARAMETER          :: probtype_in = 3
+INTEGER,PARAMETER          :: probtype_in = 7
 INTEGER,PARAMETER          :: operator_type_in = 1 !0=low,1=simple,2=least sqr
 INTEGER,PARAMETER          :: dclt_test_in = 0 ! 1 = Dirichlet test  on
 INTEGER,PARAMETER          :: solvtype = 1 ! 0 = CG  1 = bicgstab
-INTEGER,PARAMETER          :: N = 64 ,M= 10
+INTEGER,PARAMETER          :: N = 32 ,M= 20
 INTEGER,PARAMETER          :: plot_int = 1
-real(kind=8),parameter     :: fixed_dt = 1.25d-2*4.0     ! !!!!!!!!!!!!!!!!!!
+real(kind=8),parameter     :: fixed_dt = 1.25d-2   ! !!!!!!!!!!!!!!!!!!
 real(kind=8),parameter     :: CFL = 0.5d0
 real(kind=8),parameter     :: problo= 0.0d0, probhi= 1.0d0
 integer,parameter          :: sdim_in = 2
@@ -103,6 +108,7 @@ endif
  open(unit=5,file="cen1.dat")
  open(unit=21,file="cen2.dat")
  open(unit=22,file="cen3.dat")
+ open(unit=23,file="cen4.dat")
  open(unit=10,file="levelset.dat")
  open(unit=31,file="levelset1.dat")
  open(unit=32,file="levelset2.dat")
@@ -117,22 +123,26 @@ endif
 
 
 
-if( 1 .eq. 0)then
-if(probtype_in .eq. 4 .or. probtype_in .eq. 3)then
- pcurve_ls = 0.0d0
- call starshape(pcurve_ls)
-   do i = 1,pcurve_num
-    write(12,*) (pcurve_ls(:,i)+1.0d0)/2.0d0
-   enddo
- call starshape2(pcurve_ls2)
 
-elseif(probtype_in .eq. 5)then
- pcurve_ls = 0.0d0
- call asteroidshape(pcurve_ls)
-   do i = 1,pcurve_num
-    write(12,*) (pcurve_ls(:,i)+1.0d0)/2.0d0
-   enddo
-endif
+!if(probtype_in .eq. 4 .or. probtype_in .eq. 3)then
+! pcurve_ls = 0.0d0
+! call starshape(pcurve_ls)
+!!   do i = 1,pcurve_num
+!    write(12,*) (pcurve_ls(:,i)+1.0d0)/2.0d0
+!   enddo
+! call starshape2(pcurve_ls2)
+if( 1 .eq. 1)then
+ if(probtype_in .eq. 5 .or. probtype_in .eq. 7)then
+  pcurve_ls = 0.0d0
+  call asteroidshape(pcurve_ls)
+  do i=1,pcurve_num+1
+   pcurve_ls(1,i)=(pcurve_ls(1,i)+1.0d0)/2.0d0
+   pcurve_ls(2,i)=(pcurve_ls(2,i)+1.0d0)/2.0d0  
+  enddo
+!   do i = 1,pcurve_num
+!    write(12,*) (pcurve_ls(:,i)+1.0d0)/2.0d0
+!   enddo
+ endif
 endif
 
 probtype=probtype_in  ! defined in probdataf95.H (probcommon)
@@ -160,6 +170,13 @@ elseif(probtype_in .eq. 6)then
  order_algorithm(1)=1
  order_algorithm(2)=2
  order_algorithm(3)=3
+elseif(probtype_in .eq. 7)then
+ nmat_in=5
+ order_algorithm(1)=1
+ order_algorithm(2)=2
+ order_algorithm(3)=3
+ order_algorithm(4)=4
+ order_algorithm(5)=5
 else
  print *,"probtype_in invalid"
  stop
@@ -298,6 +315,12 @@ enddo
   thermal_cond(1) = 1.0d0
   thermal_cond(2) = 0.1d0 
   thermal_cond(3) = 0.01d0
+ elseif(probtype_in .eq. 7)then
+  thermal_cond(1) = 1.0d0
+  thermal_cond(2) = 0.1d0 
+  thermal_cond(3) = 1.0d0
+  thermal_cond(4) = 0.1d0 
+  thermal_cond(5) = 1.0d0
  else 
   print *,"probtype_in invalid"
   stop
@@ -352,7 +375,14 @@ enddo
   elseif(probtype_in .eq. 6)then
    T(i,j,1)=2.0
    T(i,j,2)=2.0    
+   T(i,j,3)=2.0 
+  elseif(probtype_in .eq. 7)then
+   T(i,j,1)=2.0
+   T(i,j,2)=2.0    
    T(i,j,3)=2.0  
+   T(i,j,4)=2.0    
+   T(i,j,5)=2.0 
+
   else
    print *,"probtype_in invalid"
    stop
@@ -600,6 +630,30 @@ if(probtype_in .eq. 6 .or. probtype_in .eq. 3)then
  enddo
 endif
 
+print *,vf(15,16,:)
+print *,vf(16,15,:)
+print *,vf(15,15,:)
+print *,vf(16,16,:)
+
+do i = 1,5
+ print *, centroid_mult(15,16,i,:)
+enddo
+print *,"======================="
+do i = 1,5
+ print *, centroid_mult(16,15,i,:)
+enddo
+print *,"======================="
+do i = 1,5
+ print *, centroid_mult(15,15,i,:)
+enddo
+print *,"======================="
+do i = 1,5
+ print *, centroid_mult(16,16,i,:)
+enddo
+print *,"======================="
+print *,cell_fab(15,16)%center%val
+print *,cell_fab(16,15)%center%val
+
 
 deallocate(vf)
 deallocate(mofdata_FAB_in)
@@ -617,6 +671,7 @@ deallocate(T_new)
  close(12)
  close(21)
  close(22)
+ close(23)
  close(31)
  close(32)
  close(41)

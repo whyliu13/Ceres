@@ -2,7 +2,7 @@ clear;
 
 lo = 0;
 hi = 1;
-N = 64;
+N = 32;
 h = (hi-lo)/N;
 
 for i = 0:N
@@ -51,18 +51,11 @@ end
   y2 = d(:,2);
   scatter (y1,y2,'.g');
   
-  
-    hold on;
-  e =  load('cen3.dat');
-  y1 = e(:,1);
-  y2 = e(:,2);
-  scatter (y1,y2,'.k');
-%   
-     hold on;
-  h =  load('cen4.dat');
-  y1 = h(:,1);
-  y2 = h(:,2);
-  scatter (y1,y2,'.m');
+%   hold on;
+%    p =  load('cen3.dat');
+%    y1 = p(:,1);
+%    y2 = p(:,2);
+%    scatter (y1,y2,'.y');
 
 hold on;
 

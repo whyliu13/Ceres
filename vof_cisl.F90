@@ -15,8 +15,8 @@ real(kind=8),parameter :: tol = 1e-6
 real(kind=8),parameter :: pi  = 4.0d0*atan(1.0d0)
 
 integer,parameter      :: pcurve_num = 1000
-real(kind=8)           :: pcurve_ls(2,pcurve_num)
-real(kind=8)           :: pcurve_ls2(2,pcurve_num)
+real(kind=8)           :: pcurve_ls(2,pcurve_num+1)
+real(kind=8)           :: pcurve_ls2(2,pcurve_num+1)
 
 real(kind=8)           :: crit_dist(2)
 
