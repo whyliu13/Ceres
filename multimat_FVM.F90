@@ -19,6 +19,7 @@ implicit none
 contains
 !---------------------------------------------------------
 subroutine dist_fns(imat,x,y,dist,probtype_in)
+
 implicit none
 
 integer,intent(in)               :: imat,probtype_in
@@ -531,6 +532,10 @@ elseif(probtype_in .eq. 6)then      ! nucleate boiling set-up
 ! elseif(imat .eq. 4)then
 !  dist= -max(dist1,dist2)
 ! endif
+elseif(probtype_in .eq. 8)then
+
+
+
  elseif(probtype_in .eq. 10)then  ! old hypercycloid
   
  xy(1)=x
@@ -692,6 +697,10 @@ endif
 
 
 end subroutine dist_fns
+
+
+
+
 
 subroutine dist_point_to_lined(sdim,p1,p2,x,dist)
 implicit none
@@ -1380,37 +1389,7 @@ real(kind=8)              :: c
 
 end subroutine normalize_cutline
 
-!-------------------------------------------------------
-subroutine check_sign(G,gtemp,flag)
-implicit none
 
-real(kind=8)         :: g(4)
-real(kind=8)         :: gtemp
-integer              :: flag
-integer              :: i,j
-
-flag = 0
-do i = 1,4
-  if(abs(g(i)) .lt. 1.0e-12) then
-     g(i)  = 0.0d0
-  endif
-enddo
-
-do i = 1,4
-   do j = 1,4
-      if(g(i)*g(j) .lt. 0.0d0) then
-        flag = 1
-      endif
-   enddo      
-enddo     
-
-do i = 1,4
-  if(g(i)*gtemp .lt. 0.0d0) then
-     flag = 1
-  endif
-enddo
-
-end subroutine check_sign
 !-------------------------------------------------------
 subroutine AdaptQuad_sort(im,center,h,centers,dist,flag,probtype_in)
 implicit none
@@ -1976,7 +1955,6 @@ end subroutine inf_lsdetect
 
 
 
-
 !------------------------------------------------------------------------
 
 subroutine AdaptQuad_2d(iin,jin,nmat_in,dx,center,centroid,vf,probtype_in)
@@ -2349,6 +2327,45 @@ enddo
 
 
 end subroutine AdaptQuad_2d
+
+
+
+!-------------------------------------------------------
+subroutine check_sign(G,gtemp,flag)
+implicit none
+
+real(kind=8)         :: g(4)
+real(kind=8)         :: gtemp
+integer              :: flag
+integer              :: i,j
+
+flag = 0
+do i = 1,4
+  if(abs(g(i)) .lt. 1.0e-12) then
+     g(i)  = 0.0d0
+  endif
+enddo
+
+do i = 1,4
+   do j = 1,4
+      if(g(i)*g(j) .lt. 0.0d0) then
+        flag = 1
+      endif
+   enddo      
+enddo     
+
+do i = 1,4
+  if(g(i)*gtemp .lt. 0.0d0) then
+     flag = 1
+  endif
+enddo
+
+end subroutine check_sign
+
+
+
+
+
 ! -----------------------------------------------
 !---------------------------------------------------------------------
 subroutine vf_correct(iin,jin,nmat_in,vf,probtype_in)

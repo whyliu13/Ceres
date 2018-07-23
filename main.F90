@@ -23,13 +23,13 @@ IMPLICIT NONE
 ! for flat interface, interface is y=0.3.
 ! for dirichlet, top material has k=0 T(y=0.3)=2.0   T(y=0.0)=3.0
 
-INTEGER,PARAMETER          :: probtype_in = 7
+INTEGER,PARAMETER          :: probtype_in = 0
 INTEGER,PARAMETER          :: operator_type_in = 1 !0=low,1=simple,2=least sqr
 INTEGER,PARAMETER          :: dclt_test_in = 0 ! 1 = Dirichlet test  on
 INTEGER,PARAMETER          :: solvtype = 1 ! 0 = CG  1 = bicgstab
-INTEGER,PARAMETER          :: N = 32 ,M= 20
+INTEGER,PARAMETER          :: N =32 ,M= 10
 INTEGER,PARAMETER          :: plot_int = 1
-real(kind=8),parameter     :: fixed_dt = 1.25d-2   ! !!!!!!!!!!!!!!!!!!
+real(kind=8),parameter     :: fixed_dt = 1.25d-2  ! !!!!!!!!!!!!!!!!!!
 real(kind=8),parameter     :: CFL = 0.5d0
 real(kind=8),parameter     :: problo= 0.0d0, probhi= 1.0d0
 integer,parameter          :: sdim_in = 2
@@ -468,6 +468,8 @@ do tm  = 1, M
   enddo
   enddo 
 
+
+
   write(2,*) "#####################################################################"
   write(2,*) "T initial", "  mat = 1"
   do i1 = loy_in-1,hiy_in+1
@@ -518,11 +520,8 @@ do tm  = 1, M
   write(2,*) "####################################################################"
 
 
-
-
-
- if(solvtype .eq. 1)then
-  call bicgstab(UNEW_in,hflag)
+ if(solvtype .eq. 1)then                        ! solver type
+  call bicgstab(UNEW_in,hflag)              
  elseif(solvtype .eq. 0)then
   call cggd(UNEW_in,hflag)
  else
@@ -597,12 +596,21 @@ If(probtype_in .eq. 6)then
   do i = 0,63  
    flxtot=flxtot+ (T(i,54,3)-T(i,53,3))/h
   enddo 
+ elseif(N .eq. 128)then
   do i = 0,127  
    flxtot=flxtot+ (T(i,108,3)-T(i,107,3))/h
   enddo 
-
+ elseif(N .eq. 256)then
+  do i = 0,255 
+   flxtot=flxtot+ (T(i,216,3)-T(i,215,3))/h
+  enddo   
  ENDIF
+
+ print *,"flux total =", flxtot
+
 endif
+
+
 
 !do i=0,N-1
 ! do j = 0,N-1
@@ -630,6 +638,7 @@ if(probtype_in .eq. 6 .or. probtype_in .eq. 3)then
  enddo
 endif
 
+if(1 .eq. 0)then
 print *,vf(15,16,:)
 print *,vf(16,15,:)
 print *,vf(15,15,:)
@@ -653,6 +662,8 @@ enddo
 print *,"======================="
 print *,cell_fab(15,16)%center%val
 print *,cell_fab(16,15)%center%val
+endif
+
 
 
 deallocate(vf)
