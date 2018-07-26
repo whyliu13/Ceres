@@ -1,6 +1,7 @@
       module bicgstab_module
 
       REAL*8, PARAMETER :: AVGTOL=1.0E-8
+      REAL*8,PARAMETER  :: ERRTOL = 0.01D0
 
       integer operator_type ! 0=low order 1=simple 2=high order
       integer probtypeCG ! 0=flat interface  1=annulus 2=vertical interface
@@ -2663,7 +2664,7 @@
         xref(dir)=xsten(0,dir)+mofdata_FAB(i,j,vofcomp+dir)
        enddo
        vf=mofdata_FAB(i,j,vofcomp) 
-       if (vf.gt.AVGTOL) then
+       if (vf.gt.ERRTOL) then
         UEXACT=exact_temperature(xref(1),xref(2), &
           out_time,im,probtypeCG,nmat,alpha,dclt_test)
         err1=abs(UNEW(i,j,im)-UEXACT)

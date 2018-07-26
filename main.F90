@@ -23,11 +23,11 @@ IMPLICIT NONE
 ! for flat interface, interface is y=0.3.
 ! for dirichlet, top material has k=0 T(y=0.3)=2.0   T(y=0.0)=3.0
 
-INTEGER,PARAMETER          :: probtype_in = 0
+INTEGER,PARAMETER          :: probtype_in = 1
 INTEGER,PARAMETER          :: operator_type_in = 1 !0=low,1=simple,2=least sqr
 INTEGER,PARAMETER          :: dclt_test_in = 0 ! 1 = Dirichlet test  on
 INTEGER,PARAMETER          :: solvtype = 1 ! 0 = CG  1 = bicgstab
-INTEGER,PARAMETER          :: N =32 ,M= 10
+INTEGER,PARAMETER          :: N =64 ,M= 1
 INTEGER,PARAMETER          :: plot_int = 1
 real(kind=8),parameter     :: fixed_dt = 1.25d-2  ! !!!!!!!!!!!!!!!!!!
 real(kind=8),parameter     :: CFL = 0.5d0
@@ -351,9 +351,9 @@ enddo
     enddo
    endif
   else if (probtype_in.eq.1) then ! annulus problem
-   T(i,j,1)=0.0
-   T(i,j,2)=2.0
-   T(i,j,3)=0.0
+!   T(i,j,1)=0.0
+!   T(i,j,2)=2.0
+!   T(i,j,3)=0.0
   if(1 .eq. 1)then
    do im = 1,nmat_in
     T(i,j,im)=exact_temperature(xcen,ycen,time_init,im,probtype_in, &

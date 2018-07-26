@@ -9,7 +9,7 @@ real(kind=8),parameter :: radcen=0.25d0
 real(kind=8),parameter :: radeps=0.1d0 ! thick:0.1d0  thin:0.005d0    annulus
                                        ! thick: 0.2  thin: 0.05         penta_foil
 real(kind=8),parameter :: thermal_delta= 0.0d0  ! prhobtype=6 thickness of the thermal layer
-integer,parameter      :: refine_lev = 5
+integer,parameter      :: refine_lev = 4
 
 real(kind=8),parameter :: eps = 1e-10
 real(kind=8),parameter :: tol = 1e-6

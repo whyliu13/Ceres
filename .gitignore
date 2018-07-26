@@ -18,3 +18,6 @@ wavedata*
 /hc1
 /1m64
 /nb1_32
+bm.F90
+diff.F90
+interp_code

@@ -2761,7 +2761,7 @@ REAL*8 mypi
    ! T=2+sin(theta) exp(-t/(rc^2))  alpha=1
    ! T_t - (T_rr + T_r/r + T_theta theta/r^2)=
    ! exp(-t/rc^2)(-sin(theta)/rc^2+sin(theta)/r^2)
-   G_in=exp(-t_in/(radius_in **2))*sin(theta_in)*(-1.0/(radius_in **2)+1.0/(radius_in**2))
+   G_in=exp(-t_in/(radcen**2))*sin(theta_in)*(-1.0/(radcen**2)+1.0/(radius_in**2))
   else
    print *,"im invalid 5"
    stop
