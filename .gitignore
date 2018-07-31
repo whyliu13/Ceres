@@ -21,3 +21,11 @@ wavedata*
 bm.F90
 diff.F90
 interp_code
+cavity_test.F90
+validtest.f90
+multi_solver.F90
+dist_starshape.F90
+diff.F90
+*.m
+/matlabfiles/*
+
