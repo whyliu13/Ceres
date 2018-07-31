@@ -25,7 +25,7 @@ IMPLICIT NONE
 
 INTEGER,PARAMETER          :: probtype_in = 1
 INTEGER,PARAMETER          :: operator_type_in = 1 !0=low,1=simple,2=least sqr
-INTEGER,PARAMETER          :: dclt_test_in = 0 ! 1 = Dirichlet test  on
+INTEGER,PARAMETER          :: dclt_test_in = 1 ! 1 = Dirichlet test  on
 INTEGER,PARAMETER          :: solvtype = 1 ! 0 = CG  1 = bicgstab
 INTEGER,PARAMETER          :: N =64 ,M= 1
 INTEGER,PARAMETER          :: plot_int = 1
@@ -68,6 +68,8 @@ integer                     :: nten
 
 real(kind=8)                :: flxtot
 
+
+
 !----------------------------------------
 INTEGER order_algorithm(1000)
 INTEGER MOFITERMAX
@@ -97,7 +99,15 @@ real(kind=8),dimension(:,:,:),allocatable :: T_new
 
 real(kind=8)  ::dtest(N+1,N+1),dtest1(N+1,N+1),dtest2(N+1,N+1)             
 
+!----------------------------------------------------------
+real(kind=8)   :: fcenter(2)
+real(kind=8)   :: fprobe(2), fI(2)
+real(kind=8)   :: fdist
 
+
+
+
+!------------------------------------------------------------
 if(dclt_test_in .eq. 1) then
  open(unit = 2, file = "out_1")
 elseif(dclt_test_in .eq. 0)then
@@ -572,19 +582,24 @@ do tm  = 1, M
 
  T = T_new
 
-  write(2,*) "#######################################################################"
-  write(2,*) "new T ", "  mat = 1"
-  do i1 = loy_in-1,hiy_in+1
-   write(2,*) T(:,i1,1) 
-  enddo
-   write(2,*) "new T ", "  mat = 2"
-  do i1 = loy_in-1,hiy_in+1
-   write(2,*) T(:,i1,2) 
-  enddo
-  write(2,*) "#######################################################################"
+!  write(2,*) "#######################################################################"
+!  write(2,*) "new T ", "  mat = 1"
+!  do i1 = loy_in-1,hiy_in+1
+!   write(2,*) T(:,i1,1) 
+!  enddo
+!   write(2,*) "new T ", "  mat = 2"
+!  do i1 = loy_in-1,hiy_in+1
+!   write(2,*) T(:,i1,2) 
+!  enddo
+!  write(2,*) "#######################################################################"
 
+   
+ 
   
 enddo ! tm=1,...,M
+
+
+
 
 If(probtype_in .eq. 6)then
  flxtot=0.0d0 
@@ -663,6 +678,31 @@ print *,"======================="
 print *,cell_fab(15,16)%center%val
 print *,cell_fab(16,15)%center%val
 endif
+
+
+if(probtype_in .eq. 1)then             ! flux test for probtype = 1 annulus problem
+
+do i=-1,N
+ do j=-1,N
+  if(vf(i,j,2) .gt. 0.0001d0)then    !   material 2 full cell.
+   do ii=1,2
+    fcenter(ii)=CELL_FAB(i,j)%center%val(ii)
+   enddo
+   call dist_fns(2,fcenter(1),fcenter(2), fdist , probtype_in)
+   if(abs(fdist) .lt. h_in)then   
+     
+
+
+   endif   ! fdist
+
+
+  endif   ! vf(i,j,2)
+ enddo
+enddo
+
+endif
+
+
 
 
 
