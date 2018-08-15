@@ -5,6 +5,7 @@ USE MOF_pair_module
 USE mmat_FVM
 !USE multi_solver_module 
 USE bicgstab_module
+use interp_module
 
 IMPLICIT NONE
 
@@ -27,7 +28,7 @@ INTEGER,PARAMETER          :: probtype_in = 1
 INTEGER,PARAMETER          :: operator_type_in = 1 !0=low,1=simple,2=least sqr
 INTEGER,PARAMETER          :: dclt_test_in = 1 ! 1 = Dirichlet test  on
 INTEGER,PARAMETER          :: solvtype = 1 ! 0 = CG  1 = bicgstab
-INTEGER,PARAMETER          :: N =64 ,M= 1
+INTEGER,PARAMETER          :: N =32 ,M= 1
 INTEGER,PARAMETER          :: plot_int = 1
 real(kind=8),parameter     :: fixed_dt = 1.25d-2  ! !!!!!!!!!!!!!!!!!!
 real(kind=8),parameter     :: CFL = 0.5d0
@@ -58,7 +59,7 @@ real(kind=8)               :: uu(0:N,0:N),vv(0:N,0:N)
 character(len=70)          :: lineseg,ctd,triangles
 real(kind=8)               :: vol_tot
 
-real(kind=8)                :: xsten(-3:3,sdim_in)
+!real(kind=8)                :: xsten(-3:3,sdim_in)
 integer                     :: im,ii,im1,im2
 real(kind=8)                :: sumT,sumvf
 
@@ -102,10 +103,22 @@ real(kind=8)  ::dtest(N+1,N+1),dtest1(N+1,N+1),dtest2(N+1,N+1)
 !----------------------------------------------------------
 real(kind=8)   :: fcenter(2)
 real(kind=8)   :: fprobe(2), fI(2)
-real(kind=8)   :: fdist
+real(kind=8)   :: fdist,fdist1,fdist3
+integer        :: sgflag
+!-----------------------------------
+real(kind=8)    :: xlo(2)
+real(kind=8)    :: interpolate_temperature
+real(kind=8)    :: gradtemp
+real(kind=8)    :: GRADERR1,GRADERR2,GRADERR3
 
 
+!NAMELIST /PMTR/ probtype_in, operator_type_in, dclt_test_in, &
+!                solvtype, N, M, plot_int, fixed_dt, &
+!                problo, probhi, sdim_in
 
+!OPEN (UNIT= 9, FILE='nl.dat', STATUS='UNKNOWN')
+! write(9, NML=PMTR) 
+! close(9)
 
 !------------------------------------------------------------
 if(dclt_test_in .eq. 1) then
@@ -681,27 +694,81 @@ endif
 
 
 if(probtype_in .eq. 1)then             ! flux test for probtype = 1 annulus problem
+sgflag = 0
+do i=1,2
+ xlo(i)=problo
+enddo
 
 do i=-1,N
  do j=-1,N
-  if(vf(i,j,2) .gt. 0.0001d0)then    !   material 2 full cell.
+  if(vf(i,j,2) .gt. 0.0001d0)then    !   material 2 cell.
    do ii=1,2
     fcenter(ii)=CELL_FAB(i,j)%center%val(ii)
    enddo
    call dist_fns(2,fcenter(1),fcenter(2), fdist , probtype_in)
-   if(abs(fdist) .lt. h_in)then   
-     
+   call dist_fns(1,fcenter(1),fcenter(2), fdist1 , probtype_in)
+   call dist_fns(3,fcenter(1),fcenter(2), fdist3, probtype_in)
+   if(abs(fdist) .lt. 2.0d0*h_in)then   
+    if(abs(fdist1) .le. abs(fdist3))then 
+     if(fdist1 .lt. 0.0d0)then
+      sgflag=-1  
+      call find_cloest_2d(-1,fdist,fcenter,xI)
+     elseif(fdist1 .gt. 0.0d0)then
+      sgflag=+1
+      call find_cloest_2d(+1,fdist,fcenter,xI)     
+     else
+      XI=fcenter
+     endif
+    elseif(abs(fdist1) .gt. abs(fdist3))then
+     if(fdist3 .lt. 0.0d0)then  
+      sgflag=+1
+      call find_cloest_2d(+1,fdist,fcenter,xI)
+     elseif(fdist3 .gt. 0.0d0)then
+      sgflag=-1
+      call find_cloest_2d(-1,fdist,fcenter,xI)     
+     else
+      XI=fcenter
+     endif    
+    else
+     print *,"Error 712"
+     stop
+    endif   ! fdist1 > < fdist3
+
+    if(sgflag .eq. +1)then
+     call find_cloest_2d(-1,h_in,xI,xprobe)
+    elseif(sgflag .eq. -1)then
+     call find_cloest_2d(+1,h_in,xI,xprobe)   
+    else
+     print *,"check"
+     stop
+    endif
 
 
-   endif   ! fdist
+   call interpfabTEMP( &
+       N, &
+       h_in, &
+       problo, &
+       T(:,:,2), &
+       vf(:,:,2),&
+       centroid_mult(:,:,2,:)
+       xprobe, &  
+       xI, & 
+       interpolate_temperature)
+
+    gradtemp= (interpolate_temperature - &
+              exact_temperature(xI(1),xI(2),M*fixed_dt, &
+              2,probtype_in,nmat_in,alpha_in,dclt_flag))/abs(fdist)
+    
 
 
+
+   endif   ! fdist > <  2*h
+  
   endif   ! vf(i,j,2)
  enddo
 enddo
 
 endif
-
 
 
 

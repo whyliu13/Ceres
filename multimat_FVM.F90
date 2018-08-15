@@ -698,8 +698,42 @@ endif
 
 end subroutine dist_fns
 
+! --------------------------------------------------
+subroutine find_cloest_2d(sflag,dist,xin,xout)
+implicit none
+
+integer     ,intent(in)    :: sflag
+real(kind=8),intent(in)    :: dist
+real(kind=8),intent(in)    :: xin(2)
+real(kind=8)               :: xout(2)
+real(kind=8)               :: ss
+real(kind=8)               :: xgrad(2)
+real(kind=8)               :: xnorm
+integer                    :: i
+
+if(sflag .eq. 1)then
+ ss = +1.0d0
+elseif(sflag .eq. -1)then
+ ss = -1.0d0
+else
+ print *,"invalid sign flag, 717"
+ stop
+endif
+
+if(dist .eq. 0.0d0)then
+ print *,"dist is 0, 723"
+ stop
+endif
+
+xnorm = sqrt((xin(1)-0.5d0)**2.0d0 + (xin(2)-0.5d0)**2.0d0)
+do i=1,2
+ xgrad(i)=(xin(i)-0.5d0)/xnorm
+ xout(i)= xin(i)+ss*xgrad(i)*abs(dist) 
+enddo
 
 
+end subroutine find_cloest_2d
+!--------------------------------------------
 
 
 subroutine dist_point_to_lined(sdim,p1,p2,x,dist)
@@ -2846,7 +2880,137 @@ REAL*8 mypi
 return
 end subroutine get_filament_source
 
+
+!----------------------------------------------------
+subroutine polar_2d_heat(sdim,N,M,step,kappa,tau, u)
+! polar coordinate 2-d heat equation solver.
+! forward in time, central FD discretization
+implicit none
+
+integer,intent(in)          :: sdim                 
+integer,intent(in)          :: N      ! discretization in r direction
+integer,intent(in)          :: M       ! discretization in theta direction
+integer,intent(in)          :: step
+real(kind=8),parameter      :: rlo=radcen-radeps
+real(kind=8),parameter      :: rhi=radcen+radeps
+
+real(kind=8)                :: r(0:N)
+real(kind=8)                :: z(0:M)
+real(kind=8)                :: u(0:N,0:M),u_new(0:N,0:M)
+real(kind=8)                :: dr,dz
+real(kind=8)                :: tau
+real(kind=8)                :: kappa
+real(kind=8),external       :: f_src
+
+integer                     :: i,j,ts
+
+
+if(sdim .ne. 2)then
+ print *,"invalid dimension 2909"
+ stop
+endif
+
+dr=(rhi-rlo)/N
+dz=(2*pi)/M
+
+do i=0,N
+ r(i)=rlo+i*dr
+enddo
+do i=0,M
+ z(i)=i*dz
+enddo
+
+tau=0.5d0*kappa*min(((dr)**2.0d0), &
+       minval(r)*dr, &
+      (minval(r)**2.0d0)*((dz)**2.0d0))
+
+print *,"tau=",tau
+
+open(unit=91,file="psol.dat")
+
+! set IC and BC /
+     !         /\
+     !        /  \
+     !       /    \
+     !      /      \
+     !     / \      \ 
+     !    /   \      \
+     !   /     \      \
+     !  /       \      \
+     ! /         \      \
+     !._________|_______|_________________
+                                                                     
+do i=0,N                                                              
+ do j=0,M                                                             
+  u(i,j)=2.0d0                                                      
+  u(i,j) = 1.0d0 + 10.0d0*(r(i)-rlo)                                 
+ enddo                                                               
+enddo                                                                
+                                                                     
+do j=0,M                                                             
+ u(0,j)=1.0d0                                                         
+ u(N,j)=3.0d0                                                         
+enddo
+
+do j=0,M
+ write(91,*) u(0:N,j) 
+enddo
+                                                                          !-------------------------
+
+do ts=1,step
+ do i=1,N-1
+  do j=1,M-1
+   u_new(i,j)= (1.0d0+kappa*tau*(-2.0d0/(dr**2.0d0)- &
+                       2.0d0/((r(i)**2.0d0)*(dz**2.0d0))))*u(i,j) &
+                + kappa*tau*(  & 
+                 (1.0d0/(dr**2.0d0)+1.0d0/(r(i)*2.0d0*dr))*u(i+1,j) &
+                + (1.0d0/(dr**2.0d0)-1.0d0/(r(i)*2.0d0*dr))*u(i-1,j) &
+                + 1.0d0/((r(i)**2.0d0)*(dz**2.0d0))*u(i,j+1) &
+                + 1.0d0/((r(i)**2.0d0)*(dz**2.0d0))*u(i,j-1)) &
+               + tau*f_src(r(i),z(j)) 
+  enddo
+ enddo
+  
+ do i=1,N-1
+   u_new(i,0)= (1.0d0+kappa*tau*(-2.0d0/(dr**2.0d0)- &
+                       2.0d0/((r(i)**2.0d0)*(dz**2.0d0))))*u(i,0) &
+                + kappa*tau*( &
+                + (1.0d0/(dr**2.0d0)+1.0d0/(r(i)*2.0d0*dr))*u(i+1,0) &
+                + (1.0d0/(dr**2.0d0)-1.0d0/(r(i)*2.0d0*dr))*u(i-1,0) &
+                + 1.0d0/((r(i)**2.0d0)*(dz**2.0d0))*u(i,1) &
+                + 1.0d0/((r(i)**2.0d0)*(dz**2.0d0))*u(i,M-1)) &
+               + tau*f_src(r(i),z(0)) 
+ enddo
+
+ do i=1,N-1
+  u_new(i,M)=u_new(i,0)
+ enddo
+do j=0,M
+ u_new(0,j)=1.0d0
+ u_new(N,j)=3.0d0
+enddo
+
+ do j=0,M
+  write(91,*) u_new(0:N,j) 
+ enddo
+
+
+ do i=0,N
+  do j=0,M
+   u(i,j)=u_new(i,j)
+  enddo
+ enddo
+
+enddo
+
+
+
+end subroutine polar_2d_heat
+
+
 end module mmat_FVM
+
+
 
 !-------------------------------------------------------
 
@@ -3134,4 +3298,18 @@ real(kind=8)              :: mypi,delx,dely
  endif
 
 end function exact_temperature
+
+!--------------------------------
+function f_src(x,y)
+! source term for subroutine polar_2d_heat
+implicit none
+
+real(kind=8)  :: x,y
+real(kind=8)  :: f_src
+
+f_src = 0.0d0
+
+
+return
+end function f_src
 
