@@ -94,7 +94,8 @@ real(kind=8),dimension(:,:,:),allocatable :: mofdata_FAB_in
 ! -1:N,-1:N,nmat
 TYPE(POINTS),DIMENSION(:,:,:),allocatable :: CENTROID_FAB
 ! -1:N,-1:N,nmat,sdim
-real(kind=8),dimension(:,:,:,:),allocatable :: centroid_mult   
+real(kind=8),dimension(:,:,:,:),allocatable :: centroid_mult
+real(kind=8),dimension(:,:,:),allocatable :: centroid_temp  
 ! -1:N,-1:N,nmat
 real(kind=8),dimension(:,:,:),allocatable :: T
 real(kind=8),dimension(:,:,:),allocatable :: T_new
@@ -106,7 +107,8 @@ real(kind=8)  ::dtest(N+1,N+1),dtest1(N+1,N+1),dtest2(N+1,N+1)
 real(kind=8)   :: fcenter(2)
 real(kind=8)   :: fprobe(2), fI(2)
 real(kind=8)   :: fdist,fdist1,fdist3
-integer        :: sgflag
+integer        :: sgflag,diflag
+real(kind=8)   :: TSAT
 !-----------------------------------
 real(kind=8)    :: xlo(2)
 real(kind=8)    :: interpolate_temperature
@@ -124,6 +126,8 @@ real(kind=8)         :: dr_polar,dz_polar
 real(kind=8)         :: pcenter(2)
 real(kind=8),parameter :: rlo=radcen-radeps
 real(kind=8),parameter :: rhi=radcen+radeps
+
+real(kind=8)         :: gradreal
 
 
 
@@ -271,6 +275,7 @@ do i= -1, N
    noy(i)= problo + (i+0.5d0)*h_in
 enddo
 
+
 !--intial cell
 do i = -1 , N
   do j= -1 , N
@@ -282,6 +287,7 @@ allocate(vf(-1:N,-1:N,nmat_in))
 allocate(mofdata_FAB_in(-1:N,-1:N,ngeom_recon_in*nmat_in)) 
 allocate(CENTROID_FAB(-1:N,-1:N,nmat_in))  ! type points 
 allocate(centroid_mult(-1:N,-1:N,nmat_in,sdim_in)) 
+allocate(centroid_temp(-1:N,-1:N,sdim_in))
 allocate(T(-1:N,-1:N,nmat_in)) 
 allocate(T_new(-1:N,-1:N,nmat_in)) 
 
@@ -414,17 +420,17 @@ CALL INIT_V(N,XLINE(0:N),YLINE(0:N),uu,vv)
   endif
 
   else if (probtype_in.eq.9) then   ! annulus cvg test
-   call set_polar_2d(sdim,Np,Mp,thermal_cond(2),tau &
+   call set_polar_2d(sdim_in,Np,Mp,thermal_cond(2),tau &
                    ,r_polar,z_polar,dr_polar,dz_polar,upolar)
-   do i=1,2
-    pcenter(i)=0.5d0
+   do i1=1,2
+    pcenter(i1)=0.5d0
    enddo
    T = 0.0d0
-   do i=0,N-1
-    do j=0,N-1
-     if(vf(i,j,2) .gt. 1.0e-8)then
+   do i2=0,N-1
+    do j2=0,N-1
+     if(vf(i2,j2,2) .gt. 1.0e-8)then
       call polar_cart_interpolate(Np,Mp,upolar,pcenter,rlo,rhi, &
-                  centroid_mult(i,j,2,:),T(i,j,2))
+                  centroid_mult(i2,j2,2,:),T(i2,j2,2))
      endif
     enddo
    enddo   
@@ -492,6 +498,9 @@ do tm  = 1, M
   write(2,*) "time step", tm
   write(2,*) "***************************************************"
 
+  GRADERR3=0.0d0
+  GRADERR2=0.0d0
+  GRADERR1=0.0d0
   ngeom_recon_in=2*sdim_in+3
   nx_in=N
   ny_in=N
@@ -655,13 +664,110 @@ do tm  = 1, M
 !  enddo
 !  write(2,*) "#######################################################################"
 
- if(probtype_in.eq.9)then
-  call polar_2d_heat(sdim,Np,Mp,kappa,tau, r_polar,z_polar &
-                       ,dr_polar,dz_polar,upolar)
+if(probtype_in.eq.9)then
+ call polar_2d_heat(sdim_in,Np,Mp,thermal_cond(2),tau, r_polar,z_polar &
+                      ,dr_polar,dz_polar,upolar)
+
+sgflag = 0
+diflag = 0
+do i=1,2
+ xlo(i)=problo
+enddo
+
+do i=-1,N
+ do j=-1,N
+  if(vf(i,j,2) .gt. 0.0001d0)then    !   material 2 cell.
+   do ii=1,2
+    fcenter(ii)=CELL_FAB(i,j)%center%val(ii)
+   enddo
+   call dist_fns(2,fcenter(1),fcenter(2), fdist , probtype_in)
+   call dist_fns(1,fcenter(1),fcenter(2), fdist1 , probtype_in)
+   call dist_fns(3,fcenter(1),fcenter(2), fdist3, probtype_in)
+   if(abs(fdist) .lt. 2.0d0*h_in)then   
+    if(abs(fdist1) .le. abs(fdist3))then 
+     diflag=1
+     TSAT=1.0d0
+     if(fdist1 .lt. 0.0d0)then
+      sgflag=-1  
+      call find_cloest_2d(-1,fdist,fcenter,fI)
+     elseif(fdist1 .gt. 0.0d0)then
+      sgflag=+1
+      call find_cloest_2d(+1,fdist,fcenter,fI)     
+     else
+      fI=fcenter
+     endif
+    elseif(abs(fdist1) .gt. abs(fdist3))then
+     diflag=2
+     TSAT=3.0d0
+     if(fdist3 .lt. 0.0d0)then  
+      sgflag=+1
+      call find_cloest_2d(+1,fdist,fcenter,fI)
+     elseif(fdist3 .gt. 0.0d0)then
+      sgflag=-1
+      call find_cloest_2d(-1,fdist,fcenter,fI)     
+     else
+      fI=fcenter
+     endif    
+    else
+     print *,"Error 712"
+     stop
+    endif   ! fdist1 > < fdist3
+
+    if(sgflag .eq. +1)then
+     call find_cloest_2d(-1,h_in,fI,fprobe)
+    elseif(sgflag .eq. -1)then
+     call find_cloest_2d(+1,h_in,fI,fprobe)   
+    else
+     print *,"check"
+     stop
+    endif
+
+   do i1=-1,N
+   do j1=-1,N
+   do i2=1,sdim_in
+    centroid_temp(i1,j1,i2)=centroid_mult(i1,j1,2,i2)
+   enddo
+   enddo
+   enddo
+
+
+   call interpfabTEMP( &
+       N, &
+       dx_in, &
+       xlo, &
+       T(:,:,2), &
+       vf(:,:,2),&
+       centroid_temp,&
+       fprobe, &  
+       fI, & 
+       TSAT,&
+       interpolate_temperature)
+   
+   if(diflag .eq. 1)then
+    gradtemp= (interpolate_temperature-1.0d0)/abs(fdist)
+   elseif(diflag .eq. 2)then
+    gradtemp= (interpolate_temperature-3.0d0)/abs(fdist)
+   else
+    print *,"diflag invalid"
+    stop
+   endif
+
+   endif   ! fdist > <  2*h
+   
+   call find_polar_cart_inter(Np,Mp,upolar,pcenter,rlo,rhi,fI, diflag, gradreal)
+   GRADERR2 = GRADERR2+ (gradtemp-gradreal)**2.0d0
+
+
+  endif   ! vf(i,j,2)
+ enddo
+enddo
+
+endif ! probtype_in .eq. 9
  
- endif 
- 
-  
+GRADERR2 = sqrt(GRADERR2)
+
+print *,"GRADERR2",GRADERR2
+
 enddo ! tm=1,...,M
 
 
@@ -746,82 +852,7 @@ print *,cell_fab(16,15)%center%val
 endif
 
 
-if(probtype_in .eq. 1)then             ! flux test for probtype = 1 annulus problem
-sgflag = 0
-do i=1,2
- xlo(i)=problo
-enddo
 
-do i=-1,N
- do j=-1,N
-  if(vf(i,j,2) .gt. 0.0001d0)then    !   material 2 cell.
-   do ii=1,2
-    fcenter(ii)=CELL_FAB(i,j)%center%val(ii)
-   enddo
-   call dist_fns(2,fcenter(1),fcenter(2), fdist , probtype_in)
-   call dist_fns(1,fcenter(1),fcenter(2), fdist1 , probtype_in)
-   call dist_fns(3,fcenter(1),fcenter(2), fdist3, probtype_in)
-   if(abs(fdist) .lt. 2.0d0*h_in)then   
-    if(abs(fdist1) .le. abs(fdist3))then 
-     if(fdist1 .lt. 0.0d0)then
-      sgflag=-1  
-      call find_cloest_2d(-1,fdist,fcenter,xI)
-     elseif(fdist1 .gt. 0.0d0)then
-      sgflag=+1
-      call find_cloest_2d(+1,fdist,fcenter,xI)     
-     else
-      XI=fcenter
-     endif
-    elseif(abs(fdist1) .gt. abs(fdist3))then
-     if(fdist3 .lt. 0.0d0)then  
-      sgflag=+1
-      call find_cloest_2d(+1,fdist,fcenter,xI)
-     elseif(fdist3 .gt. 0.0d0)then
-      sgflag=-1
-      call find_cloest_2d(-1,fdist,fcenter,xI)     
-     else
-      XI=fcenter
-     endif    
-    else
-     print *,"Error 712"
-     stop
-    endif   ! fdist1 > < fdist3
-
-    if(sgflag .eq. +1)then
-     call find_cloest_2d(-1,h_in,xI,xprobe)
-    elseif(sgflag .eq. -1)then
-     call find_cloest_2d(+1,h_in,xI,xprobe)   
-    else
-     print *,"check"
-     stop
-    endif
-
-
-   call interpfabTEMP( &
-       N, &
-       h_in, &
-       problo, &
-       T(:,:,2), &
-       vf(:,:,2),&
-       centroid_mult(:,:,2,:)
-       xprobe, &  
-       xI, & 
-       interpolate_temperature)
-
-    gradtemp= (interpolate_temperature - &
-              exact_temperature(xI(1),xI(2),M*fixed_dt, &
-              2,probtype_in,nmat_in,alpha_in,dclt_flag))/abs(fdist)
-    
-
-
-
-   endif   ! fdist > <  2*h
-  
-  endif   ! vf(i,j,2)
- enddo
-enddo
-
-endif
 
 
 

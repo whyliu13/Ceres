@@ -18,6 +18,7 @@ use probcommon_module
 use mof_routines_module
 use MOF_pair_module
 use mmat_FVM
+use global_utility_module
 
 implicit none
 
@@ -39,6 +40,7 @@ contains
        centroid, &
        xprobe, &  ! normal probe position
        xI, & ! closest point on interface from a cell center.
+       TSAT,&
        interpolate_temperature)
       IMPLICIT NONE
 
@@ -66,7 +68,7 @@ contains
       REAL(KIND=8)  :: Temp(-1:N,-1:N)
       REAL(KIND=8)  :: vf(-1:N,-1:N)      
       REAL(KIND=8)  :: centroid(-1:N,-1:N,sdim) 
-
+      REAL(KIND=8)  :: TSAT
 
       nhalf=3
 
@@ -148,6 +150,7 @@ contains
        xI, &
        xprobe, &  
        VF_sten, & 
+       TSAT,&
        interpolate_temperature)
 
       return 
@@ -162,6 +165,7 @@ contains
        xI, &  ! closest point on interface to cell center.
        xprobe, &
        VF_sten, &
+       TSAT,&
        interpolate_temperature)
       implicit none
 
@@ -196,7 +200,7 @@ contains
       REAL_T wt_local
       REAL_T TSAT
 
-      REAL(KIND=8),EXTERNAL :: exact_temperature                    ! use temperature on the interface
+ !     REAL(KIND=8),EXTERNAL :: exact_temperature                    ! use temperature on the interface
 
       if (nhalf.ne.3) then
        print *,"nhalf invalid"
@@ -430,6 +434,47 @@ contains
    
     
       end subroutine polar_cart_interpolate
+
+
+    subroutine find_polar_cart_inter(Np,Mp,upolar,pcenter,rlo,rhi,x_in, diflag, dux)
+    implicit none 
+     integer,intent(in)          :: Np,Mp
+     real(kind=8),intent(in),dimension(0:Np,0:Mp)  :: upolar
+     real(kind=8),intent(in)          :: pcenter(2)
+     real(kind=8),intent(in)          :: rlo,rhi
+     real(kind=8),intent(in)          :: x_in(2)
+
+     real(kind=8)                     :: dux
+     integer                          :: i,j
+     real(kind=8)                     :: xr,xz
+     integer                          :: rl,zl      
+     real(kind=8)                     :: dr,dz
+     real(kind=8)                     :: du1,du2
+     real(kind=8)                     :: beta
+     
+     integer                          :: diflag
+
+      dr = (rhi-rlo)/real(Np,8)     
+      dz = 2.0d0*pi/real(Mp,8)
+
+      call rad_cal(x_in,pcenter,xz)
+      zl = floor(xz/dz)
+      beta=(xz-zl*dz)/dz 
+
+      if(diflag .eq. 1)then 
+       du1= (upolar(1,zl)-upolar(0,zl))/dr
+       du2=(upolar(1,zl+1)-upolar(0,zl+1))/dr
+      elseif(diflag .eq. 2)then
+       du1= (upolar(Np-1,zl)-upolar(Np,zl))/dr
+       du2=(upolar(Np-1,zl+1)-upolar(Np,zl+1))/dr
+      else
+       print *,"check diflag"
+       stop
+      endif 
+
+      dux = du1*(1.0d0-beta)+du2*beta
+
+    end subroutine find_polar_cart_inter
 
 end module
 

@@ -2928,13 +2928,21 @@ tau=0.5d0*kappa*min(((dr)**2.0d0), &
 
 print *,"tau=",tau
 
-do i=0,N                                                              
- do j=0,M                                                             
-  u(i,j)=2.0d0                                                      
-  u(i,j) = 1.0d0 + 10.0d0*(r(i)-rlo)                                 
- enddo                                                               
-enddo                                                                
-                                                                     
+!do i=0,N                                                              
+! do j=0,M                                                             
+!  u(i,j)=2.0d0                                                      
+!  u(i,j) = 1.0d0 + 10.0d0*(r(i)-rlo)                                 
+! enddo                                                               
+!enddo                                                                
+
+do i=1,N-1
+ do j=0,M
+  u(i,j)=1.0d0*(rhi-r(i))/(rhi-rlo) + &
+         3.0d0*(r(i)-rlo)/(rhi-rlo) + &
+         sin(z(j))*(r(i)-rlo)/(rhi-r(i))
+ enddo
+enddo
+                                                                
 do j=0,M                                                             
  u(0,j)=1.0d0                                                         
  u(N,j)=3.0d0                                                         
@@ -2967,18 +2975,7 @@ real(kind=8),external       :: f_src
 integer                     :: i,j,ts
 
 
-! set IC and BC /
-     !         /\
-     !        /  \
-     !       /    \
-     !      /      \
-     !     / \      \ 
-     !    /   \      \
-     !   /     \      \
-     !  /       \      \
-     ! /         \      \
-     !._________|_______|_________________
-                                                                     
+                         
 do j=0,M
  write(91,*) u(0:N,j) 
 enddo
@@ -3318,6 +3315,9 @@ real(kind=8)              :: mypi,delx,dely
   ! exact_temperature = (x*x + y*y)*exp(-t)
  elseif(probtype_in .eq. 7)then
   ! do nothing
+ elseif(probtype_in .eq. 9)then
+  ! do nothing
+  print *,"call exact_temprature"
  else
   print *,"probtype_in invalid2 3016",probtype_in
   stop
