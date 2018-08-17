@@ -46,7 +46,7 @@ integer                          :: pp1,pp2
 real(kind=8)                     :: pcurve_crit(2)
 integer                          :: cenflag,cccflag
 
-if(probtype_in .eq. 1) then
+if(probtype_in .eq. 1 .or. probtype_in .eq. 9) then
  center(1) = 0.5d0
  center(2) = 0.5d0
  r1=radcen-radeps
@@ -2192,7 +2192,8 @@ else if (probtype_in.eq.2) then
  ! do nothing
 elseif(probtype_in .eq. 4 .or. probtype_in .eq. 5)then
  ! do nothing
-else if (probtype_in.eq.1 .or. probtype_in .eq. 3) then
+else if (probtype_in.eq.1 .or. probtype_in .eq. 3 &
+         .or. probtype_in .eq. 9) then
  vf(2) = 1.0d0 - vf(1) -vf(3)
 
  if(abs(vf(2)) .lt. eps)then
@@ -2295,7 +2296,8 @@ else if (probtype_in.eq.2) then
  ! do nothing
 elseif(probtype_in .eq. 4 .or. probtype_in .eq. 5) then
  ! do nothing
-else if (probtype_in.eq.1 .or. probtype_in .eq. 3) then
+else if (probtype_in.eq.1 .or. probtype_in .eq. 3 &
+         .or. probtype_in .eq. 9) then
  if(vf(2) .gt. eps)then
   do dir=1,2
    centroid(2,dir) =  &
@@ -2431,7 +2433,8 @@ if ((probtype_in.eq.0).or. &
   stop
  endif
 
-else if (probtype_in.eq.1 .or. probtype_in .eq. 3) then
+else if (probtype_in.eq.1 .or. probtype_in .eq. 3 &
+         .or. probtype_in .eq. 9) then
  if (nmat_in.ne.3) then
   print *,"nmat_in invalid"
   stop
@@ -2872,6 +2875,8 @@ REAL*8 mypi
    G_in = 0.0d0
  elseif(probtype_in .eq. 7)then
    G_in = 0.0d0
+ elseif(probtype_in .eq. 9)then
+   G_in = 0.0d0
  else
   print *,"probtype_in invalid"
   stop
@@ -2881,29 +2886,26 @@ return
 end subroutine get_filament_source
 
 
-!----------------------------------------------------
-subroutine polar_2d_heat(sdim,N,M,step,kappa,tau, u)
-! polar coordinate 2-d heat equation solver.
-! forward in time, central FD discretization
+subroutine set_polar_2d(sdim,N,M,kappa,tau,r,z,dr,dz,u)
 implicit none
+
 
 integer,intent(in)          :: sdim                 
 integer,intent(in)          :: N      ! discretization in r direction
 integer,intent(in)          :: M       ! discretization in theta direction
-integer,intent(in)          :: step
 real(kind=8),parameter      :: rlo=radcen-radeps
 real(kind=8),parameter      :: rhi=radcen+radeps
 
 real(kind=8)                :: r(0:N)
 real(kind=8)                :: z(0:M)
-real(kind=8)                :: u(0:N,0:M),u_new(0:N,0:M)
+
 real(kind=8)                :: dr,dz
 real(kind=8)                :: tau
 real(kind=8)                :: kappa
-real(kind=8),external       :: f_src
 
-integer                     :: i,j,ts
+real(kind=8)                :: u(0:N,0:M)
 
+integer                     :: i,j
 
 if(sdim .ne. 2)then
  print *,"invalid dimension 2909"
@@ -2926,7 +2928,44 @@ tau=0.5d0*kappa*min(((dr)**2.0d0), &
 
 print *,"tau=",tau
 
-open(unit=91,file="psol.dat")
+do i=0,N                                                              
+ do j=0,M                                                             
+  u(i,j)=2.0d0                                                      
+  u(i,j) = 1.0d0 + 10.0d0*(r(i)-rlo)                                 
+ enddo                                                               
+enddo                                                                
+                                                                     
+do j=0,M                                                             
+ u(0,j)=1.0d0                                                         
+ u(N,j)=3.0d0                                                         
+enddo
+
+
+end subroutine set_polar_2d
+
+!----------------------------------------------------
+subroutine polar_2d_heat(sdim,N,M,kappa,tau, r,z,dr,dz,u)
+! polar coordinate 2-d heat equation solver.
+! forward in time, central FD discretization
+implicit none
+
+integer,intent(in)          :: sdim                 
+integer,intent(in)          :: N      ! discretization in r direction
+integer,intent(in)          :: M       ! discretization in theta direction
+!integer,intent(in)          :: step
+real(kind=8),parameter      :: rlo=radcen-radeps
+real(kind=8),parameter      :: rhi=radcen+radeps
+
+real(kind=8)                :: r(0:N)
+real(kind=8)                :: z(0:M)
+real(kind=8)                :: u(0:N,0:M),u_new(0:N,0:M)
+real(kind=8)                :: dr,dz
+real(kind=8)                :: tau
+real(kind=8)                :: kappa
+real(kind=8),external       :: f_src
+
+integer                     :: i,j,ts
+
 
 ! set IC and BC /
      !         /\
@@ -2940,24 +2979,12 @@ open(unit=91,file="psol.dat")
      ! /         \      \
      !._________|_______|_________________
                                                                      
-do i=0,N                                                              
- do j=0,M                                                             
-  u(i,j)=2.0d0                                                      
-  u(i,j) = 1.0d0 + 10.0d0*(r(i)-rlo)                                 
- enddo                                                               
-enddo                                                                
-                                                                     
-do j=0,M                                                             
- u(0,j)=1.0d0                                                         
- u(N,j)=3.0d0                                                         
-enddo
-
 do j=0,M
  write(91,*) u(0:N,j) 
 enddo
                                                                           !-------------------------
 
-do ts=1,step
+!do ts=1,step
  do i=1,N-1
   do j=1,M-1
    u_new(i,j)= (1.0d0+kappa*tau*(-2.0d0/(dr**2.0d0)- &
@@ -2985,10 +3012,10 @@ do ts=1,step
  do i=1,N-1
   u_new(i,M)=u_new(i,0)
  enddo
-do j=0,M
- u_new(0,j)=1.0d0
- u_new(N,j)=3.0d0
-enddo
+ do j=0,M
+  u_new(0,j)=1.0d0
+  u_new(N,j)=3.0d0
+ enddo
 
  do j=0,M
   write(91,*) u_new(0:N,j) 
@@ -3001,7 +3028,7 @@ enddo
   enddo
  enddo
 
-enddo
+!enddo
 
 
 
@@ -3291,7 +3318,6 @@ real(kind=8)              :: mypi,delx,dely
   ! exact_temperature = (x*x + y*y)*exp(-t)
  elseif(probtype_in .eq. 7)then
   ! do nothing
-
  else
   print *,"probtype_in invalid2 3016",probtype_in
   stop

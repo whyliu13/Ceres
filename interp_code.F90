@@ -392,6 +392,44 @@ contains
 
       return
       end subroutine center_centroid_interchange
+   
+    
+
+      subroutine polar_cart_interpolate(Np,Mp,upolar,pcenter,rlo,rhi,x_in, ux)
+      implicit none
+        
+      integer,intent(in)          :: Np,Mp
+      real(kind=8),intent(in),dimension(0:Np,0:Mp)  :: upolar
+      real(kind=8),intent(in)          :: pcenter(2)
+      real(kind=8),intent(in)          :: rlo,rhi
+      real(kind=8),intent(in)          :: x_in(2)
+
+      real(kind=8)                     :: ux
+      integer                          :: i,j
+      real(kind=8)                     :: xr,xz
+      integer                          :: rl,zl      
+      real(kind=8)                     :: dr,dz
+      real(kind=8)                     :: r_interp1,r_interp2
+      real(kind=8)                     :: alpha,beta
+
+      dr = (rhi-rlo)/real(Np,8)     
+      dz = 2.0d0*pi/real(Mp,8)
+
+      xr = sqrt((x_in(1)-pcenter(1))**2.0d0 + (x_in(2)-pcenter(2))**2.0d0)
+      rl = floor((xr-rlo)/dr) 
+      alpha= (xr-(rlo+rl*dr))/dr
+      
+      call rad_cal(x_in,pcenter,xz)
+      zl = floor(xz/dz)
+      beta=(xz-zl*dz)/dz
+
+      r_interp1=upolar(rl,zl)*(1.0d0-alpha)+upolar(rl+1,zl)*alpha
+      r_interp2=upolar(rl,zl+1)*(1.0d0-alpha)+upolar(rl+1,zl+1)*alpha
+      
+      ux=r_interp1*(1.0d0-beta)+r_interp2*beta
+   
+    
+      end subroutine polar_cart_interpolate
 
 end module
 

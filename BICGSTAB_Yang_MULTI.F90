@@ -857,7 +857,7 @@
         print *,"dir or sidesten invalid"
         stop
        endif
-      else if (probtypeCG.eq.1 .or. &
+      else if (probtypeCG.eq.1 .or. probtypeCG .eq. 9 .or.&
                probtypeCG .eq. 4 .or. probtypeCG .eq. 5 &
                .or. probtypeCG .eq. 7) then
        if ((dir.eq.1).and.(sidesten.eq.1)) then

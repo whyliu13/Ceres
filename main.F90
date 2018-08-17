@@ -19,12 +19,14 @@ IMPLICIT NONE
 ! 6 = nucleate boiling diffusion with thin filament between vapor bubble and substrate
 ! 7 = hypocycloid with 5 materials
 ! 8 = nucleate boiling diffusion without filament
+! 9 = annulus cvg test
+! 
 
 
 ! for flat interface, interface is y=0.3.
 ! for dirichlet, top material has k=0 T(y=0.3)=2.0   T(y=0.0)=3.0
 
-INTEGER,PARAMETER          :: probtype_in = 1
+INTEGER,PARAMETER          :: probtype_in = 9
 INTEGER,PARAMETER          :: operator_type_in = 1 !0=low,1=simple,2=least sqr
 INTEGER,PARAMETER          :: dclt_test_in = 1 ! 1 = Dirichlet test  on
 INTEGER,PARAMETER          :: solvtype = 1 ! 0 = CG  1 = bicgstab
@@ -111,6 +113,21 @@ real(kind=8)    :: interpolate_temperature
 real(kind=8)    :: gradtemp
 real(kind=8)    :: GRADERR1,GRADERR2,GRADERR3
 
+! probtype_in=9, usr polar coord numerical solution to be real solution
+! dicrtization of polar solver
+integer,parameter  :: Np=16    
+integer,parameter  :: Mp=32
+real(kind=8),dimension(0:Np,0:Mp) :: upolar
+real(kind=8)         :: r_polar(0:Np)
+real(kind=8)         :: z_polar(0:Mp)
+real(kind=8)         :: dr_polar,dz_polar
+real(kind=8)         :: pcenter(2)
+real(kind=8),parameter :: rlo=radcen-radeps
+real(kind=8),parameter :: rhi=radcen+radeps
+
+
+
+
 
 !NAMELIST /PMTR/ probtype_in, operator_type_in, dclt_test_in, &
 !                solvtype, N, M, plot_int, fixed_dt, &
@@ -142,6 +159,8 @@ endif
  open(unit=42,file="output2.dat")
  open(unit=43,file="output3.dat")
 
+ open(unit=91,file="psol.dat")
+
 
 
 
@@ -168,6 +187,8 @@ if( 1 .eq. 1)then
  endif
 endif
 
+
+
 probtype=probtype_in  ! defined in probdataf95.H (probcommon)
 order_algorithm = 0
 if (probtype_in.eq.0) then
@@ -177,6 +198,12 @@ else if (probtype_in.eq.1) then
  order_algorithm(2)=3
  order_algorithm(3)=2
  nmat_in=3
+else if(probtype_in .eq. 9)then
+ order_algorithm(1)=1
+ order_algorithm(2)=3
+ order_algorithm(3)=2
+ nmat_in=3
+
 else if (probtype_in.eq.2) then
  nmat_in=2
 else if(probtype_in .eq. 3)then
@@ -275,9 +302,7 @@ CALL INIT_V(N,XLINE(0:N),YLINE(0:N),uu,vv)
 
  print *,"tau=",tau
 
-do i = 1,M
-  Ts(i) =(i-1)* tau
-enddo
+
 
   ! TYPE(POINTS),DIMENSION(:,:,:),allocatable :: CENTROID_FAB 
  call init_vfncen(N,CELL_FAB,nmat_in,dx_in,CENTROID_FAB,vf,probtype_in)
@@ -321,6 +346,10 @@ enddo
   thermal_cond(1)=0.0d0 
   thermal_cond(2)=1.0d0 
   thermal_cond(3)=0.0d0 
+ else if (probtype_in.eq. 9) then
+  thermal_cond(1)=0.0d0 
+  thermal_cond(2)=1.0d0 
+  thermal_cond(3)=0.0d0 
  else if (probtype_in.eq. 2) then
   thermal_cond(1)=1.0d0
   thermal_cond(2)=0.1d0
@@ -350,7 +379,7 @@ enddo
  endif
 
  T = 1.0d0
- do i= -1,N
+ do i= -1,N                                              ! set IC
  do j= -1,N
 
 !  xcen=centroid_mult(i,j,2,1) 
@@ -384,6 +413,22 @@ enddo
    enddo
   endif
 
+  else if (probtype_in.eq.9) then   ! annulus cvg test
+   call set_polar_2d(sdim,Np,Mp,thermal_cond(2),tau &
+                   ,r_polar,z_polar,dr_polar,dz_polar,upolar)
+   do i=1,2
+    pcenter(i)=0.5d0
+   enddo
+   T = 0.0d0
+   do i=0,N-1
+    do j=0,N-1
+     if(vf(i,j,2) .gt. 1.0e-8)then
+      call polar_cart_interpolate(Np,Mp,upolar,pcenter,rlo,rhi, &
+                  centroid_mult(i,j,2,:),T(i,j,2))
+     endif
+    enddo
+   enddo   
+  
   elseif (probtype_in .eq. 3)then
    do im = 1,nmat_in
     T(i,j,im)=exact_temperature(xcen,ycen,time_init,im,probtype_in, &
@@ -433,7 +478,11 @@ enddo
  enddo
 
 
-  
+
+do i = 1,M
+  Ts(i) =(i-1)* tau
+enddo
+
 
 
 do tm  = 1, M
@@ -606,7 +655,11 @@ do tm  = 1, M
 !  enddo
 !  write(2,*) "#######################################################################"
 
-   
+ if(probtype_in.eq.9)then
+  call polar_2d_heat(sdim,Np,Mp,kappa,tau, r_polar,z_polar &
+                       ,dr_polar,dz_polar,upolar)
+ 
+ endif 
  
   
 enddo ! tm=1,...,M
@@ -795,6 +848,7 @@ deallocate(T_new)
  close(41)
  close(42)
  close(43)
+ close(91)
 
 END PROGRAM
 
