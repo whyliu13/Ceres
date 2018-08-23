@@ -21,6 +21,18 @@ real(kind=8)           :: pcurve_ls2(2,pcurve_num+1)
 
 real(kind=8)           :: crit_dist(2)
 
+! polar solver
+
+integer,parameter  :: Np=16    
+integer,parameter  :: Mp=32
+real(kind=8),dimension(0:Np,0:Mp) :: upolar
+real(kind=8)         :: r_polar(0:Np)
+real(kind=8)         :: z_polar(0:Mp)
+real(kind=8)         :: dr_polar,dz_polar
+real(kind=8)         :: pcenter(2)
+real(kind=8),parameter :: rlo=radcen-radeps
+real(kind=8),parameter :: rhi=radcen+radeps
+
 !//////////////////////////////////////
 !    TYPE DEFINE
 !/////////////////////////////////////

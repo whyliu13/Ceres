@@ -468,7 +468,7 @@ contains
        du1= (upolar(Np-1,zl)-upolar(Np,zl))/dr
        du2=(upolar(Np-1,zl+1)-upolar(Np,zl+1))/dr
       else
-       print *,"check diflag"
+       print *,"check diflag",diflag
        stop
       endif 
 
@@ -478,5 +478,232 @@ contains
 
 end module
 
+Function  exact_temperature(x,y,t,im,probtype_in,nmat_in,alpha,dclt_flag)
+Use generalclass
+USE probcommon_module 
+USE MOF_pair_module
+USE mmat_FVM
+!USE multi_solver_module 
+use interp_module
+
+implicit none
+
+integer,intent(in)         :: im,probtype_in,nmat_in,dclt_flag
+real(kind=8),intent(in)    :: alpha(nmat_in)
+real(kind=8),intent(in)    :: t,x,y
+real(kind=8)               :: exact_temperature
+real(kind=8)              :: radius,theta,r1,r2
+real(kind=8)              :: TLO,THI,yI,yHI,a1,b1,a2,b2
+real(kind=8)              :: mypi,delx,dely
+real(kind=8)               :: xy(2)
+
+ mypi=4.0d0*atan(1.0d0)
+ if (probtype_in.eq.1) then
+  if (nmat_in.ne.3) then
+   print *,"nmat_in invalid"
+   stop
+  endif
+  if (im.eq.2) then
+   r1=radcen-radeps
+   r2=radcen+radeps
+      
+   delx=x-0.5d0
+   dely=y-0.5d0
+   radius = sqrt(delx**2.0d0 +dely**2.0d0)
+ 
+       ! x=r cos(theta)
+       ! y=r sin(theta)
+   if (radius.le.radeps/1000.0) then
+    theta=0.0
+   else if ((delx.ge.0.0).and.(dely.ge.0.0)) then
+    theta=acos(delx/radius)
+   else if ((delx.le.0.0).and.(dely.ge.0.0)) then
+    theta=acos(abs(delx)/radius)
+    theta=mypi-theta
+   else if ((delx.le.0.0).and.(dely.le.0.0)) then
+    theta=acos(abs(delx)/radius)
+    theta=mypi+theta
+   else if ((delx.ge.0.0).and.(dely.le.0.0)) then
+    theta=acos(delx/radius)
+    theta=2.0d0*mypi-theta
+   else
+    print *,"delx or dely invalid"
+    stop
+   endif
+
+   exact_temperature=2.0d0+sin(theta)*exp(-t/(radcen**2))
+  else if ((im.eq.1).or.(im.eq.3)) then
+   exact_temperature=0.0
+  else
+   print *,"im invalid 6"
+   stop
+  endif
+
+ elseif(probtype_in .eq. 3)then
+
+  if (nmat_in.ne.3) then
+   print *,"nmat_in invalid"
+   stop
+  endif
+  if (im.eq.2) then
+      
+   delx=x-0.5d0-sqrt(5.0)*0.02d0
+   dely=y-0.5d0-sqrt(5.0)*0.02d0
+   radius = sqrt(delx**2.0d0 +dely**2.0d0)
+ 
+       ! x=r cos(theta)
+       ! y=r sin(theta)
+   if (radius.le.radeps/1000.0) then
+    theta=0.0
+   else if ((delx.ge.0.0).and.(dely.ge.0.0)) then
+    theta=acos(delx/radius)
+   else if ((delx.le.0.0).and.(dely.ge.0.0)) then
+    theta=acos(abs(delx)/radius)
+    theta=mypi-theta
+   else if ((delx.le.0.0).and.(dely.le.0.0)) then
+    theta=acos(abs(delx)/radius)
+    theta=mypi+theta
+   else if ((delx.ge.0.0).and.(dely.le.0.0)) then
+    theta=acos(delx/radius)
+    theta=2.0d0*mypi-theta
+   else
+    print *,"delx or dely invalid"
+    stop
+   endif
+
+   exact_temperature=2.0d0+sin(theta)*exp(-t)
+  else if ((im.eq.1).or.(im.eq.3)) then
+   exact_temperature=0.0
+  else
+   print *,"im invalid 6"
+   stop
+  endif
+
+
+
+ else if ((probtype_in.eq.0).or.(probtype_in.eq.2)) then
+  if (nmat_in.ne.2) then
+   print *,"nmat_in invalid"
+   stop
+  endif
+     ! T1=a1+b1 y
+     ! T2=a2+b2 (y-yI)
+     ! b1 * k1 = b2 * k2
+     ! a1=TLO
+     ! a2=a1+b1 * yI
+     ! a2=TLO+b1 * yI
+     ! a2+b2(yHI-yI)=THI
+     ! a2+(b1 k1/k2)(yHI-yI)=THI
+     ! TLO+b1 yI+(b1 k1/k2)(yHI-yI)=THI
+     ! TLO k2 + b1 (yI k2 + k1 (yHI - yI))=THI k2
+     ! b1(yI k2 + k1 (yHI-yI))=(THI-TLO)k2
+!
+!  if (dclt_flag.eq.0) then
+   TLO=3.0d0
+   THI=2.0d0
+   yI=0.3d0
+   yHI=1.0
+   a1=TLO
+   b1=(THI-TLO)*alpha(2)/(yI * alpha(2) +alpha(1)*(yHI-yI))
+   b2=b1*alpha(1)/alpha(2)
+   a2=a1+b1*yI 
+!  else if (dclt_flag.eq.1) then
+!   TLO=3.0d0
+!   THI=2.0d0
+!   a1=TLO
+!   b1=(THI-TLO)/0.3d0
+!   yI = 0.0d0           ! NULL the yI
+!   a2=0.0d0
+!   b2=0.0d0
+!  else
+!   print *,"dclt_flag invalid"
+!   stop
+!  endif
+
+  if (probtype_in.eq.0) then
+!   if(dclt_flag .eq. 0)then
+!    if (im.eq.1) then
+!     exact_temperature=a1+b1*y
+!    else if (im.eq.2) then
+!     exact_temperature=a2+b2*(y-yI)
+!    else
+!     print *,"im invalid 7"
+!     stop
+!    endif
+!   elseif(dclt_flag .eq. 1)then
+    if (im.eq.1) then
+     exact_temperature=a1+b1*y
+    else if (im.eq.2) then
+     exact_temperature=a2+b2*(y-yI)
+!     exact_temperature = a2
+    else
+     print *,"im invalid 7"
+     stop
+    endif
+!   else
+!    print *,"invalid dclt_flag in exact_temperature"
+!    stop
+!   endif
+
+  else if (probtype_in.eq.2) then
+
+   if (im.eq.1) then
+    exact_temperature=a1+b1*x
+   else if (im.eq.2) then
+    exact_temperature=a2+b2*(x-yI)
+   else
+    print *,"im invalid 8"
+    stop
+   endif
+  else
+   print *,"probtype_in invalid1"
+   stop
+  endif
+
+ elseif(probtype_in .eq. 4 .or. probtype_in .eq. 5)then
+   exact_temperature = (x*x + y*y)*exp(-t)
+
+
+!  if(im .eq. 1)then
+!   exact_temperature = (x*x + y*y)*exp(-t)
+!  elseif(im .eq. 2)then
+!   exact_temperature = (0.1d0*(x**2.0d0+y**2.0d0)**2.0d0- &
+!       0.01d0*log(2.0d0*sqrt(x**2.0d0+y**2.0d0)))*exp(-t)
+!  else
+!   print *,"wrong im, 1736"
+!   stop
+!  endif
+
+! elseif(probtype_in .eq. 5)then
+!  if(im .eq. 1)then
+!   exact_temperature = x*x + y*y
+!  elseif(im .eq. 2)then
+!   exact_temperature = 0.1d0*(x**2.0d0+y**2.0d0)**2.0d0- &
+!       0.01d0*log(2.0d0*sqrt(x**2.0d0+y**2.0d0))
+!  else
+!   print *,"wrong im, 1736"
+!   stop
+!  endif
+
+ elseif(probtype_in .eq. 6)then
+  ! do nothing
+  ! print *,"into exact"
+  ! exact_temperature = (x*x + y*y)*exp(-t)
+ elseif(probtype_in .eq. 7)then
+  ! do nothing
+ elseif(probtype_in .eq. 9)then
+   xy(1)=x
+   xy(2)=y
+  ! do nothing
+!   print *,"call exact_temprature"
+  call polar_cart_interpolate(Np,Mp,upolar,pcenter,rlo,rhi,xy, &
+                       exact_temperature)
+
+ else
+  print *,"probtype_in invalid2 3016",probtype_in
+  stop
+ endif
+
+end function exact_temperature
 
 

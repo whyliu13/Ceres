@@ -33,9 +33,11 @@ INTEGER,PARAMETER          :: solvtype = 1 ! 0 = CG  1 = bicgstab
 INTEGER,PARAMETER          :: N =32 ,M= 1
 INTEGER,PARAMETER          :: plot_int = 1
 real(kind=8),parameter     :: fixed_dt = 1.25d-2  ! !!!!!!!!!!!!!!!!!!
+real(kind=8),parameter     :: cf= 1.0d0
 real(kind=8),parameter     :: CFL = 0.5d0
 real(kind=8),parameter     :: problo= 0.0d0, probhi= 1.0d0
 integer,parameter          :: sdim_in = 2
+
 
 INTEGER :: nmat_in
 INTEGER :: precond_type_in
@@ -117,15 +119,7 @@ real(kind=8)    :: GRADERR1,GRADERR2,GRADERR3
 
 ! probtype_in=9, usr polar coord numerical solution to be real solution
 ! dicrtization of polar solver
-integer,parameter  :: Np=16    
-integer,parameter  :: Mp=32
-real(kind=8),dimension(0:Np,0:Mp) :: upolar
-real(kind=8)         :: r_polar(0:Np)
-real(kind=8)         :: z_polar(0:Mp)
-real(kind=8)         :: dr_polar,dz_polar
-real(kind=8)         :: pcenter(2)
-real(kind=8),parameter :: rlo=radcen-radeps
-real(kind=8),parameter :: rhi=radcen+radeps
+
 
 real(kind=8)         :: gradreal
 
@@ -164,6 +158,9 @@ endif
  open(unit=43,file="output3.dat")
 
  open(unit=91,file="psol.dat")
+ open(unit=92,file="test9.dat")
+ open(unit=93,file="c_xi.dat")
+ open(unit=94,file="probe.dat")
 
 
 
@@ -425,6 +422,9 @@ CALL INIT_V(N,XLINE(0:N),YLINE(0:N),uu,vv)
    do i1=1,2
     pcenter(i1)=0.5d0
    enddo
+   tau =tau*cf
+   
+
    T = 0.0d0
    do i2=0,N-1
     do j2=0,N-1
@@ -485,10 +485,18 @@ CALL INIT_V(N,XLINE(0:N),YLINE(0:N),uu,vv)
 
 
 
+  do j=-1,N
+   write(92,*) T(-1:N,j,2)
+  enddo
+
+
+
+
+
 do i = 1,M
   Ts(i) =(i-1)* tau
 enddo
-
+print *,"tau",tau
 
 
 do tm  = 1, M
@@ -551,16 +559,16 @@ do tm  = 1, M
 
 
 
-  write(2,*) "#####################################################################"
-  write(2,*) "T initial", "  mat = 1"
-  do i1 = loy_in-1,hiy_in+1
-   write(2,*) Uold_in(:,i1,1) 
-  enddo
-   write(2,*) "T initial", "  mat = 2"
-  do i1 = loy_in-1,hiy_in+1
-   write(2,*) Uold_in(:,i1,2) 
-  enddo
-  write(2,*)"#####################################################################"
+!  write(2,*) "#####################################################################"
+!  write(2,*) "T initial", "  mat = 1"
+!  do i1 = loy_in-1,hiy_in+1
+!   write(2,*) Uold_in(:,i1,1) 
+!  enddo
+!   write(2,*) "T initial", "  mat = 2"
+!  do i1 = loy_in-1,hiy_in+1
+!   write(2,*) Uold_in(:,i1,2) 
+!  enddo
+!  write(2,*)"#####################################################################"
 
 
   current_time_in=Ts(tm) ! t^{n}
@@ -587,18 +595,18 @@ do tm  = 1, M
    call output_solution(UNEW_in,time_n,nsteps,plot_int)
   endif
 
-  write(2,*)"#################################################################"
-  write(2,*) "T1", "  mat = 1"
+!  write(2,*)"#################################################################"
+!  write(2,*) "T1", "  mat = 1"
   do i1 = loy_in-1,hiy_in+1
-   write(2,*) Unew_in(:,i1,1) 
+!   write(2,*) Unew_in(:,i1,1) 
    write(41,*) Unew_in(:,i1,1) 
   enddo
-   write(2,*) "T1", "  mat = 2"
+!   write(2,*) "T1", "  mat = 2"
   do i1 = loy_in-1,hiy_in+1
-   write(2,*) Unew_in(:,i1,2) 
+!   write(2,*) Unew_in(:,i1,2) 
    write(42,*) Unew_in(:,i1,2) 
   enddo
-  write(2,*) "####################################################################"
+!  write(2,*) "####################################################################"
 
 
  if(solvtype .eq. 1)then                        ! solver type
@@ -611,18 +619,18 @@ do tm  = 1, M
  endif
 
 
-  write(2,*)"#################################################################"
-  write(2,*) "T2", "  mat = 1"
+!  write(2,*)"#################################################################"
+!  write(2,*) "T2", "  mat = 1"
   do i1 = loy_in-1,hiy_in+1
-   write(2,*) Unew_in(:,i1,1) 
+!   write(2,*) Unew_in(:,i1,1) 
    write(41,*) Unew_in(:,i1,1) 
   enddo
-   write(2,*) "T2", "  mat = 2"
+!   write(2,*) "T2", "  mat = 2"
   do i1 = loy_in-1,hiy_in+1
-   write(2,*) Unew_in(:,i1,2) 
+!   write(2,*) Unew_in(:,i1,2) 
    write(42,*) Unew_in(:,i1,2) 
   enddo
-  write(2,*) "####################################################################"
+!  write(2,*) "####################################################################"
 
 
 
@@ -664,9 +672,22 @@ do tm  = 1, M
 !  enddo
 !  write(2,*) "#######################################################################"
 
+
+! call polar_2d_heat(sdim_in,Np,Mp,thermal_cond(2),tau, r_polar,z_polar &
+!                      ,dr_polar,dz_polar,upolar)
+! do j=0,Mp
+!  write(91,*) upolar(0:Np,j) 
+! enddo
+
+
 if(probtype_in.eq.9)then
  call polar_2d_heat(sdim_in,Np,Mp,thermal_cond(2),tau, r_polar,z_polar &
                       ,dr_polar,dz_polar,upolar)
+ do j=0,Mp
+  write(91,*) upolar(0:Np,j) 
+ enddo
+
+
 
 sgflag = 0
 diflag = 0
@@ -683,10 +704,11 @@ do i=-1,N
    call dist_fns(2,fcenter(1),fcenter(2), fdist , probtype_in)
    call dist_fns(1,fcenter(1),fcenter(2), fdist1 , probtype_in)
    call dist_fns(3,fcenter(1),fcenter(2), fdist3, probtype_in)
-   if(abs(fdist) .lt. 2.0d0*h_in)then   
+!   print *,fdist,fdist1,fdist3
+   if(abs(fdist) .lt. 2.0d0*h_in .and. fdist .gt. 0.0d0)then   
     if(abs(fdist1) .le. abs(fdist3))then 
      diflag=1
-     TSAT=1.0d0
+     TSAT=2.0d0
      if(fdist1 .lt. 0.0d0)then
       sgflag=-1  
       call find_cloest_2d(-1,fdist,fcenter,fI)
@@ -698,7 +720,7 @@ do i=-1,N
      endif
     elseif(abs(fdist1) .gt. abs(fdist3))then
      diflag=2
-     TSAT=3.0d0
+     TSAT=2.0d0
      if(fdist3 .lt. 0.0d0)then  
       sgflag=+1
       call find_cloest_2d(+1,fdist,fcenter,fI)
@@ -721,6 +743,10 @@ do i=-1,N
      print *,"check"
      stop
     endif
+   
+   write(93,*) fcenter,fI
+   write(94,*) fI,fprobe
+
 
    do i1=-1,N
    do j1=-1,N
@@ -744,18 +770,20 @@ do i=-1,N
        interpolate_temperature)
    
    if(diflag .eq. 1)then
-    gradtemp= (interpolate_temperature-1.0d0)/abs(fdist)
+    gradtemp= (interpolate_temperature-2.0d0)/abs(fdist)
    elseif(diflag .eq. 2)then
-    gradtemp= (interpolate_temperature-3.0d0)/abs(fdist)
+    gradtemp= (interpolate_temperature-2.0d0)/abs(fdist)
    else
     print *,"diflag invalid"
     stop
    endif
 
-   endif   ! fdist > <  2*h
-   
    call find_polar_cart_inter(Np,Mp,upolar,pcenter,rlo,rhi,fI, diflag, gradreal)
    GRADERR2 = GRADERR2+ (gradtemp-gradreal)**2.0d0
+   print *,"gradtemp",gradtemp,"gradreal",gradreal
+
+   endif   ! fdist > <  2*h
+   
 
 
   endif   ! vf(i,j,2)
@@ -763,6 +791,8 @@ do i=-1,N
 enddo
 
 endif ! probtype_in .eq. 9
+
+
  
 GRADERR2 = sqrt(GRADERR2)
 
@@ -880,6 +910,9 @@ deallocate(T_new)
  close(42)
  close(43)
  close(91)
+ close(92)
+ close(93)
+ close(94)
 
 END PROGRAM
 
