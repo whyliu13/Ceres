@@ -30,7 +30,7 @@ INTEGER,PARAMETER          :: probtype_in = 9
 INTEGER,PARAMETER          :: operator_type_in = 1 !0=low,1=simple,2=least sqr
 INTEGER,PARAMETER          :: dclt_test_in = 1 ! 1 = Dirichlet test  on
 INTEGER,PARAMETER          :: solvtype = 1 ! 0 = CG  1 = bicgstab
-INTEGER,PARAMETER          :: N =32 ,M= 1
+INTEGER,PARAMETER          :: N =32,M= 1
 INTEGER,PARAMETER          :: plot_int = 1
 real(kind=8),parameter     :: fixed_dt = 1.25d-2  ! !!!!!!!!!!!!!!!!!!
 real(kind=8),parameter     :: cf= 1.0d0
@@ -64,7 +64,7 @@ character(len=70)          :: lineseg,ctd,triangles
 real(kind=8)               :: vol_tot
 
 !real(kind=8)                :: xsten(-3:3,sdim_in)
-integer                     :: im,ii,im1,im2
+integer                     :: im,ii,im1,im2,jj
 real(kind=8)                :: sumT,sumvf
 
 !---------------------------------------------------
@@ -116,12 +116,15 @@ real(kind=8)    :: xlo(2)
 real(kind=8)    :: interpolate_temperature
 real(kind=8)    :: gradtemp
 real(kind=8)    :: GRADERR1,GRADERR2,GRADERR3
+integer         :: gradcount
 
 ! probtype_in=9, usr polar coord numerical solution to be real solution
 ! dicrtization of polar solver
 
 
 real(kind=8)         :: gradreal
+integer              :: call_time
+real(kind=8)         :: temptestt1,temptestt2
 
 
 
@@ -161,12 +164,12 @@ endif
  open(unit=92,file="test9.dat")
  open(unit=93,file="c_xi.dat")
  open(unit=94,file="probe.dat")
+ open(unit=95,file="temp_inter.dat")
 
 
 
 
-
-
+call_time=0
 !if(probtype_in .eq. 4 .or. probtype_in .eq. 3)then
 ! pcurve_ls = 0.0d0
 ! call starshape(pcurve_ls)
@@ -419,6 +422,8 @@ CALL INIT_V(N,XLINE(0:N),YLINE(0:N),uu,vv)
   else if (probtype_in.eq.9) then   ! annulus cvg test
    call set_polar_2d(sdim_in,Np,Mp,thermal_cond(2),tau &
                    ,r_polar,z_polar,dr_polar,dz_polar,upolar)
+
+
    do i1=1,2
     pcenter(i1)=0.5d0
    enddo
@@ -485,6 +490,10 @@ CALL INIT_V(N,XLINE(0:N),YLINE(0:N),uu,vv)
 
 
 
+   do jj=0,Mp
+    write(91,*) upolar(0:Np,jj) 
+   enddo
+
   do j=-1,N
    write(92,*) T(-1:N,j,2)
   enddo
@@ -494,7 +503,7 @@ CALL INIT_V(N,XLINE(0:N),YLINE(0:N),uu,vv)
 
 
 do i = 1,M
-  Ts(i) =(i-1)* tau
+  Ts(i) =i* tau
 enddo
 print *,"tau",tau
 
@@ -661,32 +670,16 @@ do tm  = 1, M
 
  T = T_new
 
-!  write(2,*) "#######################################################################"
-!  write(2,*) "new T ", "  mat = 1"
-!  do i1 = loy_in-1,hiy_in+1
-!   write(2,*) T(:,i1,1) 
-!  enddo
-!   write(2,*) "new T ", "  mat = 2"
-!  do i1 = loy_in-1,hiy_in+1
-!   write(2,*) T(:,i1,2) 
-!  enddo
-!  write(2,*) "#######################################################################"
 
-
-! call polar_2d_heat(sdim_in,Np,Mp,thermal_cond(2),tau, r_polar,z_polar &
-!                      ,dr_polar,dz_polar,upolar)
-! do j=0,Mp
-!  write(91,*) upolar(0:Np,j) 
-! enddo
-
-
-if(probtype_in.eq.9)then
- call polar_2d_heat(sdim_in,Np,Mp,thermal_cond(2),tau, r_polar,z_polar &
+if(probtype_in.eq.9)then              ! polar solution updated                                    
+ call polar_2d_heat(sdim_in,Np,Mp,thermal_cond(2),tau, r_polar,z_polar &     
                       ,dr_polar,dz_polar,upolar)
  do j=0,Mp
   write(91,*) upolar(0:Np,j) 
- enddo
 
+ enddo
+  call_time=call_time+1
+  print *,"call_times",call_time
 
 
 sgflag = 0
@@ -695,6 +688,7 @@ do i=1,2
  xlo(i)=problo
 enddo
 
+gradcount=0
 do i=-1,N
  do j=-1,N
   if(vf(i,j,2) .gt. 0.0001d0)then    !   material 2 cell.
@@ -708,7 +702,7 @@ do i=-1,N
    if(abs(fdist) .lt. 2.0d0*h_in .and. fdist .gt. 0.0d0)then   
     if(abs(fdist1) .le. abs(fdist3))then 
      diflag=1
-     TSAT=2.0d0
+     TSAT=BC_T1
      if(fdist1 .lt. 0.0d0)then
       sgflag=-1  
       call find_cloest_2d(-1,fdist,fcenter,fI)
@@ -720,7 +714,7 @@ do i=-1,N
      endif
     elseif(abs(fdist1) .gt. abs(fdist3))then
      diflag=2
-     TSAT=2.0d0
+     TSAT=BC_T2
      if(fdist3 .lt. 0.0d0)then  
       sgflag=+1
       call find_cloest_2d(+1,fdist,fcenter,fI)
@@ -756,7 +750,7 @@ do i=-1,N
    enddo
    enddo
 
-
+  
    call interpfabTEMP( &
        N, &
        dx_in, &
@@ -768,18 +762,31 @@ do i=-1,N
        fI, & 
        TSAT,&
        interpolate_temperature)
-   
+
+!   print *,"interpolate_temperature", interpolate_temperature
+!   print *,"fdist", abs(fdist)
+
+
+    call polar_cart_interpolate(Np,Mp,upolar,pcenter,rlo,rhi,fprobe, temptestt1)
+!    print *, "temptestt1",temptestt1
+
    if(diflag .eq. 1)then
-    gradtemp= (interpolate_temperature-2.0d0)/abs(fdist)
+    gradtemp= (interpolate_temperature-BC_T1)/h_in
    elseif(diflag .eq. 2)then
-    gradtemp= (interpolate_temperature-2.0d0)/abs(fdist)
+    gradtemp= (interpolate_temperature-BC_T2)/h_in
    else
     print *,"diflag invalid"
     stop
    endif
 
    call find_polar_cart_inter(Np,Mp,upolar,pcenter,rlo,rhi,fI, diflag, gradreal)
+   
+   if(abs(gradtemp-gradreal) .gt. GRADERR3)then
+    GRADERR3 = abs(gradtemp-gradreal)
+   endif
+
    GRADERR2 = GRADERR2+ (gradtemp-gradreal)**2.0d0
+   gradcount = gradcount + 1
    print *,"gradtemp",gradtemp,"gradreal",gradreal
 
    endif   ! fdist > <  2*h
@@ -794,9 +801,14 @@ endif ! probtype_in .eq. 9
 
 
  
-GRADERR2 = sqrt(GRADERR2)
+GRADERR2 = sqrt(GRADERR2/real(gradcount,8))
 
-print *,"GRADERR2",GRADERR2
+print *,"tau",tau
+
+print *,"GRADERR2",GRADERR2, "GRADERR3", GRADERR3
+
+
+print *,"time", Ts(tm)
 
 enddo ! tm=1,...,M
 
@@ -913,6 +925,7 @@ deallocate(T_new)
  close(92)
  close(93)
  close(94)
+ close(95)
 
 END PROGRAM
 

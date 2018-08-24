@@ -2893,8 +2893,8 @@ implicit none
 integer,intent(in)          :: sdim                 
 integer,intent(in)          :: N      ! discretization in r direction
 integer,intent(in)          :: M       ! discretization in theta direction
-real(kind=8),parameter      :: rlo=radcen-radeps
-real(kind=8),parameter      :: rhi=radcen+radeps
+!real(kind=8),parameter      :: rlo=radcen-radeps
+!real(kind=8),parameter      :: rhi=radcen+radeps
 
 real(kind=8)                :: r(0:N)
 real(kind=8)                :: z(0:M)
@@ -2907,13 +2907,16 @@ real(kind=8)                :: u(0:N,0:M)
 
 integer                     :: i,j
 
-real(kind=8),parameter      :: T1=2.0d0
-real(kind=8),parameter      :: T2=2.0d0
 
 if(sdim .ne. 2)then
  print *,"invalid dimension 2909"
  stop
 endif
+do i=0,N
+do j=0,M
+ u(i,j)=0.0d0
+enddo
+enddo
 
 dr=(rhi-rlo)/N
 dz=(2*pi)/M
@@ -2937,10 +2940,10 @@ tau=0.5d0*kappa*min(((dr)**2.0d0), &
 ! enddo                                                               
 !enddo                                                                
 
-do i=1,N-1
+do i=0,N
  do j=0,M
-  u(i,j)=T1*(rhi-r(i))/(rhi-rlo) + &
-         T2*(r(i)-rlo)/(rhi-rlo) + &
+  u(i,j)=BC_T1*(rhi-r(i))/(rhi-rlo) + &
+         BC_T2*(r(i)-rlo)/(rhi-rlo) + &
          100.0d0*sin(z(j))*(r(i)-rlo)*(rhi-r(i))
  enddo
 enddo
@@ -2962,29 +2965,19 @@ implicit none
 integer,intent(in)          :: sdim                 
 integer,intent(in)          :: N      ! discretization in r direction
 integer,intent(in)          :: M       ! discretization in theta direction
-!integer,intent(in)          :: step
-real(kind=8),parameter      :: rlo=radcen-radeps
-real(kind=8),parameter      :: rhi=radcen+radeps
 
-real(kind=8)                :: r(0:N)
-real(kind=8)                :: z(0:M)
+real(kind=8),intent(in)     :: r(0:N)
+real(kind=8),intent(in)     :: z(0:M)
 real(kind=8)                :: u(0:N,0:M),u_new(0:N,0:M)
 real(kind=8)                :: dr,dz
-real(kind=8)                :: tau
-real(kind=8)                :: kappa
+real(kind=8),intent(in)     :: tau
+real(kind=8),intent(in)     :: kappa
 real(kind=8),external       :: f_src
 
 
-integer                     :: i,j,ts
+integer                     :: i,j
 
 
-                         
-!do j=0,M
-! write(91,*) u(0:N,j) 
-!enddo
-                                                                          !-------------------------
-
-!do ts=1,step
  do i=1,N-1
   do j=1,M-1
    u_new(i,j)= (1.0d0+kappa*tau*(-2.0d0/(dr**2.0d0)- &
@@ -3013,8 +3006,8 @@ integer                     :: i,j,ts
   u_new(i,M)=u_new(i,0)
  enddo
  do j=0,M
-  u_new(0,j)=2.0d0
-  u_new(N,j)=2.0d0
+  u_new(0,j)=BC_T1
+  u_new(N,j)=BC_T2
  enddo
 
 ! do j=0,M

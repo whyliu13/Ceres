@@ -38,7 +38,7 @@ tau=0.5d0/kappa*min(((dr)**2.0d0), &
 
 print *,"tau=",tau
 
-open(unit=5,file="psol.dat")
+open(unit=5,file="psol1.dat")
 
 
 
