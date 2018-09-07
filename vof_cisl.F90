@@ -7,7 +7,8 @@ IMPLICIT NONE
 
 real(kind=8),parameter :: radcen=0.25d0
 real(kind=8),parameter :: radeps=0.1d0 ! thick:0.1d0  thin:0.005d0    annulus
-                                       ! thick: 0.2  thin: 0.05         penta_foil
+
+real(kind=8),parameter :: pentaeps= 0.2d0      ! thick: 0.2  thin: 0.05         penta_foil
 real(kind=8),parameter :: thermal_delta= 0.0d0  ! prhobtype=6 thickness of the thermal layer
 integer,parameter      :: refine_lev = 4
 
@@ -23,7 +24,7 @@ real(kind=8)           :: crit_dist(2)
 
 ! polar solver
 
-integer,parameter  :: Np=64    
+integer,parameter  :: Np=64   
 integer,parameter  :: Mp=128
 real(kind=8),dimension(0:Np,0:Mp) :: upolar
 real(kind=8)         :: r_polar(0:Np)
@@ -33,7 +34,7 @@ real(kind=8)         :: pcenter(2)
 real(kind=8),parameter :: rlo=radcen-radeps
 real(kind=8),parameter :: rhi=radcen+radeps
 real(kind=8),parameter :: BC_T1=2.0d0
-real(kind=8),parameter :: BC_T2=2.0d0
+real(kind=8),parameter :: BC_T2=3.0d0
 
 !//////////////////////////////////////
 !    TYPE DEFINE

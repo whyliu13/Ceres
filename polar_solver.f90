@@ -1,12 +1,12 @@
 program main
 implicit none
 
-integer,parameter           :: N=16
-integer,parameter           :: M=32
+integer,parameter           :: N=128
+integer,parameter           :: M=256
 real(kind=8),parameter      :: rlo=0.25d0-0.1d0
 real(kind=8),parameter      :: rhi=0.25d0+0.1d0
 real(kind=8),parameter      :: pi=4.0d0*atan(1.0d0)
-integer,parameter           :: step=40
+integer,parameter           :: step=64
 integer,parameter           :: testnum=3
 real(kind=8),parameter      :: T1=2.0d0
 real(kind=8),parameter      :: T2=2.0d0
@@ -36,11 +36,13 @@ tau=0.5d0/kappa*min(((dr)**2.0d0), &
        2.0d0*minval(r)*dr, &
       (minval(r)**2.0d0)*((dz)**2.0d0))
 
+
 print *,"tau=",tau
 
 open(unit=5,file="psol1.dat")
-
-
+open(unit=15,file="psol2.dat")
+open(unit=25,file="psol3.dat")
+open(unit=35,file="psol4.dat")
 
 ! initial cond, boundary cond
 
@@ -71,8 +73,8 @@ elseif(testnum .eq. 3)then
  
  do i=0,N
   do j= 0,M
-    u(i,j)=2.0d0*(rhi-r(i))/(rhi-rlo) + &
-         2.0d0*(r(i)-rlo)/(rhi-rlo) + &
+    u(i,j)=T1*(rhi-r(i))/(rhi-rlo) + &
+         T2*(r(i)-rlo)/(rhi-rlo) + &
          100.0d0*sin(z(j))*(r(i)-rlo)*(rhi-r(i))
   enddo
  enddo
@@ -86,9 +88,6 @@ else
 endif
 
 
-do j=0,M
- write(5,*) u(0:N,j) 
-enddo
 
 
 !--
@@ -125,9 +124,9 @@ do j=0,M
  u_new(N,j)=T2
 enddo
 
- do j=0,M
-  write(5,*) u_new(0:N,j) 
- enddo
+! do j=0,M
+!  write(5,*) u_new(0:N,j) 
+! enddo
 
 
  do i=0,N
@@ -139,7 +138,23 @@ enddo
 enddo
 
 
+do j=0,M
+ if(N.eq.16)then
+  write(5,*) u(0:N,j)
+ elseif(N.eq.32)then
+  write(15,*) u(0:N,j)
+ elseif(N.eq.64)then
+  write(25,*) u(0:N,j)  
+ elseif(N.eq.128)then
+  write(35,*) u(0:N,j)   
+ endif
+enddo
+
+
 close(5)
+close(15)
+close(25)
+close(35)
 
 end program
 

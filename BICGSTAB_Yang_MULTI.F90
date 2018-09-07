@@ -1,7 +1,7 @@
       module bicgstab_module
 
       REAL*8, PARAMETER :: AVGTOL=1.0E-8
-      REAL*8,PARAMETER  :: ERRTOL = 0.01D0
+      REAL*8,PARAMETER  :: ERRTOL = 0.99D0
 
       integer operator_type ! 0=low order 1=simple 2=high order
       integer probtypeCG ! 0=flat interface  1=annulus 2=vertical interface
@@ -859,7 +859,7 @@
        endif
       else if (probtypeCG.eq.1 .or. probtypeCG .eq. 9 .or.&
                probtypeCG .eq. 4 .or. probtypeCG .eq. 5 &
-               .or. probtypeCG .eq. 7) then
+               .or. probtypeCG .eq. 7 .or. probtypeCG.eq.3) then
        if ((dir.eq.1).and.(sidesten.eq.1)) then
         bctype=1 ! dirichlet
         UWALL=0.0
@@ -910,23 +910,7 @@
         print *,"dir or sidesten invalid"
         stop
        endif
-      else if (probtypeCG.eq.3) then
-       if ((dir.eq.1).and.(sidesten.eq.1)) then
-        bctype=0 ! neumann
-        UWALL=0.0
-       else if ((dir.eq.1).and.(sidesten.eq.2)) then
-        bctype=0 ! neumann
-        UWALL=0.0
-       else if ((dir.eq.2).and.(sidesten.eq.1)) then
-        bctype=0 ! neumann
-        UWALL=0.0
-       else if ((dir.eq.2).and.(sidesten.eq.2)) then
-        bctype=0 ! neumann
-        UWALL= 0.0
-       else
-        print *,"dir or sidesten invalid"
-        stop
-       endif
+
 
 
       else

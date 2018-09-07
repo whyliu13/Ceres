@@ -129,7 +129,7 @@ elseif(probtype_in .eq. 3) then
  dist1 = -(sqrt((x0-c1)**2.0d0 + (y0-c2)**2.0d0) - &
          (0.5d0 + 0.2d0*sin(5.0d0*tt)))
  dist2 = -(sqrt((x0-c1)**2.0d0 + (y0-c2)**2.0d0) - &
-         (0.5d0 + radeps + 0.2d0*sin(5.0d0*tt)))
+         (0.5d0 + pentaeps + 0.2d0*sin(5.0d0*tt)))
 
  if(imat .eq. 1)then
   dist = dist1  
@@ -844,9 +844,9 @@ enddo
 
 do i = 1,num
  xt(1,i) = 0.02d0*sqrt(5.0d0) + &
-        (0.5d0 -radeps + 0.2d0*sin(5.0d0*theta(i)))*cos(theta(i))
+        (0.5d0 -pentaeps + 0.2d0*sin(5.0d0*theta(i)))*cos(theta(i))
  xt(2,i) = 0.02d0*sqrt(5.0d0) + &
-        (0.5d0 -radeps + 0.2d0*sin(5.0d0*theta(i)))*sin(theta(i))
+        (0.5d0 -pentaeps + 0.2d0*sin(5.0d0*theta(i)))*sin(theta(i))
 enddo
 
 
@@ -2805,51 +2805,54 @@ REAL*8 mypi
   endif
 
  else if (probtype_in.eq.3) then
-  if ((im.eq.1).or.(im.eq.3)) then
-   G_in=0.0
-  else if (im.eq.2) then
 
-   r1=radcen-radeps
-   r2=radcen+radeps
-
-
-    delx=x_in(1)-0.5d0-0.02d0*sqrt(5.0)
-    dely=x_in(2)-0.5d0-0.02d0*sqrt(5.0)  
-
-
-   radius_in = sqrt(delx**2.0d0 +dely**2.0d0)
+!  if(1 .eq. 0)then
+!  if ((im.eq.1).or.(im.eq.3)) then
+!   G_in=0.0
+!  else if (im.eq.2) then
+!    delx=x_in(1)-0.5d0-0.02d0*sqrt(5.0)
+!    dely=x_in(2)-0.5d0-0.02d0*sqrt(5.0)  
+!   radius_in = sqrt(delx**2.0d0 +dely**2.0d0)
 
     ! x=r cos(theta)
     ! y=r sin(theta)
-   if (radius_in.le.radeps/1000.0) then
-    theta_in=0.0
-   else if ((delx.ge.0.0).and.(dely.ge.0.0)) then
-    theta_in=acos(delx/radius_in)
-   else if ((delx.le.0.0).and.(dely.ge.0.0)) then
-    theta_in=acos(abs(delx)/radius_in)
-    theta_in=mypi-theta_in
-   else if ((delx.le.0.0).and.(dely.le.0.0)) then
-    theta_in=acos(abs(delx)/radius_in)
-    theta_in=mypi+theta_in
-   else if ((delx.ge.0.0).and.(dely.le.0.0)) then
-    theta_in=acos(delx/radius_in)
-    theta_in=2.0d0*mypi-theta_in
-   else
-    print *,"delx or dely invalid"
-    stop
-   endif
-
+!   if (radius_in.le.radeps/1000.0) then
+!    theta_in=0.0
+!   else if ((delx.ge.0.0).and.(dely.ge.0.0)) then
+!    theta_in=acos(delx/radius_in)
+!   else if ((delx.le.0.0).and.(dely.ge.0.0)) then
+!    theta_in=acos(abs(delx)/radius_in)
+!    theta_in=mypi-theta_in
+!   else if ((delx.le.0.0).and.(dely.le.0.0)) then
+!    theta_in=acos(abs(delx)/radius_in)
+!    theta_in=mypi+theta_in
+!   else if ((delx.ge.0.0).and.(dely.le.0.0)) then
+!    theta_in=acos(delx/radius_in)
+!    theta_in=2.0d0*mypi-theta_in
+!   else
+!    print *,"delx or dely invalid"
+!    stop
+!   endif
    ! T=2+sin(theta) exp(-t)  alpha=1
    ! T_t - (T_rr + T_r/r + T_theta theta/r^2)=
    ! exp(-t/rc^2)(-sin(theta)/rc^2+sin(theta)/r^2)
-   G_in=exp(-t_in)*sin(theta_in)*(-1.0d0+1.0d0/(radius_in**2))
-  else
-   print *,"im invalid 5"
-   stop
-  endif
+!   G_in=exp(-t_in)*sin(theta_in)*(-1.0d0+1.0d0/(radius_in**2))
+!  else
+!   print *,"im invalid 5"
+!   stop
+!  endif
+!  endif
+
+!  if ((im.eq.1).or.(im.eq.3)) then
+!   G_in=0.0
+!  else if (im.eq.2) then
+!   G_in= (-4.0d0-(x_in(1)**2.0d0+x_in(2)**2.0d0))*exp(-t_in)
+!  endif
+
+   G_in = 0.0d0
 
  elseif(probtype_in .eq.4 .or. probtype_in .eq. 5)then
-   G_in = (4.0d0 -(x_in(1)**2.0d0+x_in(2)**2.0d0))*exp(-t_in)
+   G_in = (-4.0d0 -(x_in(1)**2.0d0+x_in(2)**2.0d0))*exp(-t_in)
 
 !  if(im .eq. 1)then
 !   G_in = 4.0d0  

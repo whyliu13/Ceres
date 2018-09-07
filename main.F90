@@ -14,7 +14,7 @@ IMPLICIT NONE
 ! 1= annulus  
 ! 2= vertical interface
 ! 3= star for thin filament
-! 4 = star for two material canity check
+! 4 = star for two material sanity check
 ! 5 = hypocycloid with 2 materials
 ! 6 = nucleate boiling diffusion with thin filament between vapor bubble and substrate
 ! 7 = hypocycloid with 5 materials
@@ -26,14 +26,14 @@ IMPLICIT NONE
 ! for flat interface, interface is y=0.3.
 ! for dirichlet, top material has k=0 T(y=0.3)=2.0   T(y=0.0)=3.0
 
-INTEGER,PARAMETER          :: probtype_in = 9
+INTEGER,PARAMETER          :: probtype_in = 3
 INTEGER,PARAMETER          :: operator_type_in = 1 !0=low,1=simple,2=least sqr
-INTEGER,PARAMETER          :: dclt_test_in = 1 ! 1 = Dirichlet test  on
+INTEGER,PARAMETER          :: dclt_test_in = 0 ! 1 = Dirichlet test  on
 INTEGER,PARAMETER          :: solvtype = 1 ! 0 = CG  1 = bicgstab
-INTEGER,PARAMETER          :: N =32,M= 1
+INTEGER,PARAMETER          :: N=128,M= 4
 INTEGER,PARAMETER          :: plot_int = 1
-real(kind=8),parameter     :: fixed_dt = 1.25d-2  ! !!!!!!!!!!!!!!!!!!
-real(kind=8),parameter     :: cf= 1.0d0
+real(kind=8),parameter     :: fixed_dt = 1.25d-2/4.0d0   ! !!!!!!!!!!!!!!!!!!
+real(kind=8),parameter     :: cf= 1.0d0          ! multiplier of the time step.
 real(kind=8),parameter     :: CFL = 0.5d0
 real(kind=8),parameter     :: problo= 0.0d0, probhi= 1.0d0
 integer,parameter          :: sdim_in = 2
@@ -139,12 +139,11 @@ real(kind=8)         :: temptestt1,temptestt2
 ! close(9)
 
 !------------------------------------------------------------
-if(dclt_test_in .eq. 1) then
- open(unit = 2, file = "out_1")
-elseif(dclt_test_in .eq. 0)then
- open(unit= 2 , file= "out_0")
-endif
- open(unit=3,file="vf.dat")
+!if(dclt_test_in .eq. 1) then
+! open(unit = 2, file = "out_1")
+!elseif(dclt_test_in .eq. 0)then
+! open(unit= 2 , file= "out_0")
+!endif
  open(unit=4,file="cen.dat")
  open(unit=5,file="cen1.dat")
  open(unit=21,file="cen2.dat")
@@ -166,7 +165,15 @@ endif
  open(unit=94,file="probe.dat")
  open(unit=95,file="temp_inter.dat")
 
+ open(unit=81,file="relT32.dat")
+ open(unit=82,file="relT64.dat")
+ open(unit=83,file="relT128.dat")
+ open(unit=84,file="relT256.dat")
 
+ open(unit=71,file="vf32.dat")
+ open(unit=72,file="vf64.dat")
+ open(unit=73,file="vf128.dat")
+ open(unit=74,file="vf256.dat")
 
 
 call_time=0
@@ -312,9 +319,27 @@ CALL INIT_V(N,XLINE(0:N),YLINE(0:N),uu,vv)
 
   ! TYPE(POINTS),DIMENSION(:,:,:),allocatable :: CENTROID_FAB 
  call init_vfncen(N,CELL_FAB,nmat_in,dx_in,CENTROID_FAB,vf,probtype_in)
- do j = 0,N
-  write(3,*) vf(0:N,j,3)
- enddo
+
+ if(N .eq. 32)then
+  do j = N-1,0,-1
+   write(71,*) vf(0:N-1,j,2)
+  enddo
+ elseif(N .eq. 64)then
+  do j = N-1,0,-1
+   write(72,*) vf(0:N-1,j,2)
+  enddo
+ elseif(N .eq. 128)then
+  do j = N-1,0,-1
+   write(73,*) vf(0:N-1,j,2)
+  enddo
+ elseif(N .eq. 256)then
+  do j = N-1,0,-1
+   write(74,*) vf(0:N-1,j,2)
+  enddo
+
+ endif
+
+
 
 
   ! real(kind=8),dimension(:,:,:,:),allocatable :: centroid_mult
@@ -441,10 +466,14 @@ CALL INIT_V(N,XLINE(0:N),YLINE(0:N),uu,vv)
    enddo   
   
   elseif (probtype_in .eq. 3)then
+!   T(i,j,1)=0.0
+!   T(i,j,2)=2.0
+!   T(i,j,3)=0.0  
    do im = 1,nmat_in
     T(i,j,im)=exact_temperature(xcen,ycen,time_init,im,probtype_in, &
      nmat_in,thermal_cond,dclt_test_in)
    enddo
+
   elseif(probtype_in .eq. 4)then
    T(i,j,1)=2.0
    T(i,j,2)=2.0  
@@ -502,9 +531,15 @@ CALL INIT_V(N,XLINE(0:N),YLINE(0:N),uu,vv)
 
 
 
+!do i = 1,M
+!  Ts(i) =i* tau
+!enddo
+
 do i = 1,M
-  Ts(i) =i* tau
+  Ts(i) =(i-1)* tau
 enddo
+
+
 print *,"tau",tau
 
 
@@ -813,6 +848,17 @@ print *,"time", Ts(tm)
 enddo ! tm=1,...,M
 
 
+do i=N-1,0,-1
+ if(N.eq.32)then
+  write(81,*) T(0:N-1,i,2)
+ elseif(N.eq.64)then
+  write(82,*) T(0:N-1,i,2)
+ elseif(N.eq.128)then  
+  write(83,*) T(0:N-1,i,2)
+ elseif(N.eq.256)then
+  write(84,*) T(0:N-1,i,2)
+ endif
+enddo
 
 
 If(probtype_in .eq. 6)then
@@ -906,8 +952,8 @@ deallocate(centroid_mult)
 deallocate(T)
 deallocate(T_new)
 
- close(2)
- close(3)
+! close(2)
+! close(3)
  close(4)
  close(5)
  close(10)
@@ -926,6 +972,15 @@ deallocate(T_new)
  close(93)
  close(94)
  close(95)
+ close(81)
+ close(82)
+ close(83)
+ close(84)
+ close(71)
+ close(72)
+ close(73)
+ close(74)
+
 
 END PROGRAM
 

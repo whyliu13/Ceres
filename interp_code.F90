@@ -541,44 +541,51 @@ real(kind=8)               :: xy(2)
 
  elseif(probtype_in .eq. 3)then
 
-  if (nmat_in.ne.3) then
-   print *,"nmat_in invalid"
-   stop
-  endif
-  if (im.eq.2) then
+!  if(1 .eq. 0)then
+!  if (nmat_in.ne.3) then
+!   print *,"nmat_in invalid"
+!   stop
+!  endif
+!  if (im.eq.2) then
       
-   delx=x-0.5d0-sqrt(5.0)*0.02d0
-   dely=y-0.5d0-sqrt(5.0)*0.02d0
-   radius = sqrt(delx**2.0d0 +dely**2.0d0)
+!   delx=x-0.5d0-sqrt(5.0)*0.02d0
+!   dely=y-0.5d0-sqrt(5.0)*0.02d0
+!   radius = sqrt(delx**2.0d0 +dely**2.0d0)
  
        ! x=r cos(theta)
        ! y=r sin(theta)
-   if (radius.le.radeps/1000.0) then
-    theta=0.0
-   else if ((delx.ge.0.0).and.(dely.ge.0.0)) then
-    theta=acos(delx/radius)
-   else if ((delx.le.0.0).and.(dely.ge.0.0)) then
-    theta=acos(abs(delx)/radius)
-    theta=mypi-theta
-   else if ((delx.le.0.0).and.(dely.le.0.0)) then
-    theta=acos(abs(delx)/radius)
-    theta=mypi+theta
-   else if ((delx.ge.0.0).and.(dely.le.0.0)) then
-    theta=acos(delx/radius)
-    theta=2.0d0*mypi-theta
-   else
-    print *,"delx or dely invalid"
-    stop
-   endif
+!   if (radius.le.radeps/1000.0) then
+!    theta=0.0
+!   else if ((delx.ge.0.0).and.(dely.ge.0.0)) then
+!    theta=acos(delx/radius)
+!   else if ((delx.le.0.0).and.(dely.ge.0.0)) then
+!    theta=acos(abs(delx)/radius)
+!    theta=mypi-theta
+!   else if ((delx.le.0.0).and.(dely.le.0.0)) then
+!    theta=acos(abs(delx)/radius)
+!    theta=mypi+theta
+!   else if ((delx.ge.0.0).and.(dely.le.0.0)) then
+!    theta=acos(delx/radius)
+!    theta=2.0d0*mypi-theta
+!   else
+!    print *,"delx or dely invalid"
+!    stop
+!   endif
 
-   exact_temperature=2.0d0+sin(theta)*exp(-t)
-  else if ((im.eq.1).or.(im.eq.3)) then
+!   exact_temperature=2.0d0+sin(theta)*exp(-t)
+!  else if ((im.eq.1).or.(im.eq.3)) then
+!   exact_temperature=0.0
+!  else
+!   print *,"im invalid 6"
+!   stop
+!  endif
+! endif
+
+ if (im.eq.2) then
+  exact_temperature = (x**2.0d0 + y**2.0d0)*exp(-t)
+ else if ((im.eq.1).or.(im.eq.3)) then
    exact_temperature=0.0
-  else
-   print *,"im invalid 6"
-   stop
-  endif
-
+ endif
 
 
  else if ((probtype_in.eq.0).or.(probtype_in.eq.2)) then

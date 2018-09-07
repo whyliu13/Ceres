@@ -1019,9 +1019,9 @@ contains
 
 
    
-  write(2,*)  "new diag cal loop********************************************"
-  write(2,*) "**************************************************************"
-  write(2,*) "considering mat", im_in
+  !write(2,*)  "new diag cal loop********************************************"
+  !write(2,*) "**************************************************************"
+  !write(2,*) "considering mat", im_in
 
     if (ngeom_recon.ne.2*sdim+3) then
      print *,"ngeom_recon invalid"
@@ -1056,7 +1056,7 @@ contains
 
         ! face: nface dot (x-xface)=0
        if ((AFRAC.gt.0.0d0).and.(AFRAC.le.1.0d0)) then
-        write(2,*) "in ext_face calvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv"
+        !write(2,*) "in ext_face calvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv"
        
         if((dir.eq.1).and.(side.eq.1)) then
          faceid=1
@@ -1067,7 +1067,7 @@ contains
          xface(1)=xsten(-1,1)
          xface(2)=xsten(0,2)
          
-         write(2,*) "side1"
+         !write(2,*) "side1"
         elseif((dir.eq.1).and.(side.eq.2)) then
          faceid=2
          ii=1
@@ -1076,7 +1076,7 @@ contains
          nface(2)=0.0
          xface(1)=xsten(1,1)
          xface(2)=xsten(0,2)
-         write(2,*) "side2"
+         !write(2,*) "side2"
         elseif((dir.eq.2).and.(side.eq.1)) then
          faceid=3
          ii=0
@@ -1085,7 +1085,7 @@ contains
          nface(2)=-1.0
          xface(1)=xsten(0,1)
          xface(2)=xsten(-1,2)
-         write(2,*) "side3"
+         !write(2,*) "side3"
         elseif((dir.eq.2).and.(side.eq.2)) then
          faceid=4
          ii=0
@@ -1094,7 +1094,7 @@ contains
          nface(2)=1.0
          xface(1)=xsten(0,1)
          xface(2)=xsten(1,2)
-         write(2,*) "side4"
+         !write(2,*) "side4"
         else
          print *,"dir or side invalid"
          stop
@@ -1192,13 +1192,13 @@ contains
 
         coef=kappa*abs(dot_product(nf,n1))/(Ltemp*Ltemp)
 
-        write(2,*) "coef in diag ext", coef
-        write(2,*) "AFRAC", AFRAC
-        write(2,*) "dx", dx(dir)
+        !write(2,*) "coef in diag ext", coef
+        !write(2,*) "AFRAC", AFRAC
+        !write(2,*) "dx", dx(dir)
 
-        write(2,*) "diag before", diag
+        !write(2,*) "diag before", diag
         diag=diag+coef*AFRAC*dx(dir)
-        write(2,*) "diag after", diag
+        !write(2,*) "diag after", diag
        elseif(AFRAC.gt.1.0d0)then
         print *,"frac_pair_cell bust in cell_diag_cal"
         stop
@@ -1206,14 +1206,14 @@ contains
         print *,"frac_pair_cell invalid in cell_diag_cal"
         stop
 
-       write(2,*) "in ext_face calVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV"
+       !write(2,*) "in ext_face calVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV"
        endif
 
       enddo ! side
      enddo ! dir
     enddo ! im2
 
-   write(2,*) "in ext_face cal^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+   !write(2,*) "in ext_face cal^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
 
 
     ! internal flux cal
@@ -1223,8 +1223,8 @@ contains
      AFRAC=int_face(im1,im2)
 
      if(AFRAC.gt.eps*dx(1)) then
-      write(2,*) "in interface calvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv"
-      write(2,*) "im1", im1, "im2", im2, "A*FRAC", AFRAC 
+      !write(2,*) "in interface calvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv"
+      !write(2,*) "im1", im1, "im2", im2, "A*FRAC", AFRAC 
       if (im1.eq.im2) then
        print *,"im1==im2 cannot happen"
        stop
@@ -1307,24 +1307,24 @@ contains
  !------------------------------------------------------------
      coef=kappa*abs(dot_product(nf,n1))/(Ltemp*Ltemp)
    
-        write(2,*) "nf", nf
-        write(2,*) "n1", n1
-        write(2,*) "nfXn1", abs(dot_product(nf,n1))
-        write(2,*) "Ltemp", Ltemp
-        write(2,*) "coef in diag int", coef
-        write(2,*) "AFRAC", AFRAC
+        !write(2,*) "nf", nf
+        !write(2,*) "n1", n1
+        !write(2,*) "nfXn1", abs(dot_product(nf,n1))
+        !write(2,*) "Ltemp", Ltemp
+        !write(2,*) "coef in diag int", coef
+        !write(2,*) "AFRAC", AFRAC
   
-        write(2,*) "diag before", diag
+        !write(2,*) "diag before", diag
      diag=diag+AFRAC*coef
-        write(2,*) "diag after", diag
+        !write(2,*) "diag after", diag
          
 
-   write(2,*) "in interface cal^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+   !write(2,*) "in interface cal^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
      endif
     enddo ! im2
 
-  write(2,*)  "new diag cal loop end********************************************"
-  write(2,*) "**************************************************************"
+  !write(2,*)  "new diag cal loop end********************************************"
+  !write(2,*) "**************************************************************"
 
   end subroutine cell_diag_cal
 
@@ -1649,9 +1649,9 @@ contains
 
     LOWTOL=0.01d0
 
-  write(2,*)  "new div_cal_simple loop*************************************"
-  write(2,*) "**************************************************************"
-  write(2,*) "considering mat", im_in
+  !write(2,*)  "new div_cal_simple loop*************************************"
+  !write(2,*) "**************************************************************"
+  !write(2,*) "considering mat", im_in
 
     if (ngeom_recon.ne.2*sdim+3) then
      print *,"ngeom_recon invalid"
@@ -1666,8 +1666,8 @@ contains
 
    rhs_loc = 0.0d0
    div_tot = 0.0d0
-    write(2,*) "T profile"
-    write(2,*) rho_box(0,0,1),rho_box(0,0,2)
+    !write(2,*) "T profile"
+    !write(2,*) rho_box(0,0,1),rho_box(0,0,2)
     rho = rho_box
 
     do i=-1,1
@@ -1711,28 +1711,28 @@ contains
         endif
 
         if ((AFRAC.gt.0.0d0).and.(AFRAC.le.1.0d0)) then
-        write(2,*) "in ext_face calvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv"
+        !write(2,*) "in ext_face calvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv"
 
          if((dir.eq.1).and.(side.eq.1)) then
           faceid=1
           ii=-1
           jj=0
-          write(2,*) "side1"
+          !write(2,*) "side1"
          elseif((dir.eq.1).and.(side.eq.2)) then
           faceid=2
           ii=1
           jj=0
-          write(2,*) "side2"
+          !write(2,*) "side2"
          elseif((dir.eq.2).and.(side.eq.1)) then
           faceid=3
           ii=0
           jj=-1
-          write(2,*) "side3"
+          !write(2,*) "side3"
          elseif((dir.eq.2).and.(side.eq.2)) then
           faceid=4
           ii=0
           jj=1
-          write(2,*) "side4"
+          !write(2,*) "side4"
          else
           print *,"dir or side invalid"
           stop
@@ -1779,15 +1779,15 @@ contains
 
         !>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
          grad=rho(0,0,im1)-rho(ii,jj,im2)
-         write(2,*) "rho(0 0 im1)", rho(0,0,im1),"rho(ii,jj,im2)",rho(ii,jj,im2)
+         !write(2,*) "rho(0 0 im1)", rho(0,0,im1),"rho(ii,jj,im2)",rho(ii,jj,im2)
          if(dclt_test .eq. 1)then
-     !       write(2,*) "WTF"
+     !       !write(2,*) "WTF"
 
           if(im1 .eq. im2)then
-     !       write(2,*) "WTF1"
+     !       !write(2,*) "WTF1"
             ! do nothing
           else
-     !      write(2,*) "WTF2"
+     !      !write(2,*) "WTF2"
            if(dclt_ratio .lt. 10e-8)then
             print *,"error, dclt_ratio is invalid"
             stop
@@ -1804,14 +1804,14 @@ contains
            rhstemp1 = exact_temperature(dclt_pp(1),dclt_pp(2), &
                        T_in,im1,probtype, nmat, alpha,dclt_test)
 
-         write(2,*) "rho(0 0 im1)", rho(0,0,im1)
-         write(2,*) "EXACT",exact_temperature(dclt_pp(1),dclt_pp(2), &
-                       T_in,im1,probtype, nmat, alpha,dclt_test)
+         !write(2,*) "rho(0 0 im1)", rho(0,0,im1)
+         !write(2,*) "EXACT",exact_temperature(dclt_pp(1),dclt_pp(2), &
+                       !T_in,im1,probtype, nmat, alpha,dclt_test)
  
           endif
          endif
 
-        write(2,*) "grad1",grad
+        !write(2,*) "grad1",grad
 
 
          if (Ltemp.le.0.0) then
@@ -1839,10 +1839,10 @@ contains
         stop
        endif
 
-       !write(2,*) "Ltemp", Ltemp
-       !write(2,*) "nf", nf
-       !write(2,*) "n1", n1
-       !write(2,*) "kappa", kappa
+       !!write(2,*) "Ltemp", Ltemp
+       !!write(2,*) "nf", nf
+       !!write(2,*) "n1", n1
+       !!write(2,*) "kappa", kappa
 
 
 
@@ -1859,18 +1859,18 @@ contains
          endif
 
 
-        write(2,*) "coef in div ext", coef
-        write(2,*) "AFRAC", AFRAC
-        write(2,*) "dx", dx(dir)
-        write(2,*) "grad2",grad
-        write(2,*) "div before", div_tot
+        !write(2,*) "coef in div ext", coef
+        !write(2,*) "AFRAC", AFRAC
+        !write(2,*) "dx", dx(dir)
+        !write(2,*) "grad2",grad
+        !write(2,*) "div before", div_tot
  
 
          div_tot = div_tot+grad*AFRAC*dx(dir)
          rhs_loc = rhs_loc + rhstemp1*AFRAC*dx(dir)
-        write(2,*) "div after", div_tot
+        !write(2,*) "div after", div_tot
 
-         !write(2,*) "div_tot of ext", div_tot
+         !!write(2,*) "div_tot of ext", div_tot
 
         elseif(AFRAC.gt.1.0d0)then
          print *,"frac_pair_cell bust in cell_div_cal"
@@ -1896,8 +1896,8 @@ contains
       endif
 
       if(AFRAC.gt.eps*dx(1)) then
-      write(2,*) "in interface calvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv"
-      write(2,*) "im1", im1, "im2", im2, "AFRAC", AFRAC 
+      !write(2,*) "in interface calvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv"
+      !write(2,*) "im1", im1, "im2", im2, "AFRAC", AFRAC 
        if (im1.eq.im2) then
         print *,"im1==im2 cannot happen"
         stop
@@ -1917,7 +1917,7 @@ contains
         print *,"dclt_ratio1 invalid"
         stop
        endif
-       !write(2,*) "int_ratio", dclt_ratio1
+       !!write(2,*) "int_ratio", dclt_ratio1
        if(dist_to_int(im1,im2) .lt. 10e-8)then
         print *,"error,dist_to_int(im1,im2) is 0"
         stop
@@ -1944,7 +1944,7 @@ contains
                             dclt_ratio1*dclt_diff1(dir3)
         enddo 
 
-       !write(2,*) "dclt_pp1", dclt_pp1 
+       !!write(2,*) "dclt_pp1", dclt_pp1 
 
       else if (dclt_test.eq.0) then
        ! do nothing
@@ -1979,26 +1979,26 @@ contains
  !------------------------------------------------------------
        coef=kappa*abs(dot_product(nf,n1))/(Ltemp*Ltemp) 
 
-        write(2,*) "nf", nf
-        write(2,*) "n1", n1
-        write(2,*) "nfXn1", abs(dot_product(nf,n1))
-        write(2,*) "Ltemp", Ltemp
-        write(2,*) "coef in div int", coef
-        write(2,*) "AFRAC", AFRAC
+        !write(2,*) "nf", nf
+        !write(2,*) "n1", n1
+        !write(2,*) "nfXn1", abs(dot_product(nf,n1))
+        !write(2,*) "Ltemp", Ltemp
+        !write(2,*) "coef in div int", coef
+        !write(2,*) "AFRAC", AFRAC
 
 
-       !write(2,*) "rho(0,0,im1)", rho(0,0,im1)
-       !write(2,*) "point", dclt_pp1, "current time", T_in, "probtype",probtype
-       !write(2,*) "im1",im1, "probtype", probtype, "alpha", alpha, "flag", dclt_test
-       !write(2,*) "exact", exact_temperature(dclt_pp1(1),dclt_pp1(2),T_in,&
+       !!write(2,*) "rho(0,0,im1)", rho(0,0,im1)
+       !!write(2,*) "point", dclt_pp1, "current time", T_in, "probtype",probtype
+       !!write(2,*) "im1",im1, "probtype", probtype, "alpha", alpha, "flag", dclt_test
+       !!write(2,*) "exact", exact_temperature(dclt_pp1(1),dclt_pp1(2),T_in,&
         !          im1,probtype,nmat,alpha,dclt_test)
 
       if(dclt_test .eq. 0)then
        grad=coef*(rho(0,0,im1)-rho(0,0,im2))
 
-       !write(2,*) "time", T_in, "coef",coef
-       write(2,*) "Tim1", rho(0,0,im1), "Tim2", rho(0,0,im2)
-       write(2,*) "grad",grad
+       !!write(2,*) "time", T_in, "coef",coef
+       !write(2,*) "Tim1", rho(0,0,im1), "Tim2", rho(0,0,im2)
+       !write(2,*) "grad",grad
 
       elseif(dclt_test .eq. 1)then
 
@@ -2008,12 +2008,12 @@ contains
        grad= coef*rho(0,0,im1)
        rhstemp2= coef*exact_temperature(dclt_pp1(1),dclt_pp1(2),T_in,&
                   im1,probtype,nmat,alpha,dclt_test)
-       !write(2,*) "time", T_in, "coef",coef
-       write(2,*) "Tim1", rho(0,0,im1), "Tdclt",  &
-        exact_temperature(dclt_pp1(1),dclt_pp1(2),T_in,&
-                 im1,probtype,nmat,alpha,dclt_test)     
+       !!write(2,*) "time", T_in, "coef",coef
+       !write(2,*) "Tim1", rho(0,0,im1), "Tdclt",  &
+!        exact_temperature(dclt_pp1(1),dclt_pp1(2),T_in,&
+!                 im1,probtype,nmat,alpha,dclt_test)     
 
-       write(2,*) "grad",grad
+       !write(2,*) "grad",grad
 
       else
        print *,"invalid dclt_test flag"
@@ -2022,16 +2022,16 @@ contains
 
 !----------------------------------------
 !      print *, "grad", grad, "Afrac", AFRAC
-        write(2,*) "div before", div_tot
+        !write(2,*) "div before", div_tot
 
 
        div_tot = div_tot + grad*AFRAC
        rhs_loc = rhs_loc + rhstemp2*AFRAC
 
-        write(2,*) "div after", div_tot
+        !write(2,*) "div after", div_tot
  
-      !write(2,*) "div_tot of int", div_tot
-   write(2,*) "in interface cal^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+      !!write(2,*) "div_tot of int", div_tot
+   !write(2,*) "in interface cal^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
 
 
       endif
@@ -2040,8 +2040,8 @@ contains
      print *,"material_in invalid" 
      stop
     endif
-  write(2,*)  "new div_simple cal loop end********************************************"
-  write(2,*) "**************************************************************"
+  !write(2,*)  "new div_simple cal loop end********************************************"
+  !write(2,*) "**************************************************************"
 
 
   end subroutine cell_div_cal_simple
