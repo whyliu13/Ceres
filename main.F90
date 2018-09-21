@@ -28,16 +28,15 @@ IMPLICIT NONE
 
 INTEGER,PARAMETER          :: probtype_in = 3
 INTEGER,PARAMETER          :: operator_type_in = 1 !0=low,1=simple,2=least sqr
-INTEGER,PARAMETER          :: dclt_test_in = 0 ! 1 = Dirichlet test  on
+INTEGER,PARAMETER          :: dclt_test_in = 1 ! 1 = Dirichlet test  on
 INTEGER,PARAMETER          :: solvtype = 1 ! 0 = CG  1 = bicgstab
-INTEGER,PARAMETER          :: N=128,M= 4
+INTEGER,PARAMETER          :: N=256,M= 8
 INTEGER,PARAMETER          :: plot_int = 1
-real(kind=8),parameter     :: fixed_dt = 1.25d-2/4.0d0   ! !!!!!!!!!!!!!!!!!!
-real(kind=8),parameter     :: cf= 1.0d0          ! multiplier of the time step.
+real(kind=8),parameter     :: fixed_dt = 1.25d-2/8.0d0 ! !!!!!!!!!!!!!!!!!!
+real(kind=8),parameter     :: cf= 1.0d0         ! multiplier of the time step.
 real(kind=8),parameter     :: CFL = 0.5d0
 real(kind=8),parameter     :: problo= 0.0d0, probhi= 1.0d0
 integer,parameter          :: sdim_in = 2
-
 
 INTEGER :: nmat_in
 INTEGER :: precond_type_in
@@ -336,7 +335,6 @@ CALL INIT_V(N,XLINE(0:N),YLINE(0:N),uu,vv)
   do j = N-1,0,-1
    write(74,*) vf(0:N-1,j,2)
   enddo
-
  endif
 
 
@@ -836,7 +834,9 @@ endif ! probtype_in .eq. 9
 
 
  
-GRADERR2 = sqrt(GRADERR2/real(gradcount,8))
+!GRADERR2 = sqrt(GRADERR2/real(gradcount,8))
+
+GRADERR2 = sqrt(GRADERR2)
 
 print *,"tau",tau
 

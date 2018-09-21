@@ -496,6 +496,7 @@ real(kind=8)              :: radius,theta,r1,r2
 real(kind=8)              :: TLO,THI,yI,yHI,a1,b1,a2,b2
 real(kind=8)              :: mypi,delx,dely
 real(kind=8)               :: xy(2)
+real(kind=8)               :: refc
 
  mypi=4.0d0*atan(1.0d0)
  if (probtype_in.eq.1) then
@@ -582,7 +583,11 @@ real(kind=8)               :: xy(2)
 ! endif
 
  if (im.eq.2) then
-  exact_temperature = (x**2.0d0 + y**2.0d0)*exp(-t)
+   refc= (0.02d0*sqrt(5.0d0)+1.0d0)/2.0d0
+!  exact_temperature = (x**2.0d0 + y**2.0d0)*exp(-t)
+   exact_temperature = ((x-refc)**2.0d0 + (y-refc)**2.0d0)*exp(-t)
+
+
  else if ((im.eq.1).or.(im.eq.3)) then
    exact_temperature=0.0
  endif
