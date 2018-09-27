@@ -672,7 +672,7 @@ real(kind=8)               :: refc
    stop
   endif
 
- elseif(probtype_in .eq. 4 .or. probtype_in .eq. 5)then
+ elseif(probtype_in .eq. 4)then
    exact_temperature = (x*x + y*y)*exp(-t)
 
 
@@ -696,6 +696,11 @@ real(kind=8)               :: refc
 !   print *,"wrong im, 1736"
 !   stop
 !  endif
+
+  elseif(probtype_in .eq. 5)then
+
+   refc= (0.02d0*sqrt(5.0d0)+1.0d0)/2.0d0
+   exact_temperature = ((x-refc)**2.0d0 + (y-refc)**2.0d0)*exp(-t)
 
  elseif(probtype_in .eq. 6)then
   ! do nothing

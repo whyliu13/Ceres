@@ -149,24 +149,27 @@ elseif(probtype_in .eq. 3) then
 elseif(probtype_in .eq. 5)then     ! asteroid
  xy(1)=x
  xy(2)=y
- center(1) = 0.02d0*sqrt(5.0d0)
- center(2) = 0.02d0*sqrt(5.0d0)
+
+! center(1) = 0.02d0*sqrt(5.0d0)
+! center(2) = 0.02d0*sqrt(5.0d0)
+ center = 0.0d0
+
  cc(1)=(center(1)+1.0d0)/2.0d0
  cc(2)=(center(2)+1.0d0)/2.0d0
 !  print *,"xy",xy
  call rad_cal(xy,cc,tt)
  if(tt .ge. 0.0d0 .and. tt .le. 0.5d0*pi)then
    pp1=1
-   pp2=250
- elseif(tt .le. pi)then
-   pp1=251
-   pp2=500
- elseif(tt .le. 1.5d0*pi)then
-   pp1=501
-   pp2=750
- elseif(tt .lt. 2.0d0*pi)then
-   pp1=751
    pp2=1000
+ elseif(tt .le. pi)then
+   pp1=1001
+   pp2=2000
+ elseif(tt .le. 1.5d0*pi)then
+   pp1=2001
+   pp2=3000
+ elseif(tt .lt. 2.0d0*pi)then
+   pp1=3001
+   pp2=4001
  else
   print *,"invalid tt", tt
   stop
@@ -190,6 +193,9 @@ elseif(probtype_in .eq. 5)then     ! asteroid
   print *,"wrong num of material, 187"
   stop
  endif
+
+
+
 elseif(probtype_in .eq. 7)then     ! 5 materials 
  xy(1)=x
  xy(2)=y
@@ -2851,7 +2857,7 @@ REAL*8 mypi
 
    G_in = 0.0d0
 
- elseif(probtype_in .eq.4 .or. probtype_in .eq. 5)then
+ elseif(probtype_in .eq.4 )then
    G_in = (-4.0d0 -(x_in(1)**2.0d0+x_in(2)**2.0d0))*exp(-t_in)
 
 !  if(im .eq. 1)then
@@ -2872,6 +2878,8 @@ REAL*8 mypi
 !   print *,"wrong im 1509"
 !   stop
 !  endif
+ elseif(probtype_in .eq. 5)then
+   G_in = 0.0d0
  elseif(probtype_in .eq. 6)then
   ! do nothing
   !G_in = (4.0d0 -(x_in(1)**2.0d0+x_in(2)**2.0d0))*exp(-t_in)
