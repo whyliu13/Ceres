@@ -27,6 +27,7 @@ validtest.f90
 multi_solver.F90
 dist_starshape.F90
 diff.F90
+fort.2
 *.m
 /matlabfiles/*
 /matlabfiles1/*

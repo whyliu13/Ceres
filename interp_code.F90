@@ -699,7 +699,7 @@ real(kind=8)               :: refc
 
   elseif(probtype_in .eq. 5)then
 
-   refc= (0.02d0*sqrt(5.0d0)+1.0d0)/2.0d0
+   refc= (1.0d0)/2.0d0
    exact_temperature = ((x-refc)**2.0d0 + (y-refc)**2.0d0)*exp(-t)
 
  elseif(probtype_in .eq. 6)then
