@@ -272,6 +272,8 @@ do dir=1,sdim_in
  dx_in(dir) = h_in
 enddo
 
+space_partition = h_in
+
 ! init nodes
 do i = -1 , N+1
    XLINE(i)= problo + (i)*h_in

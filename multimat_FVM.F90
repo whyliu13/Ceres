@@ -36,7 +36,8 @@ real(kind=8)                     :: r1,r2,r3,r4
 real(kind=8)                     :: center(2),cc(2)
 
 real(kind=8)                     :: x0,y0
-real(kind=8)                     :: c1,c2,c3,c4,tt
+real(kind=8)                     :: c1,c2,c3,c4,tt,ttcrit
+integer                          :: ttsign
 real(kind=8)                     :: tcrit,tcrit1,tcrit2  !theta
 real(kind=8)                     :: signtemp
 real(kind=8)                     :: xtheta,ytheta
@@ -45,6 +46,12 @@ integer                          :: flag
 integer                          :: pp1,pp2
 real(kind=8)                     :: pcurve_crit(2)
 integer                          :: cenflag,cccflag
+
+real(kind=8)                     :: vt1(2),vt2(2),vt3(2),vt4(2)
+real(kind=8)                     :: vtd1,vtd2,vtd3,vtd4
+
+real(kind=8)                     :: smrad
+real(kind=8)                     :: rad_crit(2)
 
 if(probtype_in .eq. 1 .or. probtype_in .eq. 9) then
  center(1) = 0.5d0
@@ -146,7 +153,7 @@ elseif(probtype_in .eq. 3) then
  endif
 
 
-elseif(probtype_in .eq. 5)then     ! asteroid
+elseif(probtype_in .eq. 5)then     ! asteroid 2 materials
  xy(1)=x
  xy(2)=y
 
@@ -160,31 +167,39 @@ elseif(probtype_in .eq. 5)then     ! asteroid
  call rad_cal(xy,cc,tt)
  if(tt .ge. 0.0d0 .and. tt .le. 0.5d0*pi)then
    pp1=1
-   pp2=1000
+   pp2=pcurve_num/4+1
  elseif(tt .le. pi)then
-   pp1=1001
-   pp2=2000
+   pp1=pcurve_num/4+1
+   pp2=pcurve_num/2+1
  elseif(tt .le. 1.5d0*pi)then
-   pp1=2001
-   pp2=3000
+   pp1= pcurve_num/2+1
+   pp2=pcurve_num/4*3
  elseif(tt .lt. 2.0d0*pi)then
-   pp1=3001
-   pp2=4001
+   pp1=pcurve_num/4*3+1
+   pp2=pcurve_num+1
  else
   print *,"invalid tt", tt
   stop
  endif 
- dist1=1000.0d0
+
+
+ dist1=100000.0d0
+ smrad=100000.0d0
  do i=pp1,pp2
   call l2normd(2,xy,pcurve_ls(:,i),dist2)
   if(dist2 .lt. dist1)then
    pcurve_crit=pcurve_ls(:,i)
    dist1=dist2
   endif
+  if(abs(pcurve_rad(i)-tt) .lt. smrad)then
+   smrad=abs(pcurve_rad(i)-tt)
+   rad_crit= pcurve_ls(:,i)   
+  endif
  enddo
-  call l2normd(2,cc,pcurve_crit,dist3)
-  call l2normd(2,cc,xy,dist2)
-   
+
+ call l2normd(2,cc,rad_crit,dist3)
+ call l2normd(2,cc,xy,dist2)
+
  if(imat .eq. 1)then
   dist=sign(dist1,(dist3-dist2))
  elseif(imat .eq. 2)then
@@ -193,7 +208,41 @@ elseif(probtype_in .eq. 5)then     ! asteroid
   print *,"wrong num of material, 187"
   stop
  endif
+ 
+! if(imat .eq. 1)then
+!  dist=sign(dist1,(dist3-dist2))
+! elseif(imat .eq. 2)then
+!  dist=-sign(dist1,(dist3-dist2))
+! else
+!  print *,"wrong num of material, 187"
+!  stop
+! endif
 
+
+! vt1(1)=0.9d0
+! vt1(2)=0.5d0
+! vt2(1)=0.5d0
+! vt2(2)=0.9d0
+! vt3(1)=0.1d0
+! vt3(2)=0.5d0
+! vt4(1)=0.5d0
+! vt4(2)=0.1d0
+! call l2normd(2,xy,vt1,vtd1)
+! call l2normd(2,xy,vt2,vtd2)
+! call l2normd(2,xy,vt3,vtd3)
+! call l2normd(2,xy,vt4,vtd4)
+! if(vtd1 .lt. space_partition)then
+!  dist=sign(vtd1,dist)
+! endif
+! if(vtd2 .lt. space_partition)then
+!  dist=sign(vtd2,dist)
+! endif
+! if(vtd3 .lt. space_partition)then
+!  dist=sign(vtd3,dist)
+! endif
+! if(vtd4 .lt. space_partition)then
+!  dist=sign(vtd4,dist)
+! endif
 
 
 elseif(probtype_in .eq. 7)then     ! 5 materials 
@@ -229,29 +278,49 @@ elseif(probtype_in .eq. 7)then     ! 5 materials
  endif
 
 if(cccflag .eq. 0)then
+! if(tt .ge. 0.0d0 .and. tt .le. 0.5d0*pi)then
+!   pp1=1
+!   pp2=251
+! elseif(tt .le. pi)then
+!   pp1=251
+!   pp2=501
+! elseif(tt .le. 1.5d0*pi)then
+!   pp1=501
+!   pp2=751
+! elseif(tt .le. 2.0d0*pi)then
+!   pp1=751
+!   pp2=1001
+! else
+!  print *,"invalid tt", tt
+!  stop
+! endif 
+
  if(tt .ge. 0.0d0 .and. tt .le. 0.5d0*pi)then
    pp1=1
-   pp2=251
+   pp2=pcurve_num/4+1
  elseif(tt .le. pi)then
-   pp1=251
-   pp2=501
+   pp1=pcurve_num/4+1
+   pp2=pcurve_num/2+1
  elseif(tt .le. 1.5d0*pi)then
-   pp1=501
-   pp2=751
- elseif(tt .le. 2.0d0*pi)then
-   pp1=751
-   pp2=1001
+   pp1= pcurve_num/2+1
+   pp2=pcurve_num/4*3
+ elseif(tt .lt. 2.0d0*pi)then
+   pp1=pcurve_num/4*3+1
+   pp2=pcurve_num+1
  else
   print *,"invalid tt", tt
   stop
  endif 
+
  dist1=1000.0d0
+ 
  do i=pp1,pp2
   call l2normd(2,xy,pcurve_ls(:,i),dist2)
   if(dist2 .lt. dist1)then
    pcurve_crit=pcurve_ls(:,i)
    dist1=dist2
   endif
+
  enddo
  
  if(abs(dist1) .lt. 1.0e-8)then
@@ -867,31 +936,32 @@ real(kind=8),intent(out):: xt(2,pcurve_num+1)
 integer          :: num
 integer :: i
 integer :: cenflag
-
+real(kind=8) :: cc(2)
 
 num = pcurve_num
  cenflag= 0
 
 do i = 1,num+1
- theta(i) = (i-1)*2.0d0*pi/num
+ theta(i) = (i-1)*2.0d0*pi/real(num,8)
 enddo
 
 if(cenflag .eq. 1)then
- do i = 1,num+1
-  xt(1,i) = 0.02d0*sqrt(5.0d0) + &
-           0.6d0*cos(theta(i)) + 0.2d0*cos(3.0d0*theta(i))
-  xt(2,i) = 0.02d0*sqrt(5.0d0) + &
-           0.6d0*sin(theta(i)) - 0.2d0*sin(3.0d0*theta(i))
- enddo
+ cc(1) = 0.02d0*sqrt(5.0d0)
+ cc(2) = 0.02d0*sqrt(5.0d0)
 elseif(cenflag .eq. 0)then
- do i = 1,num+1
-  xt(1,i) = 0.6d0*cos(theta(i)) + 0.2d0*cos(3.0d0*theta(i))
-  xt(2,i) = 0.6d0*sin(theta(i)) - 0.2d0*sin(3.0d0*theta(i))
- enddo
+ cc = 0.0d0
 else
  print *,"wrong cenflag"
  stop
 endif
+
+ do i = 1,num+1
+  xt(1,i) = cc(1) + &
+           0.6d0*cos(theta(i)) + 0.2d0*cos(3.0d0*theta(i))
+  xt(2,i) = cc(2) + &
+           0.6d0*sin(theta(i)) - 0.2d0*sin(3.0d0*theta(i))
+  call rad_cal(xt(:,i),cc,pcurve_rad(i))
+ enddo
 
 end subroutine asteroidshape
 

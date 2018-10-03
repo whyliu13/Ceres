@@ -19,8 +19,11 @@ real(kind=8),parameter :: pi  = 4.0d0*atan(1.0d0)
 integer,parameter      :: pcurve_num = 4000
 real(kind=8)           :: pcurve_ls(2,pcurve_num+1)
 real(kind=8)           :: pcurve_ls2(2,pcurve_num+1)
+real(kind=8)           :: pcurve_rad(pcurve_num+1)
 
 real(kind=8)           :: crit_dist(2)
+
+real(kind=8)           :: space_partition
 
 ! polar solver
 
