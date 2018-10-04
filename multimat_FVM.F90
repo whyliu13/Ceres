@@ -244,8 +244,7 @@ elseif(probtype_in .eq. 5)then     ! asteroid 2 materials
 !  dist=sign(vtd4,dist)
 ! endif
 
-
-elseif(probtype_in .eq. 7)then     ! 5 materials 
+elseif(probtype_in .eq. 7)then
  xy(1)=x
  xy(2)=y
  cenflag=0    ! 0= axis symmetry aligned with grid
@@ -277,207 +276,110 @@ elseif(probtype_in .eq. 7)then     ! 5 materials
   call rad_cal(xy,cc,tt)
  endif
 
-if(cccflag .eq. 0)then
-! if(tt .ge. 0.0d0 .and. tt .le. 0.5d0*pi)then
-!   pp1=1
-!   pp2=251
-! elseif(tt .le. pi)then
-!   pp1=251
-!   pp2=501
-! elseif(tt .le. 1.5d0*pi)then
-!   pp1=501
-!   pp2=751
-! elseif(tt .le. 2.0d0*pi)then
-!   pp1=751
-!   pp2=1001
-! else
-!  print *,"invalid tt", tt
-!  stop
-! endif 
+ if(cccflag .eq. 0)then
 
- if(tt .ge. 0.0d0 .and. tt .le. 0.5d0*pi)then
+  if(tt .ge. 0.0d0 .and. tt .le. 0.5d0*pi)then
    pp1=1
    pp2=pcurve_num/4+1
- elseif(tt .le. pi)then
+  elseif(tt .le. pi)then
    pp1=pcurve_num/4+1
    pp2=pcurve_num/2+1
- elseif(tt .le. 1.5d0*pi)then
+  elseif(tt .le. 1.5d0*pi)then
    pp1= pcurve_num/2+1
    pp2=pcurve_num/4*3
- elseif(tt .lt. 2.0d0*pi)then
+  elseif(tt .lt. 2.0d0*pi)then
    pp1=pcurve_num/4*3+1
    pp2=pcurve_num+1
- else
-  print *,"invalid tt", tt
-  stop
- endif 
+  else
+   print *,"invalid tt", tt
+   stop
+  endif 
 
- dist1=1000.0d0
- 
- do i=pp1,pp2
-  call l2normd(2,xy,pcurve_ls(:,i),dist2)
-  if(dist2 .lt. dist1)then
-   pcurve_crit=pcurve_ls(:,i)
-   dist1=dist2
-  endif
+  dist1=100000.0d0
+  smrad=100000.0d0
+  do i=pp1,pp2
+   call l2normd(2,xy,pcurve_ls(:,i),dist2)
+   if(dist2 .lt. dist1)then
+    pcurve_crit=pcurve_ls(:,i)
+    dist1=dist2
+   endif
+   if(abs(pcurve_rad(i)-tt) .lt. smrad)then
+    smrad=abs(pcurve_rad(i)-tt)
+    rad_crit= pcurve_ls(:,i)   
+   endif
+  enddo
 
- enddo
- 
- if(abs(dist1) .lt. 1.0e-8)then
-  dist1=0.0d0
- endif
-  
-
- call l2normd(2,cc,pcurve_crit,dist3)
+  call l2normd(2,cc,rad_crit,dist3) 
   call l2normd(2,cc,xy,dist2)
-   
-! if(tt .eq. 0.0d0)then                              ! theta= 0
-!  if(imat .eq. 1)then
-!    dist=xy(1)-(cc(1)+0.4d0) 
-!  elseif(imat .eq. 2 .or. imat .eq. 5)then
-!    dist=0.0d0
-!  elseif(imat .eq. 3 .or. imat .eq. 4)then
-!    dist=-1.0d0*xy(1)
-! elseif
 
- if(tt .ge. 0.0d0 .and. tt .lt. 0.5d0*pi)then   !  0 <= theta < pi/2 
-  if(imat .eq. 1)then
-   dist=-sign(dist1,(dist3-dist2))
-  elseif(imat .eq. 2)then
-   dist4=xy(1)-cc(1)
-   dist5=xy(2)-cc(2)
-   dist= min(dist4,dist5,sign(dist1,(dist3-dist2)))
-  elseif(imat .eq. 3)then
-   x1(1)=cc(1)
-   x1(2)=cc(2)+0.4d0
-!   print *,"x1",x1,"cc",cc,"xy",xy
-   call dist_point_to_lined(2,cc,x1,xy,dist4)
-!   print *,"dist4",dist4
-   dist=-dist4
-   if(abs(dist) .lt. 1.0e-8)then
-    dist=0.0d0
-   endif
-  elseif(imat .eq. 4)then
-   call l2normd(2,xy,cc,dist4)
-   dist=-dist4
-   if(abs(dist) .lt. 1.0e-8)then
-    dist=0.0d0
-   endif
-  elseif(imat .eq. 5)then
-   x1(1)=cc(1)+0.4d0
-   x1(2)=cc(2)
-   call dist_point_to_lined(2,cc,x1,xy,dist4)
-   dist=-dist4 
-   if(abs(dist) .lt. 1.0e-8)then
-    dist=0.0d0
-   endif  
+  x1(1)=cc(1)+0.4d0                            !          x2  
+  x1(2)=cc(2)                                  ! 
+  x2(1)=cc(1)                                  ! 
+  x2(2)=cc(2)+0.4d0                            !    x3           x1
+  x3(1)=cc(1)-0.4d0                            ! 
+  x3(2)=cc(2)                                  ! 
+  x4(1)=cc(1)                                  !           x4 
+  x4(2)=cc(2)-0.4d0                            !  
+
+
+
+ if(imat .eq. 1)then
+  dist=-sign(dist1,(dist3-dist2))
+ elseif(imat .eq. 2)then
+  call dist_point_to_lined(2,cc,x1,xy,dist4)
+  call dist_point_to_lined(2,cc,x2,xy,dist5)
+  
+  if(xy(1) .lt. cc(1) .or. xy(2) .lt. cc(2))then
+   dist= -min(dist4,dist5)
   else
-   print *,"wrong number of material"
-   stop 
+   dist= min(sign(dist1,(dist3-dist2)),dist4,dist5)
   endif
 
+ elseif(imat .eq. 3)then
+  call dist_point_to_lined(2,cc,x2,xy,dist4)
+  call dist_point_to_lined(2,cc,x3,xy,dist5)
+  
+  if(xy(1) .gt. cc(1) .or. xy(2) .lt. cc(2))then
+   dist= -min(dist4,dist5)
+  else
+   dist= min(sign(dist1,(dist3-dist2)),dist4,dist5)
+  endif
 
- elseif(tt .le. pi)then
-  if(imat .eq. 1)then
-   dist=-sign(dist1,(dist3-dist2))
-  elseif(imat .eq. 3)then
-   dist4=xy(2)-cc(2)
-   dist5=cc(1)-xy(1)
-   dist=min(dist4,dist5,sign(dist1,(dist3-dist2)))
-  elseif(imat .eq. 2)then
-   x1(1)=cc(1)
-   x1(2)=cc(2)+0.4d0
-   call dist_point_to_lined(2,cc,x1,xy,dist4)
-   dist=-dist4
-   if(abs(dist) .lt. 1.0e-8)then
-    dist=0.0d0
-   endif
-  elseif(imat .eq. 5)then
-   call l2normd(2,xy,cc,dist4)
-   dist=-dist4
-   if(abs(dist) .lt. 1.0e-8)then
-    dist=0.0d0
-   endif
-  elseif(imat .eq. 4)then
-   x1(1)=cc(1)-0.4d0
-   x1(2)=cc(2)
-   call dist_point_to_lined(2,cc,x1,xy,dist4)
-   dist=-dist4 
-   if(abs(dist) .lt. 1.0e-8)then
-    dist=0.0d0
-   endif  
+ elseif(imat .eq. 4)then
+  call dist_point_to_lined(2,cc,x3,xy,dist4)
+  call dist_point_to_lined(2,cc,x4,xy,dist5)
+  
+  if(xy(1) .gt. cc(1) .or. xy(2) .gt. cc(2))then
+   dist= -min(dist4,dist5)
   else
-   print *,"wrong number of material"
-   stop 
-  endif 
+   dist= min(sign(dist1,(dist3-dist2)),dist4,dist5)
+  endif
 
- elseif(tt .le. 1.5d0*pi)then
-  if(imat .eq. 1)then
-   dist=-sign(dist1,(dist3-dist2))
-  elseif(imat .eq. 4)then
-   dist4=cc(1)-xy(1)
-   dist5=cc(2)-xy(2)
-   dist=min(dist4,dist5,sign(dist1,(dist3-dist2)))
-  elseif(imat .eq. 5)then
-   x1(1)=cc(1)
-   x1(2)=cc(2)-0.4d0
-   call dist_point_to_lined(2,cc,x1,xy,dist4)
-   dist=-dist4
-  elseif(imat .eq. 2)then
-   call l2normd(2,xy,cc,dist4)
-   dist=-dist4
-  elseif(imat .eq. 3)then
-   x1(1)=cc(1)-0.4d0
-   x1(2)=cc(2)
-   call dist_point_to_lined(2,cc,x1,xy,dist4)
-   dist=-dist4 
-  else
-   print *,"wrong number of material"
-   stop   
-  endif 
-  if(abs(dist) .lt. 1.0e-8)then
-    dist=0.0d0
+ elseif(imat .eq. 5)then
+  call dist_point_to_lined(2,cc,x4,xy,dist4)
+  call dist_point_to_lined(2,cc,x1,xy,dist5)
+  
+   if(xy(1) .lt. cc(1) .or. xy(2) .gt. cc(2))then
+    dist= -min(dist4,dist5)
+   else
+    dist= min(sign(dist1,(dist3-dist2)),dist4,dist5)
    endif
- elseif(tt .le. 2.0d0*pi)then
-  if(imat .eq. 1)then
-   dist=-sign(dist1,(dist3-dist2))
-  elseif(imat .eq. 5)then
-   dist=sign(dist1,(dist3-dist2))
-  elseif(imat .eq. 4)then
-   x1(1)=cc(1)
-   x1(2)=cc(2)-0.4d0
-   call dist_point_to_lined(2,cc,x1,xy,dist4)
-   dist=-dist4
-  elseif(imat .eq. 3)then
-   call l2normd(2,xy,cc,dist4)
-   dist=-dist4
-  elseif(imat .eq. 2)then
-   x1(1)=cc(1)+0.4d0
-   x1(2)=cc(2)
-   call dist_point_to_lined(2,cc,x1,xy,dist4)
-   dist=-dist4 
   else
-   print *,"wrong number of material"
-   stop  
-  endif 
+   print *, "wrong number of materials 368"
+   stop
+  endif
+
+ elseif(cccflag .eq. 1)then
+  if(imat .eq. 1)then
+   dist=-0.1d0*sqrt(2.0)
+  else
+   dist=0.0d0
+  endif
  else
-  print *,"invalid tt", tt
+  print *,"cccflag invald 353"
   stop
- endif  
-
-elseif(cccflag .eq. 1)then
-
-
-!if(xy(2) .gt. cc()
- if(imat .eq. 1)then
-  dist=-0.2d0
- else
-  dist=0.0d0
  endif
-else
- print *,"cccflag invald 353"
- stop
-endif
+
 
 
 

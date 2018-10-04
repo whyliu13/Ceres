@@ -26,13 +26,13 @@ IMPLICIT NONE
 ! for flat interface, interface is y=0.3.
 ! for dirichlet, top material has k=0 T(y=0.3)=2.0   T(y=0.0)=3.0
 
-INTEGER,PARAMETER          :: probtype_in = 5
+INTEGER,PARAMETER          :: probtype_in = 7
 INTEGER,PARAMETER          :: operator_type_in = 1 !0=low,1=simple,2=least sqr
 INTEGER,PARAMETER          :: dclt_test_in = 0 ! 1 = Dirichlet test  on
 INTEGER,PARAMETER          :: solvtype = 1 ! 0 = CG  1 = bicgstab
-INTEGER,PARAMETER          :: N=256,M= 8
+INTEGER,PARAMETER          :: N=64,M= 1
 INTEGER,PARAMETER          :: plot_int = 1
-real(kind=8),parameter     :: fixed_dt = 1.25d-2/real(M,8) ! !!!!!!!!!!!!!!!!!!
+real(kind=8),parameter     :: fixed_dt = 1.25d-2 /real(M,8) ! !!!!!!!!!!!!!!!!!!
 real(kind=8),parameter     :: cf= 1.0d0         ! multiplier of the time step.
 real(kind=8),parameter     :: CFL = 0.5d0
 real(kind=8),parameter     :: problo= 0.0d0, probhi= 1.0d0
@@ -400,7 +400,7 @@ CALL INIT_V(N,XLINE(0:N),YLINE(0:N),uu,vv)
 
  elseif(probtype_in .eq. 5)then      ! hypocycloid with 2 materials
   thermal_cond(1) = 1.0d0           ! interior region    
-  thermal_cond(2) = 0.1d0          ! exterior region
+  thermal_cond(2) = 0.01d0          ! exterior region
 
  elseif(probtype_in .eq. 6)then
   thermal_cond(1) = 1.0d0
@@ -489,11 +489,21 @@ CALL INIT_V(N,XLINE(0:N),YLINE(0:N),uu,vv)
 
   elseif(probtype_in .eq. 5)then
 
-    T(i,j,1)=exact_temperature(xcen,ycen,time_init,1,probtype_in, &
-     nmat_in,thermal_cond,dclt_test_in)
-    T(i,j,2)=exact_temperature(xcen,ycen,time_init,2,probtype_in, &
-     nmat_in,thermal_cond,dclt_test_in)
+!    T(i,j,1)=exact_temperature(xcen,ycen,time_init,1,probtype_in, &
+!     nmat_in,thermal_cond,dclt_test_in)
+!    T(i,j,2)=exact_temperature(xcen,ycen,time_init,2,probtype_in, &
+!     nmat_in,thermal_cond,dclt_test_in)
+!   T(i,j,1)=2.0d0
+!   T(i,j,2)=2.0d0
+    
+   if( sqrt((nox(i)-0.5d0)**2.0d0+ (noy(j)-0.5d0)**2.0d0) .lt. 0.1d0)then
+    T(i,j,:)=10.0d0
+   else
+    T(i,j,:)=0.0d0
+   endif
 
+
+ 
   elseif(probtype_in .eq. 6)then
    T(i,j,1)=2.0
    T(i,j,2)=2.0    

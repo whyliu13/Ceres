@@ -1344,7 +1344,7 @@
 
 
          vf=VFRAC_MOF(i,j,im)
-         if (vf.le.AVGTOL) then
+         if (vf.le.AVGTOL) then                                      !  avgtol
           AU(i,j,im)=(meshvol/deltat)*U(i,j,im)
          else        
           AU(i,j,im)=(meshvol/deltat)*vf*U(i,j,im) + div_tot 
