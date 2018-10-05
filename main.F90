@@ -170,11 +170,16 @@ real(kind=8)         :: temptestt1,temptestt2
  open(unit=82,file="relT64.dat")
  open(unit=83,file="relT128.dat")
  open(unit=84,file="relT256.dat")
+ open(unit=85,file="relT512.dat")
+
 
  open(unit=71,file="vf32.dat")
  open(unit=72,file="vf64.dat")
  open(unit=73,file="vf128.dat")
  open(unit=74,file="vf256.dat")
+ open(unit=75,file="vf512.dat")
+
+ open(unit=79,file="vf.dat")
 
 
 call_time=0
@@ -339,6 +344,10 @@ CALL INIT_V(N,XLINE(0:N),YLINE(0:N),uu,vv)
   do j = N-1,0,-1
    write(74,*) vf(0:N-1,j,msample)
   enddo
+ elseif(N .eq. 512)then
+  do j = N-1,0,-1
+   write(75,*) vf(0:N-1,j,msample)
+  enddo
  endif
 
 
@@ -362,6 +371,39 @@ CALL INIT_V(N,XLINE(0:N),YLINE(0:N),uu,vv)
    mofdata_FAB_in(-1,i,:) = mofdata_FAB_in(0,i,:)
    mofdata_FAB_in(N,i,:) = mofdata_FAB_in(N-1,i,:)   
  enddo
+
+
+  ngeom_recon_in=2*sdim_in+3
+  do i=-1,N
+  do j=-1,N
+  do im1=1,nmat_in
+     vofcomp=ngeom_recon_in*(im1-1)+1
+   if(im1 .eq. 1 .and. mofdata_FAB_in(i,j,vofcomp) .gt. eps)then
+    write(4,*) mofdata_FAB_in(i,j,1+vofcomp)+CELL_FAB(i,j)%center%val(1), &
+               mofdata_FAB_in(i,j,2+vofcomp)+CELL_FAB(i,j)%center%val(2)
+   elseif(im1 .eq. 2 .and. mofdata_FAB_in(i,j,vofcomp) .gt. eps)then
+    write(5,*) mofdata_FAB_in(i,j,1+vofcomp)+CELL_FAB(i,j)%center%val(1), &
+               mofdata_FAB_in(i,j,2+vofcomp)+CELL_FAB(i,j)%center%val(2)
+   elseif(im1 .eq. 3 .and. mofdata_FAB_in(i,j,vofcomp) .gt. eps)then
+    write(21,*) mofdata_FAB_in(i,j,1+vofcomp)+CELL_FAB(i,j)%center%val(1), &
+               mofdata_FAB_in(i,j,2+vofcomp)+CELL_FAB(i,j)%center%val(2)
+   elseif(im1 .eq. 4 .and. mofdata_FAB_in(i,j,vofcomp) .gt. eps)then
+    write(22,*) mofdata_FAB_in(i,j,1+vofcomp)+CELL_FAB(i,j)%center%val(1), &
+               mofdata_FAB_in(i,j,2+vofcomp)+CELL_FAB(i,j)%center%val(2)
+   elseif(im1 .eq. 5 .and. mofdata_FAB_in(i,j,vofcomp) .gt. eps)then
+    write(23,*) mofdata_FAB_in(i,j,1+vofcomp)+CELL_FAB(i,j)%center%val(1), &
+               mofdata_FAB_in(i,j,2+vofcomp)+CELL_FAB(i,j)%center%val(2) 
+   else
+
+   endif 
+  enddo
+  enddo
+  enddo
+
+  do j=N,-1,-1
+   write(79,*) mofdata_FAB_in(:,j,1+ngeom_recon_in*2)  
+  enddo
+
 
 ! init thermal conductivity
  if (probtype_in.eq.0) then
@@ -552,13 +594,6 @@ CALL INIT_V(N,XLINE(0:N),YLINE(0:N),uu,vv)
   enddo
 
 
-
-
-
-!do i = 1,M
-!  Ts(i) =i* tau
-!enddo
-
 do i = 1,M
   Ts(i) =(i-1)* tau
 enddo
@@ -642,8 +677,6 @@ do tm  = 1, M
   current_time_in=Ts(tm) ! t^{n}
 
   
-
-
   call INIT_GLOBALS( &
    dclt_test_in, &
    operator_type_in, &
@@ -883,6 +916,8 @@ do i=N-1,0,-1
   write(83,*) T(0:N-1,i,msample)
  elseif(N.eq.256)then
   write(84,*) T(0:N-1,i,msample)
+ elseif(N.eq.512)then
+  write(85,*) T(0:N-1,i,msample)
  endif
 enddo
 
@@ -1002,10 +1037,15 @@ deallocate(T_new)
  close(82)
  close(83)
  close(84)
+ close(85)
+
  close(71)
  close(72)
  close(73)
  close(74)
+ close(75)
+
+ close(79)
 
 
 END PROGRAM

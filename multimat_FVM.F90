@@ -2318,23 +2318,23 @@ else
  stop
 endif
 
-do im = 1,nmat_in
-   if(im .eq. 1)then
-    write(4,*) centroid(im,:)
-   elseif(im .eq. 2)then
-    write(5,*) centroid(im,:)
-   elseif(im .eq. 3)then
-    write(21,*) centroid(im,:)
-   elseif(im .eq. 4)then
-    write(22,*) centroid(im,:) 
-   elseif(im .eq. 5)then
-    write(23,*) centroid(im,:) 
-
-   else
-    print *,"err 1075"
-    stop
-   endif   
-enddo
+!do im = 1,nmat_in
+!   if(im .eq. 1)then
+!    write(4,*) centroid(im,:)
+!   elseif(im .eq. 2)then
+!    write(5,*) centroid(im,:)
+!   elseif(im .eq. 3)then
+!    write(21,*) centroid(im,:)
+!   elseif(im .eq. 4)then
+!    write(22,*) centroid(im,:) 
+!   elseif(im .eq. 5)then
+!    write(23,*) centroid(im,:) 
+! 
+!   else
+!    print *,"err 1075"
+!    stop
+!   endif   
+!enddo
 
 
 ! call renormalize_vf(nmat_in,vf) 
