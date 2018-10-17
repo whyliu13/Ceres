@@ -13,8 +13,10 @@ use probcommon_module
 use mof_routines_module
 use MOF_pair_module
 
-
 implicit none
+
+REAL(KIND=8),PARAMETER   :: mof_tol=1.0e-4
+
 
 contains
 !---------------------------------------------------------
@@ -1636,9 +1638,9 @@ integer                 :: ct
  elseif(d1 .ge. 0.0d0  .and. d2 .ge. 0.0d0 .and. d3 .ge. 0.0d0)then         ! +0  +0  +0
   call tri_area8(v1,v2,v3,area)
   call tri_centroid(v1,v2,v3,cen)
- ! print *,"case 1", "area",area
+!  print *,"case 1", "area",area
  elseif(d1 .le. 0.0d0  .and. d2 .le. 0.0d0 .and. d3 .le. 0.0d0)then         ! -0  -0  -0   
- ! print *,"case 2"
+!  print *,"case 2"
     area = 0.0d0
     cen = 0.0d0
     ! do nothing
@@ -1659,7 +1661,7 @@ integer                 :: ct
     stop
    endif
  elseif(abs(d2) .lt. 1.0e-10 .and. d1*d3 .lt. 0.0d0)then
-!   print *, "case4"
+   print *, "case4"
    ratio = abs(d1)/(abs(d1)+abs(d3))
    do i = 1,2
     x1(i)= v1(i) + ratio*(v3(i)-v1(i))
@@ -1675,7 +1677,7 @@ integer                 :: ct
     stop
    endif    
  elseif(abs(d3) .lt. 1.0e-10 .and. d1*d2 .lt. 0.0d0)then
-!   print *,"case5"
+   print *,"case5"
    ratio = abs(d1)/(abs(d1)+abs(d2))
    do i = 1,2
     x1(i)= v1(i) + ratio*(v2(i)-v1(i))
@@ -1691,7 +1693,7 @@ integer                 :: ct
     stop
    endif  
  else
-!  print *,"case6"
+ ! print *,"case6"
   ct = 0
   do i = 1,2
    if(d(i)*d(i+1) .lt. 0.0d0)then
@@ -1740,7 +1742,7 @@ integer                 :: ct
        cen(i)=(cen2(i)*area2 - cen1(i)*area1)/area 
       enddo
     else
-     print *,"d(1) can be zero,  565"
+     print *,"d(1) cant be zero,  565"
      stop
     endif
   elseif(d(2)*d(3) .lt. 0.0d0 .and. d(2)*d(1) .lt. 0.0d0)then
@@ -1812,9 +1814,12 @@ IMPLICIT NONE
 real(kind=8),INTENT(IN)                  :: V1(2),V2(2),V3(2)
 REAL(KIND=8),INTENT(OUT)                 :: AREA
 
- AREA = 0.5* ABS(V1(1)*(V2(2)-V3(2)) &
-           & - V2(1)*(V1(2)-V3(2)) &
-           & + V3(1)*(V1(2)-V2(2)))
+! AREA = 0.5* ABS(V1(1)*(V2(2)-V3(2)) &
+!           & - V2(1)*(V1(2)-V3(2)) &
+!           & + V3(1)*(V1(2)-V2(2)))
+
+ AREA=0.5*ABS((v2(1)-v1(1))*(v3(2)-v1(2)) - &
+                (v3(1)-v1(1))*(v2(2)-v1(2)))
 
 
 END SUBROUTINE tri_area8
@@ -2013,6 +2018,16 @@ real(kind=8)                  :: v1(2),v2(2),v3(2)
 real(kind=8),allocatable      :: center_hold(:,:),center_hold1(:,:)
 integer,allocatable           :: center_mark(:)
 
+integer                       :: scheck
+
+
+if(iin .eq. 14 .and. jin .eq. 35)then
+ scheck=1
+else
+ scheck=0
+endif
+
+
 x = center(1)
 y = center(2)
 h = dx(1)                  !  h squared domain
@@ -2063,8 +2078,15 @@ do im=1,nmat_in
     stop
    endif
   enddo
+
+  if(scheck .eq. 1)then
+   write(11,*) "ncheck",ncenter
+   write(11,*) "vol",vol,vol/(h*h)
+   write(11,*) "center_mark", center_mark
+  endif
+
+  ilev=ilev+1
   if(lev_check .eq. 1)then
-   ilev=ilev+1
    allocate(center_hold1(4**(ilev),2))
    ic=0 
    do i=1,ncenter
@@ -2097,7 +2119,21 @@ do im=1,nmat_in
   endif
    
  enddo  ! do while
- 
+
+  if(scheck .eq. 1)then
+   write(11,*) "ncenter",ncenter
+   write(11,*) "vol",vol,vol/(h*h)
+   write(11,*) "center_mark", center_mark
+
+   write(11,*) "ic",ic
+   do i=1,ic
+    write(11,*) "center_hold", center_hold(i,:)
+   enddo
+
+  endif
+
+
+
  if(lev_check .ne. 0)then
   do i=1,ic
    call find_vertex(center_hold(i,:), h/(2.0d0**real(ilev,8)), vertex)
@@ -2106,11 +2142,33 @@ do im=1,nmat_in
      v1 = vertex(1,:)
      v2 = vertex(2,:)
      v3 = vertex(4,:)
+
+    if(scheck .eq. 1)then
+     call dist_fns(im,vertex(1,1),vertex(1,2),dist,probtype_in)
+     write(11,*) "v1",vertex(1,:),dist
+     call dist_fns(im,vertex(2,1),vertex(2,2),dist,probtype_in)
+     write(11,*) "v2",vertex(2,:),dist
+     call dist_fns(im,vertex(3,1),vertex(3,2),dist,probtype_in)
+     write(11,*) "v3",vertex(3,:),dist
+     call dist_fns(im,vertex(4,1),vertex(4,2),dist,probtype_in)
+     write(11,*) "v4",vertex(4,:),dist
+    endif
+
+
+
      call triangle_interface_detect(im,probtype_in,v1,v2,v3,vol_temp,cen_temp%val)
      ! update centroid and volume
      vol(im) = vol(im) + vol_temp
      cxtemp(im) = cxtemp(im) + vol_temp*cen_temp%val(1) 
      cytemp(im) = cytemp(im) + vol_temp*cen_temp%val(2)
+ 
+
+    if(scheck .eq. 1)then
+     write(11,*) "vol",vol,vol/(h*h)
+     write(11,*) "vol_temp",vol_temp,vol_temp/(h*h)
+    endif
+
+
      !------------------------------------------------------------------------------
      vol_temp = 0.0d0
      cen_temp%val = 0.0d0
@@ -2124,16 +2182,11 @@ do im=1,nmat_in
      cxtemp(im) = cxtemp(im) + vol_temp*cen_temp%val(1) 
      cytemp(im) = cytemp(im) + vol_temp*cen_temp%val(2)
 
-     if (1.eq.0) then
-      write(11,*) iin,jin
-      write(11,*) "center",center
-      write(11,*) "im,mx,my,c ",im,mx,my,c
-      do ii=1,4
-       write(11,*) "ii,vertex,G ",ii,vertex(ii,1),vertex(ii,2),G(ii)
-      enddo
-       write(11,*) "vfrac ",vol_temp/(h6*h6)
-       write(11,*) "cenx,ceny ",cen_temp%val(1),cen_temp%val(2)
-     endif
+    if(scheck .eq. 1)then
+     write(11,*) "vol",vol,vol/(h*h)
+     write(11,*) "vol_temp",vol_temp
+    endif
+
   enddo
  endif
 
@@ -2149,16 +2202,34 @@ if (h.le.0.0) then
 endif
 
 do im = 1,nmat_in
-   if(vol(im) .ne. 0.0d0)then
- !  if(vol(im) .gt. eps)then
-    centroid(im,1) = cxtemp(im)/vol(im)
-    centroid(im,2) = cytemp(im)/vol(im)
-   else
-     vol(im) = 0.0d0
-     centroid(im,:) = 0.0d0
-   endif
-   vf(im) = vol(im)/(h*h)   
+  if(vol(im) .lt. 0.0d0)then
+    print *,"vol(im) is negtive, 2155"
+    stop
+  else
+   centroid(im,1) = cxtemp(im)/vol(im)
+   centroid(im,2) = cytemp(im)/vol(im)
+  endif
+   vf(im) = vol(im)/(h*h)     
 enddo
+
+
+  if (scheck .eq. 1) then
+   write(11,*) iin,jin
+   write(11,*) "center",center
+   call find_vertex(center, h, vertex)
+   do ii=1,4
+    call dist_fns(1,vertex(ii,1),vertex(ii,2),dist,probtype_in)
+    write(11,*) "mat1, ii,vertex,dist ",ii,vertex(ii,1),vertex(ii,2),dist
+   enddo
+   do ii=1,4
+    call dist_fns(2,vertex(ii,1),vertex(ii,2),dist,probtype_in)
+    write(11,*) "mat2, ii,vertex,dist ",ii,vertex(ii,1),vertex(ii,2),dist
+   enddo
+
+    write(11,*) "vfrac ",vf(1),vf(2)
+    write(11,*) "mat1 ",vf(1),centroid(1,:)
+    write(11,*) "mat2" , vf(2),centroid(2,:)
+   endif
 
 
 
@@ -2168,8 +2239,10 @@ if (probtype_in.eq.0) then
  ! do nothing
 else if (probtype_in.eq.2) then
  ! do nothing
-elseif(probtype_in .eq. 4 .or. probtype_in .eq. 5)then
- ! do nothing
+elseif(probtype_in .eq. 4 )then
+  ! do nothing
+elseif(probtype_in .eq. 5)then
+  vf(2)=1.0-vf(1)
 else if (probtype_in.eq.1 .or. probtype_in .eq. 3 &
          .or. probtype_in .eq. 9) then
  vf(2) = 1.0d0 - vf(1) -vf(3)
@@ -2272,8 +2345,14 @@ if (probtype_in.eq.0) then
  ! do nothing
 else if (probtype_in.eq.2) then
  ! do nothing
-elseif(probtype_in .eq. 4 .or. probtype_in .eq. 5) then
- ! do nothing
+elseif(probtype_in .eq. 4)then
+  ! do nothing
+elseif(probtype_in .eq. 5) then
+  do dir=1,2
+   centroid(2,dir) =  &
+    (center(dir) - vf(1)*centroid(1,dir))/vf(2)
+  enddo  
+
 else if (probtype_in.eq.1 .or. probtype_in .eq. 3 &
          .or. probtype_in .eq. 9) then
  if(vf(2) .gt. eps)then

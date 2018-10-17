@@ -26,7 +26,7 @@ IMPLICIT NONE
 ! for flat interface, interface is y=0.3.
 ! for dirichlet, top material has k=0 T(y=0.3)=2.0   T(y=0.0)=3.0
 
-INTEGER,PARAMETER          :: probtype_in = 7
+INTEGER,PARAMETER          :: probtype_in = 5
 INTEGER,PARAMETER          :: operator_type_in = 1 !0=low,1=simple,2=least sqr
 INTEGER,PARAMETER          :: dclt_test_in = 0 ! 1 = Dirichlet test  on
 INTEGER,PARAMETER          :: solvtype = 1 ! 0 = CG  1 = bicgstab
@@ -156,9 +156,9 @@ real(kind=8)         :: temptestt1,temptestt2
  open(unit=11,file="check.dat")
  open(unit=12,file="para.dat")
 
- open(unit=41,file="output1.dat")
- open(unit=42,file="output2.dat")
- open(unit=43,file="output3.dat")
+ !open(unit=41,file="output1.dat")
+ !open(unit=42,file="output2.dat")
+ !open(unit=43,file="output3.dat")
 
  open(unit=91,file="psol.dat")
  open(unit=92,file="test9.dat")
@@ -373,6 +373,8 @@ CALL INIT_V(N,XLINE(0:N),YLINE(0:N),uu,vv)
  enddo
 
 
+
+  
   ngeom_recon_in=2*sdim_in+3
   do i=-1,N
   do j=-1,N
@@ -400,11 +402,12 @@ CALL INIT_V(N,XLINE(0:N),YLINE(0:N),uu,vv)
   enddo
   enddo
 
-  do j=N,-1,-1
-   write(79,*) mofdata_FAB_in(:,j,1+ngeom_recon_in*2)  
-  enddo
-
-
+  if(probtype_in .eq. 7)then
+   do j=N,-1,-1
+    write(79,*) mofdata_FAB_in(:,j,1+ngeom_recon_in*2)  
+   enddo
+  endif
+ 
 ! init thermal conductivity
  if (probtype_in.eq.0) then
   thermal_cond(1)=10.0d0
@@ -698,15 +701,15 @@ do tm  = 1, M
 
 !  write(2,*)"#################################################################"
 !  write(2,*) "T1", "  mat = 1"
-  do i1 = loy_in-1,hiy_in+1
+!  do i1 = loy_in-1,hiy_in+1
 !   write(2,*) Unew_in(:,i1,1) 
-   write(41,*) Unew_in(:,i1,1) 
-  enddo
+!   write(41,*) Unew_in(:,i1,1) 
+!  enddo
 !   write(2,*) "T1", "  mat = 2"
-  do i1 = loy_in-1,hiy_in+1
+!  do i1 = loy_in-1,hiy_in+1
 !   write(2,*) Unew_in(:,i1,2) 
-   write(42,*) Unew_in(:,i1,2) 
-  enddo
+!   write(42,*) Unew_in(:,i1,2) 
+!  enddo
 !  write(2,*) "####################################################################"
 
 
@@ -722,15 +725,15 @@ do tm  = 1, M
 
 !  write(2,*)"#################################################################"
 !  write(2,*) "T2", "  mat = 1"
-  do i1 = loy_in-1,hiy_in+1
+!  do i1 = loy_in-1,hiy_in+1
 !   write(2,*) Unew_in(:,i1,1) 
-   write(41,*) Unew_in(:,i1,1) 
-  enddo
+!   write(41,*) Unew_in(:,i1,1) 
+!  enddo
 !   write(2,*) "T2", "  mat = 2"
-  do i1 = loy_in-1,hiy_in+1
+!  do i1 = loy_in-1,hiy_in+1
 !   write(2,*) Unew_in(:,i1,2) 
-   write(42,*) Unew_in(:,i1,2) 
-  enddo
+!   write(42,*) Unew_in(:,i1,2) 
+!  enddo
 !  write(2,*) "####################################################################"
 
 
@@ -974,6 +977,23 @@ if(probtype_in .eq. 6 .or. probtype_in .eq. 3)then
  enddo
 endif
 
+if(probtype_in .eq. 5)then
+ do i=0,N
+ do j = 0,N
+  call dist_fns(1,xline(i),yline(j),dtest(i+1,j+1),probtype_in)
+  call dist_fns(2,xline(i),yline(j),dtest1(i+1,j+1),probtype_in)
+ enddo
+ enddo
+ do j=1,N+1
+  write(10,*) dtest(:,j) 
+ enddo
+ do j=1,N+1
+  write(31,*) dtest1(:,j) 
+ enddo
+endif
+
+
+
 if(1 .eq. 0)then
 print *,vf(15,16,:)
 print *,vf(16,15,:)
@@ -1025,9 +1045,9 @@ deallocate(T_new)
  close(23)
  close(31)
  close(32)
- close(41)
- close(42)
- close(43)
+! close(41)
+! close(42)
+! close(43)
  close(91)
  close(92)
  close(93)

@@ -15,6 +15,6 @@ test:
 run:
 	./test
 clean:
-	rm *.mod core.* test *.jpg *.o *.tec wavedata*
+	rm *.mod core.* test *.jpg *.o *.tec wavedata* fort.1 fort.2
 clear:	
 	rm *.dat
