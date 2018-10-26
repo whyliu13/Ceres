@@ -16,7 +16,7 @@ real(kind=8),parameter :: eps = 1e-10
 real(kind=8),parameter :: tol = 1e-6
 real(kind=8),parameter :: pi  = 4.0d0*atan(1.0d0)
 
-integer,parameter      :: pcurve_num = 4000
+integer,parameter      :: pcurve_num = 2000
 real(kind=8)           :: pcurve_ls(2,pcurve_num+1)
 real(kind=8)           :: pcurve_ls2(2,pcurve_num+1)
 real(kind=8)           :: pcurve_rad(pcurve_num+1)

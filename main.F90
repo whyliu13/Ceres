@@ -30,7 +30,7 @@ INTEGER,PARAMETER          :: probtype_in = 5
 INTEGER,PARAMETER          :: operator_type_in = 1 !0=low,1=simple,2=least sqr
 INTEGER,PARAMETER          :: dclt_test_in = 0 ! 1 = Dirichlet test  on
 INTEGER,PARAMETER          :: solvtype = 1 ! 0 = CG  1 = bicgstab
-INTEGER,PARAMETER          :: N=64,M= 1
+INTEGER,PARAMETER          :: N=256,M= 8
 INTEGER,PARAMETER          :: plot_int = 1
 real(kind=8),parameter     :: fixed_dt = 1.25d-2 /real(M,8) ! !!!!!!!!!!!!!!!!!!
 real(kind=8),parameter     :: cf= 1.0d0         ! multiplier of the time step.
@@ -39,6 +39,7 @@ real(kind=8),parameter     :: problo= 0.0d0, probhi= 1.0d0
 integer,parameter          :: sdim_in = 2
 
 integer,parameter          :: msample=1
+integer,parameter          :: cal_off=0
 
 INTEGER :: nmat_in
 INTEGER :: precond_type_in
@@ -181,6 +182,10 @@ real(kind=8)         :: temptestt1,temptestt2
 
  open(unit=79,file="vf.dat")
 
+ open(unit=51,file="asteroid.dat")
+ open(unit=52,file="pcurve.dat")
+
+
 
 call_time=0
 !if(probtype_in .eq. 4 .or. probtype_in .eq. 3)then
@@ -198,6 +203,12 @@ if( 1 .eq. 1)then
    pcurve_ls(1,i)=(pcurve_ls(1,i)+1.0d0)/2.0d0
    pcurve_ls(2,i)=(pcurve_ls(2,i)+1.0d0)/2.0d0  
   enddo
+!  print *,"pcurve_ls 0", pcurve_ls(:,1)
+!  print *,"pcurve_ls 1/4", pcurve_ls(:,pcurve_num/4+1)
+!  print *,"pcurve_ls 1/2", pcurve_ls(:,pcurve_num/2+1)
+!  print *,"pcurve_ls 3/4", pcurve_ls(:,pcurve_num*3/4+1)
+!  print *,"pcurve_ls 1", pcurve_ls(:,pcurve_num+1)  
+
 !   do i = 1,pcurve_num
 !    write(12,*) (pcurve_ls(:,i)+1.0d0)/2.0d0
 !   enddo
@@ -712,7 +723,7 @@ do tm  = 1, M
 !  enddo
 !  write(2,*) "####################################################################"
 
-
+if(cal_off .eq. 0)then
  if(solvtype .eq. 1)then                        ! solver type
   call bicgstab(UNEW_in,hflag)              
  elseif(solvtype .eq. 0)then
@@ -721,6 +732,14 @@ do tm  = 1, M
   print *, "solver type invalid"
   stop
  endif
+
+elseif(cal_off .eq. 1)then
+  ! do nothing
+else
+ print *,"wrong flag cal_off"
+ stop
+endif
+ 
 
 
 !  write(2,*)"#################################################################"
@@ -1021,6 +1040,9 @@ print *,cell_fab(16,15)%center%val
 endif
 
 
+ do i=1,pcurve_num+1
+   write(52,*) pcurve_ls(:,i)
+ enddo
 
 
 
@@ -1048,6 +1070,9 @@ deallocate(T_new)
 ! close(41)
 ! close(42)
 ! close(43)
+ close(51)
+ close(52)
+
  close(91)
  close(92)
  close(93)

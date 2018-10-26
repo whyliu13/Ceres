@@ -16,9 +16,187 @@ use MOF_pair_module
 implicit none
 
 REAL(KIND=8),PARAMETER   :: mof_tol=1.0e-4
-
+integer,parameter        :: shapeflag=1   ! asteroid test case 0: asteroid 1:diamand 
+                                           ! 2: circle
 
 contains
+! 
+subroutine test_dist_fns(imat,x,y,dist,probtype_in)
+implicit none
+
+integer,intent(in)               :: imat,probtype_in
+real(kind=8)                     :: x,y,dist
+real(kind=8)                     :: dist1,dist2,dist3,dist4,dist5
+real(kind=8)                     :: dist6,dist7,dist8
+real(kind=8)                     :: d1,d2,d3,d4,d5
+real(kind=8)                     :: xy(2)
+real(kind=8)                     :: x1(2),x2(2),x3(2),x4(2),x5(2)
+real(kind=8)                     :: x6(2)
+real(kind=8)                     :: xxl(2),xxr(2)
+integer                          :: i
+real(kind=8)                     :: r1,r2,r3,r4
+real(kind=8)                     :: center(2),cc(2)
+
+real(kind=8)                     :: x0,y0
+real(kind=8)                     :: c1,c2,c3,c4,tt,ttcrit,tt1,tt2
+integer                          :: ttsign
+real(kind=8)                     :: tcrit,tcrit1,tcrit2  !theta
+real(kind=8)                     :: signtemp
+real(kind=8)                     :: xtheta,ytheta
+real(kind=8)                     :: xtheta1,ytheta1,xtheta2,ytheta2
+integer                          :: flag
+integer                          :: pp1,pp2
+real(kind=8)                     :: pcurve_crit(2)
+integer                          :: cenflag,cccflag
+
+real(kind=8)                     :: vt1(2),vt2(2),vt3(2),vt4(2)
+real(kind=8)                     :: vtd1,vtd2,vtd3,vtd4
+
+real(kind=8)                     :: smrad
+real(kind=8)                     :: rad_crit(2)
+integer                          :: ppcrit
+real(kind=8)                     :: pcrit1(2),pcrit2(2),pcrit(2)
+real(kind=8)                     :: psig1(2),psig2(2)
+
+real(kind=8)                     :: mx,my,c
+real(kind=8)                     :: cdiff
+real(kind=8)                     :: xysign 
+real(kind=8)                     :: xc(2),xc1(2),xc2(2),xc3(2)
+
+
+if(probtype_in .eq. 5)then     ! asteroid 2 materials 
+ xy(1)=x
+ xy(2)=y
+
+! center(1) = 0.02d0*sqrt(5.0d0)
+! center(2) = 0.02d0*sqrt(5.0d0)
+ center = 0.0d0
+
+ cc(1)=(center(1)+1.0d0)/2.0d0
+ cc(2)=(center(2)+1.0d0)/2.0d0
+!  print *,"xy",xy
+ call rad_cal(xy,cc,tt)
+ if(tt .ge. 0.0d0 .and. tt .le. 0.5d0*pi)then
+   pp1=1
+   pp2=pcurve_num/4+1
+ elseif(tt .le. pi)then
+   pp1=pcurve_num/4+1
+   pp2=pcurve_num/2+1
+ elseif(tt .le. 1.5d0*pi)then
+   pp1= pcurve_num/2+1
+   pp2=pcurve_num/4*3+1
+ elseif(tt .lt. 2.0d0*pi)then
+   pp1=pcurve_num/4*3+1
+   pp2=pcurve_num+1
+ else
+  print *,"invalid tt", tt
+  stop
+ endif 
+
+
+ dist1=100000.0d0
+ ppcrit=pp1
+ do i=pp1,pp2
+  call l2normd(2,xy,pcurve_ls(:,i),dist2)
+  if(dist2 .lt. dist1)then
+!   pcurve_crit=pcurve_ls(:,i)
+   dist1=dist2
+   ppcrit=i
+  endif
+ enddo
+ !  pcrit1 >> pcrit >> pcrit2
+ ! print *,"ppcrit=",ppcrit
+ if(ppcrit .eq. pp1) then
+  pcrit(:)=pcurve_ls(:,pp1)
+  pcrit2(:)=pcurve_ls(:,pp1+1)
+ elseif(ppcrit .eq. pp2)then
+  pcrit1(:)=pcurve_ls(:,pp2-1)
+  pcrit(:)=pcurve_ls(:,pp2)  
+ elseif(ppcrit .gt. pp1 .and. ppcrit .lt. pp2)then
+  pcrit(:)=pcurve_ls(:,ppcrit)
+  pcrit1(:)=pcurve_ls(:,ppcrit-1)
+  pcrit2(:)=pcurve_ls(:,ppcrit+1)   
+!  print *,"pcrit", pcrit
+!  print *,"pcrit1",pcrit1
+!  print *,"pcrit2",pcrit2
+ else
+  print *,"ppcrit invalid 212"
+  stop
+ endif
+
+ if(ppcrit .eq. pp1) then
+  call l2normd(2,xy,pcurve_ls(:,pp1),dist1)
+  psig1(:)=pcrit(:)
+  psig2(:)=pcrit2(:)
+  write(51,*) xy,pcurve_ls(:,pp1)
+ elseif(ppcrit .eq. pp2)then
+  call l2normd(2,xy,pcurve_ls(:,pp2),dist1)
+  psig1(:)=pcrit1(:)
+  psig2(:)=pcrit(:)
+  write(51,*) xy,pcurve_ls(:,pp2)
+ elseif(ppcrit .gt. pp1 .and. ppcrit .lt. pp2)then
+   call dist_point_to_line_modify(2,pcrit1,pcrit,xy,dist3,xc1)
+   call dist_point_to_line_modify(2,pcrit2,pcrit,xy,dist4,xc2)
+
+!  print *,"pp1,pp2",pp1,pp2
+!  print *,"pcrit", pcrit, dist1
+!  print *,"pcrit1", pcrit1, dist3
+!  print *,"pcirt2", pcrit2, dist4
+!  print *,"xy",xy
+
+
+
+  if(dist3 .lt. 0.0d0 .or. dist4 .lt. 0.0d0)then
+   print *,"check sign 233"
+   stop
+  endif
+
+   if(dist3 .le. dist4 .and. dist3 .le. dist1)then
+    psig1(:)=pcrit1(:)
+    psig2(:)=pcrit(:)
+    dist1=dist3
+    write(51,*) xy,xc1
+   elseif(dist4 .le. dist3 .and. dist4 .le. dist1)then
+    psig1(:)=pcrit(:)
+    psig2(:)=pcrit2(:)
+    dist1=dist4 
+    write(51,*) xy,xc2 
+   else
+    print *, "err, check251",dist3,dist4,dist1
+!    psig1(:)=pcrit1(:)
+!    psig2(:)=pcrit(:)
+!    dist1=dist3
+    stop
+   endif
+ else
+  print *,"ppcrit invalid 224"
+  stop
+ endif
+
+!  print *,  "dist", dist1
+
+ call rad_cal(psig1,xy,tt1)
+ call rad_cal(psig2,xy,tt2)  
+ if(tt1 .le. tt2)then
+  xysign=+1.0d0
+ else 
+  xysign=-1.0d0
+ endif
+
+ if(imat .eq. 1)then
+  dist=dist1*xysign
+ elseif(imat .eq. 2)then
+  dist=-1.0d0*dist1*xysign
+ else
+  print *,"wrong num of materials for test 5"
+  stop
+ endif
+
+endif
+
+
+end subroutine test_dist_fns
+
 !---------------------------------------------------------
 subroutine dist_fns(imat,x,y,dist,probtype_in)
 
@@ -38,7 +216,7 @@ real(kind=8)                     :: r1,r2,r3,r4
 real(kind=8)                     :: center(2),cc(2)
 
 real(kind=8)                     :: x0,y0
-real(kind=8)                     :: c1,c2,c3,c4,tt,ttcrit
+real(kind=8)                     :: c1,c2,c3,c4,tt,ttcrit,tt1,tt2
 integer                          :: ttsign
 real(kind=8)                     :: tcrit,tcrit1,tcrit2  !theta
 real(kind=8)                     :: signtemp
@@ -54,6 +232,18 @@ real(kind=8)                     :: vtd1,vtd2,vtd3,vtd4
 
 real(kind=8)                     :: smrad
 real(kind=8)                     :: rad_crit(2)
+integer                          :: ppcrit
+real(kind=8)                     :: pcrit1(2),pcrit2(2),pcrit(2)
+real(kind=8)                     :: psig1(2),psig2(2)
+real(kind=8)                     :: pclose(2),pclose1(2),pclose2(2)
+
+real(kind=8)                     :: mx,my,c
+real(kind=8)                     :: cdiff
+real(kind=8)                     :: xysign
+real(kind=8)                     :: xc(2),xc1(2),xc2(2),xc3(2)
+real(kind=8)                     :: crossp(3)
+integer                          :: choosepn
+
 
 if(probtype_in .eq. 1 .or. probtype_in .eq. 9) then
  center(1) = 0.5d0
@@ -154,8 +344,7 @@ elseif(probtype_in .eq. 3) then
   print *,"error 143"
  endif
 
-
-elseif(probtype_in .eq. 5)then     ! asteroid 2 materials
+elseif(probtype_in .eq. 25)then     ! asteroid 2 materials connected points
  xy(1)=x
  xy(2)=y
 
@@ -175,7 +364,7 @@ elseif(probtype_in .eq. 5)then     ! asteroid 2 materials
    pp2=pcurve_num/2+1
  elseif(tt .le. 1.5d0*pi)then
    pp1= pcurve_num/2+1
-   pp2=pcurve_num/4*3
+   pp2=pcurve_num/4*3+1
  elseif(tt .lt. 2.0d0*pi)then
    pp1=pcurve_num/4*3+1
    pp2=pcurve_num+1
@@ -186,30 +375,268 @@ elseif(probtype_in .eq. 5)then     ! asteroid 2 materials
 
 
  dist1=100000.0d0
- smrad=100000.0d0
+ ppcrit=pp1
+ do i=pp1,pp2
+  call l2normd(2,xy,pcurve_ls(:,i),dist2)
+  if(dist2 .lt. dist1)then
+!   pcurve_crit=pcurve_ls(:,i)
+   dist1=dist2
+   ppcrit=i
+  endif
+ enddo
+ !  pcrit1 >> pcrit >> pcrit2
+ ! print *,"ppcrit=",ppcrit
+ if(ppcrit .eq. pp1) then
+  pcrit(:)=pcurve_ls(:,pp1)
+  pcrit2(:)=pcurve_ls(:,pp1+1)
+ elseif(ppcrit .eq. pp2)then
+  pcrit(:)=pcurve_ls(:,pp2)  
+  pcrit1(:)=pcurve_ls(:,ppcrit-1)
+ elseif(ppcrit .gt. pp1 .and. ppcrit .lt. pp2)then
+  pcrit(:)=pcurve_ls(:,ppcrit)
+  pcrit1(:)=pcurve_ls(:,ppcrit-1)
+  pcrit2(:)=pcurve_ls(:,ppcrit+1)   
+!  print *,"pcrit", pcrit
+!  print *,"pcrit1",pcrit1
+!  print *,"pcrit2",pcrit2
+ else
+  print *,"ppcrit invalid 212"
+  stop
+ endif
+
+ if(ppcrit .eq. pp1) then
+!  call l2normd(2,xy,pcurve_ls(:,pp1),dist1)
+  call dist_point_to_line_modify(2,pcrit,pcrit2,xy,dist1,pclose)
+
+ elseif(ppcrit .eq. pp2)then
+!  call l2normd(2,xy,pcurve_ls(:,pp2),dist1)
+  call dist_point_to_line_modify(2,pcrit1,pcrit,xy,dist1,pclose)
+
+ elseif(ppcrit .gt. pp1 .and. ppcrit .lt. pp2)then
+   call dist_point_to_line_modify(2,pcrit1,pcrit,xy,dist3,pclose1)
+   call dist_point_to_line_modify(2,pcrit2,pcrit,xy,dist4,pclose2)
+
+!  print *,"pp1,pp2",pp1,pp2
+!  print *,"pcrit", pcrit, dist1
+!  print *,"pcrit1", pcrit1, dist3
+!  print *,"pcirt2", pcrit2, dist4
+!  print *,"xy",xy
+
+
+
+  if(dist3 .lt. 0.0d0 .or. dist4 .lt. 0.0d0)then
+   print *,"check sign 233"
+   stop
+  endif
+
+   if(dist3 .le. dist4 )then
+    dist1=dist3
+    pclose=pclose1
+  !  write(51,*) xy,xc1
+    choosepn=-1
+   elseif(dist4 .lt. dist3)then
+    dist1=dist4 
+    pclose=pclose2
+ !   write(51,*) xy,xc2
+    choosepn=+1     
+   else
+    print *, "err, check251",dist3,dist4,dist1
+    stop
+   endif
+ else
+   print *,"ppcrit invalid 224"
+   stop
+ endif
+
+!  print *,  "dist", dist1
+
+if(pclose(1) .eq. x .and. pclose(2) .eq. y)then
+ dist=0.0d0
+ crossp=0.0d0
+else
+ if(ppcrit .eq. pp2)then
+  call cross_product(2,pcurve_ls(:,ppcrit-1),&
+                     pcurve_ls(:,ppcrit),xy,crossp)
+ elseif(ppcrit .eq. pp1)then
+  call cross_product(2,pcurve_ls(:,ppcrit), & 
+                   pcurve_ls(:,ppcrit+1),xy,crossp)
+ elseif(ppcrit .gt. pp1 .and. ppcrit .lt. pp2)then
+  if(choosepn .eq. -1)then
+   call cross_product(2,pcurve_ls(:,ppcrit-1), & 
+                   pcurve_ls(:,ppcrit),xy,crossp)  
+  elseif(choosepn .eq. +1)then
+    call cross_product(2,pcurve_ls(:,ppcrit), & 
+                   pcurve_ls(:,ppcrit+1),xy,crossp)
+  else
+   print *,"check chosepn"
+   stop
+  endif
+   
+ else
+  print *,"check ppcrit"
+  stop
+ endif
+
+ if(crossp(3) .eq. 0.0d0)then
+  dist=0.0d0
+  crossp=0.0d0
+!  print *,"cross_product is 0 check!"
+!  print *,"xy",xy
+!  print *, pcurve_ls(:,ppcrit-1)
+!  print *,pcurve_ls(:,ppcrit)
+!  print *,pcurve_ls(:,ppcrit+1)
+!  print *,"crossp",crossp
+!  stop
+ endif
+
+
+ if(imat .eq. 1)then
+  dist=sign(dist1,crossp(3))
+ elseif(imat .eq. 2)then
+  dist=-1.0d0*sign(dist1,crossp(3))
+ else
+  print *,"wrong num of materials for test 5"
+  stop
+ endif
+
+endif
+
+elseif(probtype_in .eq. 15)then     ! diamand
+ xy(1)=x
+ xy(2)=y
+ vt1(1)=0.75d0
+ vt1(2)=0.5d0
+ vt2(1)=0.5d0
+ vt2(2)=0.75d0
+ vt3(1)=0.25d0
+ vt3(2)=0.5d0
+ vt4(1)=0.5d0
+ vt4(2)=0.25d0
+ call dist_point_to_lined(2,vt1,vt2,xy,dist1)
+ call dist_point_to_lined(2,vt2,vt3,xy,dist2) 
+ call dist_point_to_lined(2,vt3,vt4,xy,dist3)
+ call dist_point_to_lined(2,vt4,vt1,xy,dist4)
+
+ dist=min(dist1,dist2,dist3,dist4)
+
+ d1=x+y-1.25d0
+ d2=x+y-0.75d0
+ d3=x-y-0.25d0
+ d4=x-y+0.25d0
+
+ if(d1 .le. 0.0d0 .and. d2 .ge. 0.0d0 .and. d3 .le. 0.0d0 .and. d4 .ge. 0.0d0)then
+  ! do nothing
+ else
+  dist = -dist
+ endif
+
+ if(imat .eq. 1)then
+  ! do nothing
+ elseif(imat .eq. 2)then
+  dist=-dist
+ endif
+ 
+
+
+
+elseif(probtype_in .eq. 5)then     ! asteroid 2 materials back
+ xy(1)=x
+ xy(2)=y
+
+! center(1) = 0.02d0*sqrt(5.0d0)
+! center(2) = 0.02d0*sqrt(5.0d0)
+ center = 0.0d0
+
+ cc(1)=(center(1)+1.0d0)/2.0d0
+ cc(2)=(center(2)+1.0d0)/2.0d0
+!  print *,"xy",xy
+ call rad_cal(xy,cc,tt)
+ if(tt .ge. 0.0d0 .and. tt .le. 0.5d0*pi)then
+   pp1=1
+   pp2=pcurve_num/4+1
+ elseif(tt .le. pi)then
+   pp1=pcurve_num/4+1
+   pp2=pcurve_num/2+1
+ elseif(tt .le. 1.5d0*pi)then
+   pp1= pcurve_num/2+1
+   pp2=pcurve_num/4*3+1
+ elseif(tt .le. 2.0d0*pi)then
+   pp1=pcurve_num/4*3+1
+   pp2=pcurve_num+1
+ else
+  print *,"invalid tt", tt
+  stop
+ endif 
+
+
+ dist1=100000.0d0
+! smrad=100000.0d0
+ ppcrit=pp1
  do i=pp1,pp2
   call l2normd(2,xy,pcurve_ls(:,i),dist2)
   if(dist2 .lt. dist1)then
    pcurve_crit=pcurve_ls(:,i)
    dist1=dist2
+   ppcrit=i
   endif
-  if(abs(pcurve_rad(i)-tt) .lt. smrad)then
-   smrad=abs(pcurve_rad(i)-tt)
-   rad_crit= pcurve_ls(:,i)   
-  endif
+!  if(abs(pcurve_rad(i)-tt) .lt. smrad)then
+!   smrad=abs(pcurve_rad(i)-tt)
+!   rad_crit= pcurve_ls(:,i)   
+!  endif
  enddo
 
- call l2normd(2,cc,rad_crit,dist3)
- call l2normd(2,cc,xy,dist2)
+if(pcurve_ls(1,ppcrit) .eq. x .and. pcurve_ls(2,ppcrit) .eq. y)then
+ dist=0.0d0
+ crossp=0.0d0
+else
+ if(ppcrit .eq. pp2)then
+  call cross_product(2,pcurve_ls(:,ppcrit-1),&
+                     pcurve_ls(:,ppcrit),xy,crossp)
+ else
+  call cross_product(2,pcurve_ls(:,ppcrit), & 
+                   pcurve_ls(:,ppcrit+1),xy,crossp) 
+ endif
+
+ if(crossp(3) .eq. 0.0d0)then
+  dist=0.0d0
+  crossp=0.0d0
+!  print *,"cross_product is 0 check!"
+!  print *,"xy",xy
+!  print *, pcurve_ls(:,ppcrit-1)
+!  print *,pcurve_ls(:,ppcrit)
+!  print *,pcurve_ls(:,ppcrit+1)
+!  print *,"crossp",crossp
+!  stop
+ endif
 
  if(imat .eq. 1)then
-  dist=sign(dist1,(dist3-dist2))
+  dist=sign(dist1,crossp(3))
  elseif(imat .eq. 2)then
-  dist=-sign(dist1,(dist3-dist2))
+  dist=-1.0d0*sign(dist1,crossp(3))
  else
-  print *,"wrong num of material, 187"
+  print *,"wrong num of materials for test 5"
   stop
  endif
+
+
+
+
+endif
+
+
+
+
+! call l2normd(2,cc,rad_crit,dist3)
+! call l2normd(2,cc,xy,dist2)
+
+! if(imat .eq. 1)then
+!  dist=sign(dist1,(dist3-dist2))
+! elseif(imat .eq. 2)then
+!  dist=-sign(dist1,(dist3-dist2))
+! else
+!  print *,"wrong num of material, 187"
+!  stop
+! endif
  
 ! if(imat .eq. 1)then
 !  dist=sign(dist1,(dist3-dist2))
@@ -221,30 +648,7 @@ elseif(probtype_in .eq. 5)then     ! asteroid 2 materials
 ! endif
 
 
-! vt1(1)=0.9d0
-! vt1(2)=0.5d0
-! vt2(1)=0.5d0
-! vt2(2)=0.9d0
-! vt3(1)=0.1d0
-! vt3(2)=0.5d0
-! vt4(1)=0.5d0
-! vt4(2)=0.1d0
-! call l2normd(2,xy,vt1,vtd1)
-! call l2normd(2,xy,vt2,vtd2)
-! call l2normd(2,xy,vt3,vtd3)
-! call l2normd(2,xy,vt4,vtd4)
-! if(vtd1 .lt. space_partition)then
-!  dist=sign(vtd1,dist)
-! endif
-! if(vtd2 .lt. space_partition)then
-!  dist=sign(vtd2,dist)
-! endif
-! if(vtd3 .lt. space_partition)then
-!  dist=sign(vtd3,dist)
-! endif
-! if(vtd4 .lt. space_partition)then
-!  dist=sign(vtd4,dist)
-! endif
+
 
 elseif(probtype_in .eq. 7)then
  xy(1)=x
@@ -677,6 +1081,59 @@ endif
 
 end subroutine dist_fns
 
+!------------------------------------------------- 
+subroutine cross_product(sdim,x1,x2,cc,crossp)
+implicit none
+
+integer, intent(in)   :: sdim
+real(kind=8),intent(in)  :: x1(sdim),x2(sdim),cc(sdim)
+real(kind=8)           :: crossp(3)
+real(kind=8)           :: u(sdim),v(sdim)
+integer                :: i
+
+ do i=1,sdim
+  u(i)=x1(i)-cc(i)
+  v(i)=x2(i)-cc(i)
+ enddo
+
+ if(sdim .eq. 2)then
+   crossp(1)= 0.0d0
+   crossp(2)= 0.0d0
+   crossp(3)= u(1)*v(2)-u(2)*v(1)
+ else
+  print *,"check cross_product"
+  stop
+ endif
+
+end subroutine cross_product
+!-------------------------------------------------
+subroutine getline_from_two_points(p1,p2,mx,my,c)
+implicit none
+
+real(kind=8),intent(in)    :: p1(2),p2(2)
+real(kind=8),intent(out)   :: mx,my,c
+real(kind=8)                :: m
+
+if(abs(p1(1)-p2(1)) .lt. 1.0e-10 .and. abs(p1(2)-p2(2)) .lt. 1.0e-10 ) then
+  print *,"p1 and p2 are coincide, 801"
+  stop
+elseif(abs(p1(1)-p2(1)) .lt. 1.0e-10)then
+  mx=1.0d0
+  my=0.0d0
+  c=-p1(1)
+elseif(abs(p1(2)-p2(2)) .lt. 1.0e-10)then
+  mx=0.0d0
+  my=1.0d0
+  c=-p1(2)
+else
+  mx=(p1(2)-p2(2))/(p1(1)-p2(1))
+  my=-1.0d0
+  c=-mx*p1(1)+p1(2)
+endif
+
+end subroutine getline_from_two_points
+
+
 ! --------------------------------------------------
 subroutine find_cloest_2d(sflag,dist,xin,xout)
 implicit none
@@ -779,6 +1236,80 @@ endif
 deallocate(x10,x21) 
 
 end subroutine dist_point_to_lined
+! ---------------------------------------------------------------
+subroutine dist_point_to_line_modify(sdim,p1,p2,x,dist,xc)
+implicit none
+! represent the line in parametric form,(v = f(s))
+! v^x = x1 + (x2-x1)s
+! v^y = y1 + (y2-y1)s
+! v^z = z1 + (z2-z1)s
+! 
+! if the closest point on the line to point x  is outside p1 -- p2, 
+! --------> return the distance from x either to p1 or p2 which is shorter.
+! otherwise
+! --------> return the distance from x to the cloest point
+
+integer,intent(in)           :: sdim
+real(kind=8),intent(in)      :: p1(sdim),p2(sdim),x(sdim)
+real(kind=8)                 :: dist
+real(kind=8)                 :: xc(sdim)
+
+
+real(kind=8)                 :: diff10,diff21,diffx
+real(kind=8),allocatable     :: x10(:), x21(:)
+integer                      :: i
+real(kind=8)                 :: s
+
+
+dist = 0.0d0
+
+allocate(x10(sdim),x21(sdim))
+do i = 1,sdim
+ x10(i) = p1(i) - x(i)
+ x21(i) = p2(i) - p1(i)
+enddo
+
+if (maxval(abs(x21)) .lt. 10d-8)then
+ print *,"p1 and p2 are coincide with each other",p1,p2
+ stop
+endif
+
+call l2normd(sdim, p1, x, diff10)
+call l2normd(sdim, p2, p1, diff21)
+
+!print *,"diff10",diff10
+!print *,"diff21",diff21
+
+s = -1.0d0*(dot_product(x10,x21))/(diff21**2.0d0)
+
+!print *,"s=",s
+
+if(s .gt. 1.0d0)then
+ call l2normd(sdim, p2, x,dist)
+ xc=p2
+elseif(s .lt. 0.0d0)then
+ call l2normd(sdim,p1,x,dist)
+ xc=p1
+else
+ if(abs((diff10**2.0d0 )*(diff21**2.0d0) - & 
+        (dot_product(x10,x21))**2.0d0) .lt. 1.0e-10)then
+   dist= 0.0d0
+   xc=x
+ else
+  dist = sqrt(((diff10**2.0d0 )*(diff21**2.0d0) - & 
+        (dot_product(x10,x21))**2.0d0)/ &
+        (diff21**2.0d0))
+  do i=1,sdim
+   xc(i)=p1(i)+ s*(x(i)-p1(i))
+  enddo
+ endif
+endif
+
+deallocate(x10,x21) 
+
+end subroutine dist_point_to_line_modify
+
+
 
 
 
@@ -842,6 +1373,7 @@ integer :: i
 integer :: cenflag
 real(kind=8) :: cc(2)
 
+
 num = pcurve_num
  cenflag= 0
 
@@ -859,13 +1391,41 @@ else
  stop
 endif
 
+if(shapeflag .eq. 0)then
+
  do i = 1,num+1
+
   xt(1,i) = cc(1) + &
            0.6d0*cos(theta(i)) + 0.2d0*cos(3.0d0*theta(i))
   xt(2,i) = cc(2) + &
            0.6d0*sin(theta(i)) - 0.2d0*sin(3.0d0*theta(i))
   call rad_cal(xt(:,i),cc,pcurve_rad(i))
  enddo
+elseif(shapeflag .eq. 1)then
+  do i = 1,pcurve_num/4+1
+   xt(1,i)= 0.5d0 -(i-1)*0.5/(real(pcurve_num,8)/4.0)
+   xt(2,i)= 0.0d0 +(i-1)*0.5/(real(pcurve_num,8)/4.0)
+
+   xt(1,pcurve_num/4+i)= 0.0d0 -(i-1)*0.5/(real(pcurve_num,8)/4.0)
+   xt(2,pcurve_num/4+i)= 0.5d0 -(i-1)*0.5/(real(pcurve_num,8)/4.0)
+
+   xt(1,pcurve_num/2+i)= -0.5d0 +(i-1)*0.5/(real(pcurve_num,8)/4.0)
+   xt(2,pcurve_num/2+i)= 0.0d0 -(i-1)*0.5/(real(pcurve_num,8)/4.0)
+ 
+   xt(1,pcurve_num/4*3+i)= 0.0d0 +(i-1)*0.5/(real(pcurve_num,8)/4.0)
+   xt(2,pcurve_num/4*3+i)= -0.5d0 +(i-1)*0.5/(real(pcurve_num,8)/4.0)
+  enddo 
+elseif(shapeflag .eq. 2)then
+ 
+ do i=1,num+1
+  xt(1,i)= cc(1) + 0.5d0*cos(theta(i))
+  xt(2,i)= cc(2) + 0.5d0*sin(theta(i))
+ enddo
+
+else
+ print *,"wrong shapeflag in asteroidshape,xt"
+ stop
+endif
 
 end subroutine asteroidshape
 
@@ -1634,18 +2194,68 @@ integer                 :: ct
  if(abs(d1) .lt. 1.0d-10 .and. abs(d2) .lt. 1.0d-10 &                       ! 0  0  0
     .and. abs(d3) .lt. 1.0d-10)then
    print *,"invalid d1 d2 d3, check triangle_interface_detect"
-   stop 
- elseif(d1 .ge. 0.0d0  .and. d2 .ge. 0.0d0 .and. d3 .ge. 0.0d0)then         ! +0  +0  +0
+   print *, v1,d1
+   print *, v2,d2
+   print *, v3,d3
+   
+ elseif(d1 .gt. 0.0d0  .and. d2 .gt. 0.0d0 .and. d3 .gt. 0.0d0)then         ! +0  +0  +0
   call tri_area8(v1,v2,v3,area)
   call tri_centroid(v1,v2,v3,cen)
 !  print *,"case 1", "area",area
- elseif(d1 .le. 0.0d0  .and. d2 .le. 0.0d0 .and. d3 .le. 0.0d0)then         ! -0  -0  -0   
+ elseif(d1 .lt. 0.0d0  .and. d2 .lt. 0.0d0 .and. d3 .lt. 0.0d0)then         ! -0  -0  -0   
 !  print *,"case 2"
     area = 0.0d0
     cen = 0.0d0
     ! do nothing
- elseif(abs(d1) .lt. 1.0e-10 .and. d2*d3 .lt. 0.0d0)then
-   print *,"case 3"
+
+  elseif(d1 .eq. 0.0d0 .and. d2 .eq. 0.0d0 .and. d3 .ne. 0.0d0)then
+   if(d3 .gt. 0.0d0)then
+    call tri_area8(v1,v2,v3,area)
+    call tri_centroid(v1,v2,v3,cen)
+   else
+    area = 0.0d0
+    cen=0.0d0
+   endif
+  elseif(d1 .eq. 0.0d0 .and. d3 .eq. 0.0d0 .and. d2 .ne. 0.0d0)then
+   if(d2 .gt. 0.0d0)then
+    call tri_area8(v1,v2,v3,area)
+    call tri_centroid(v1,v2,v3,cen)
+   else
+    area = 0.0d0
+    cen=0.0d0
+   endif
+  elseif(d2 .eq. 0.0d0 .and. d3 .eq. 0.0d0 .and. d1 .ne. 0.0d0)then
+   if(d1 .gt. 0.0d0)then
+    call tri_area8(v1,v2,v3,area)
+    call tri_centroid(v1,v2,v3,cen)
+   else
+    area = 0.0d0
+    cen=0.0d0
+   endif
+  elseif(d1 .eq. 0.0d0 .and. d2*d3 .gt. 0.0d0)then
+   if(d2 .gt. 0.0d0)then
+    call tri_area8(v1,v2,v3,area)
+    call tri_centroid(v1,v2,v3,cen)  
+   else
+    ! do nothing
+   endif
+  elseif(d2 .eq. 0.0d0 .and. d1*d3 .gt. 0.0d0)then
+   if(d1 .gt. 0.0d0)then
+    call tri_area8(v1,v2,v3,area)
+    call tri_centroid(v1,v2,v3,cen)  
+   else
+    ! do nothing
+   endif
+  elseif(d3 .eq. 0.0d0 .and. d1*d2 .gt. 0.0d0)then
+   if(d2 .gt. 0.0d0)then
+    call tri_area8(v1,v2,v3,area)
+    call tri_centroid(v1,v2,v3,cen)  
+   else
+    ! do nothing
+   endif
+
+ elseif(d1 .eq. 0.0d0 .and. d2*d3 .lt. 0.0d0)then
+ !  print *,"case 3"
    ratio = abs(d2)/(abs(d3)+abs(d2))
    do i = 1,2
     x1(i)= v2(i) + ratio*(v3(i)-v2(i))
@@ -1660,8 +2270,8 @@ integer                 :: ct
     print *,"error, volate d2*d3<0,458"
     stop
    endif
- elseif(abs(d2) .lt. 1.0e-10 .and. d1*d3 .lt. 0.0d0)then
-   print *, "case4"
+ elseif(d2 .eq. 0.0d0 .and. d1*d3 .lt. 0.0d0)then
+!   print *, "case4",d1,d2,d3
    ratio = abs(d1)/(abs(d1)+abs(d3))
    do i = 1,2
     x1(i)= v1(i) + ratio*(v3(i)-v1(i))
@@ -1676,8 +2286,8 @@ integer                 :: ct
     print *,"error, volate d2*d3<0,473"
     stop
    endif    
- elseif(abs(d3) .lt. 1.0e-10 .and. d1*d2 .lt. 0.0d0)then
-   print *,"case5"
+ elseif( d3 .eq. 0.0d0 .and. d1*d2 .lt. 0.0d0)then
+ !  print *,"case5",d1,d2,d3
    ratio = abs(d1)/(abs(d1)+abs(d2))
    do i = 1,2
     x1(i)= v1(i) + ratio*(v2(i)-v1(i))
@@ -1691,8 +2301,10 @@ integer                 :: ct
    else
     print *,"error, volate d2*d3<0,488"
     stop
-   endif  
- else
+   endif
+
+  
+ elseif(d1 .ne. 0.0d0 .and. d2 .ne. 0.0d0 .and. d3 .ne. 0.0d0)then
  ! print *,"case6"
   ct = 0
   do i = 1,2
@@ -1795,11 +2407,18 @@ integer                 :: ct
     print *,"v3",v3
     stop
   endif
+
+ else
+  print *,"err out of cases", d1, d2,d3
+
  endif
 !else
 ! print *,"probtype_in error in triangle_interface_detect"
 ! stop
 !endif
+
+
+
 
 
 
@@ -1960,13 +2579,25 @@ integer                   :: flag
  do i = 1,4
   call dist_fns(im_in,vertex(i,1),vertex(i,2),dist(i),probtype_in)
  enddo
- 
+  
  do i = 1,3
   if(dist(1)*dist(i+1) .lt. 0.0d0)then
    flag = 1
    exit
   endif
  enddo
+
+ do i = 2,3
+  if(dist(2)*dist(i+1) .lt. 0.0d0)then
+   flag = 1
+   exit
+  endif
+ enddo
+
+  if(dist(3)*dist(4) .lt. 0.0d0)then
+   flag = 1
+  endif
+
 
 end subroutine inf_lsdetect
 
