@@ -16,7 +16,7 @@ use MOF_pair_module
 implicit none
 
 REAL(KIND=8),PARAMETER   :: mof_tol=1.0e-4
-integer,parameter        :: shapeflag=1   ! asteroid test case 0: asteroid 1:diamand 
+integer,parameter        :: shapeflag = 2   ! asteroid test case 0: asteroid 1:diamand 
                                            ! 2: circle
 
 contains
@@ -344,6 +344,8 @@ elseif(probtype_in .eq. 3) then
   print *,"error 143"
  endif
 
+
+
 elseif(probtype_in .eq. 25)then     ! asteroid 2 materials connected points
  xy(1)=x
  xy(2)=y
@@ -536,10 +538,24 @@ elseif(probtype_in .eq. 15)then     ! diamand
   dist=-dist
  endif
  
+elseif(probtype_in .eq. 5)then
+  xy(1)=x
+  xy(2)=y
+   cc(1)=0.5d0
+  cc(2)=0.5d0
+  call l2normd(2,xy,cc,dist2)
+  if(imat .eq. 1)then
+   dist=0.25d0-dist2
+  elseif(imat .eq. 2)then
+   dist=dist2-0.25d0
+  else
+   print *,"Err"
+   stop
+  endif
 
 
 
-elseif(probtype_in .eq. 5)then     ! asteroid 2 materials back
+elseif(probtype_in .eq. 35)then     ! asteroid 2 materials back
  xy(1)=x
  xy(2)=y
 
