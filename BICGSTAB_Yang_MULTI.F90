@@ -1,7 +1,7 @@
       module bicgstab_module
 
       REAL*8, PARAMETER :: AVGTOL=1.0E-8
-      REAL*8,PARAMETER  :: ERRTOL = 0.99D0
+      REAL*8,PARAMETER  :: ERRTOL = 0.01D0
 
       integer operator_type ! 0=low order 1=simple 2=high order
       integer probtypeCG ! 0=flat interface  1=annulus 2=vertical interface
@@ -687,6 +687,8 @@
         do dir=1,sdim
          xsrc(dir)=centroid_mult_FAB(i,j,im,dir)
         enddo
+
+        ! print *,"xsrc",xsrc
 
         if (abs(vf).le.AVGTOL) then
          G(i,j,im)=(meshvol/deltat)*UOLD(i,j,im)

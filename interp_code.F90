@@ -528,7 +528,7 @@ real(kind=8)               :: refc
     theta=acos(delx/radius)
     theta=2.0d0*mypi-theta
    else
-    print *,"delx or dely invalid"
+    print *,"delx or dely invalid",2,x,y
     stop
    endif
 

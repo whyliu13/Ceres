@@ -26,11 +26,11 @@ IMPLICIT NONE
 ! for flat interface, interface is y=0.3.
 ! for dirichlet, top material has k=0 T(y=0.3)=2.0   T(y=0.0)=3.0
 
-INTEGER,PARAMETER          :: probtype_in = 5
+INTEGER,PARAMETER          :: probtype_in = 1
 INTEGER,PARAMETER          :: operator_type_in = 1 !0=low,1=simple,2=least sqr
 INTEGER,PARAMETER          :: dclt_test_in = 0 ! 1 = Dirichlet test  on
 INTEGER,PARAMETER          :: solvtype = 1 ! 0 = CG  1 = bicgstab
-INTEGER,PARAMETER          :: N=256,M= 8
+INTEGER,PARAMETER          :: N=64,M= 1
 INTEGER,PARAMETER          :: plot_int = 1
 real(kind=8),parameter     :: fixed_dt = 1.25d-2 /real(M,8) ! !!!!!!!!!!!!!!!!!!
 real(kind=8),parameter     :: cf= 1.0d0         ! multiplier of the time step.
@@ -39,7 +39,7 @@ real(kind=8),parameter     :: problo= 0.0d0, probhi= 1.0d0
 integer,parameter          :: sdim_in = 2
 
 integer,parameter          :: msample=1
-integer,parameter          :: cal_off=0
+integer,parameter          :: cal_off=1
 
 INTEGER :: nmat_in
 INTEGER :: precond_type_in
@@ -128,7 +128,7 @@ real(kind=8)         :: gradreal
 integer              :: call_time
 real(kind=8)         :: temptestt1,temptestt2
 
-
+real(kind=8)         :: vftot
 
 
 
@@ -146,6 +146,7 @@ real(kind=8)         :: temptestt1,temptestt2
 !elseif(dclt_test_in .eq. 0)then
 ! open(unit= 2 , file= "out_0")
 !endif
+ open(unit= 3 , file= "checkcheck.dat")
  open(unit=4,file="cen.dat")
  open(unit=5,file="cen1.dat")
  open(unit=21,file="cen2.dat")
@@ -339,6 +340,9 @@ CALL INIT_V(N,XLINE(0:N),YLINE(0:N),uu,vv)
   ! TYPE(POINTS),DIMENSION(:,:,:),allocatable :: CENTROID_FAB 
  call init_vfncen(N,CELL_FAB,nmat_in,dx_in,CENTROID_FAB,vf,probtype_in)
 
+
+
+
  if(N .eq. 32)then
   do j = N-1,0,-1
    write(71,*) vf(0:N-1,j,msample)
@@ -360,6 +364,15 @@ CALL INIT_V(N,XLINE(0:N),YLINE(0:N),uu,vv)
    write(75,*) vf(0:N-1,j,msample)
   enddo
  endif
+
+ vftot=0.0d0
+ do i=0,N-1
+  do j=0,N-1
+   vftot=vftot+vf(i,j,msample)
+  enddo
+ enddo
+ vftot=vftot*h_in*h_in
+ print *,"volume total of material", msample, "is", vftot
 
 
 
@@ -487,7 +500,7 @@ CALL INIT_V(N,XLINE(0:N),YLINE(0:N),uu,vv)
 
   time_init=0.0
 
-  write(2,*) "centroid", xcen,ycen
+  !write(3,*) i,j,"centroid", xcen,ycen
    ! 1d problem
   if ((probtype_in.eq.0).or.(probtype_in.eq.2)) then
    T(i,j,1)=2.0
@@ -499,10 +512,10 @@ CALL INIT_V(N,XLINE(0:N),YLINE(0:N),uu,vv)
     enddo
    endif
   else if (probtype_in.eq.1) then ! annulus problem
-!   T(i,j,1)=0.0
-!   T(i,j,2)=2.0
-!   T(i,j,3)=0.0
-  if(1 .eq. 1)then
+   T(i,j,1)=0.0
+   T(i,j,2)=2.0
+   T(i,j,3)=0.0
+  if(0 .eq. 1)then
    do im = 1,nmat_in
     T(i,j,im)=exact_temperature(xcen,ycen,time_init,im,probtype_in, &
      nmat_in,thermal_cond,dclt_test_in)
@@ -1013,31 +1026,31 @@ endif
 
 
 
-if(1 .eq. 0)then
-print *,vf(15,16,:)
-print *,vf(16,15,:)
-print *,vf(15,15,:)
-print *,vf(16,16,:)
+!if(1 .eq. 0)then
+!print *,vf(15,16,:)
+!print *,vf(16,15,:)
+!print *,vf(15,15,:)
+!print *,vf(16,16,:)
 
-do i = 1,5
- print *, centroid_mult(15,16,i,:)
-enddo
-print *,"======================="
-do i = 1,5
- print *, centroid_mult(16,15,i,:)
-enddo
-print *,"======================="
-do i = 1,5
- print *, centroid_mult(15,15,i,:)
-enddo
-print *,"======================="
-do i = 1,5
- print *, centroid_mult(16,16,i,:)
-enddo
-print *,"======================="
-print *,cell_fab(15,16)%center%val
-print *,cell_fab(16,15)%center%val
-endif
+!do i = 1,5
+! print *, centroid_mult(15,16,i,:)
+!enddo
+!print *,"======================="
+!do i = 1,5
+! print *, centroid_mult(16,15,i,:)
+!enddo
+!print *,"======================="
+!do i = 1,5
+! print *, centroid_mult(15,15,i,:)
+!enddo
+!print *,"======================="
+!do i = 1,5
+! print *, centroid_mult(16,16,i,:)
+!enddo
+!print *,"======================="
+!print *,cell_fab(15,16)%center%val
+!print *,cell_fab(16,15)%center%val
+!endif
 
 
  do i=1,pcurve_num+1

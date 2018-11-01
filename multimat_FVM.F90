@@ -538,7 +538,7 @@ elseif(probtype_in .eq. 15)then     ! diamand
   dist=-dist
  endif
  
-elseif(probtype_in .eq. 5)then
+elseif(probtype_in .eq. 5)then    ! whole circle
   xy(1)=x
   xy(2)=y
    cc(1)=0.5d0
@@ -2726,11 +2726,11 @@ do im=1,nmat_in
    endif
   enddo
 
-  if(scheck .eq. 1)then
-   write(11,*) "ncheck",ncenter
-   write(11,*) "vol",vol,vol/(h*h)
-   write(11,*) "center_mark", center_mark
-  endif
+!  if(scheck .eq. 1)then
+!   write(11,*) "ncheck",ncenter
+!   write(11,*) "vol",vol,vol/(h*h)
+!   write(11,*) "center_mark", center_mark
+!  endif
 
   ilev=ilev+1
   if(lev_check .eq. 1)then
@@ -2767,17 +2767,17 @@ do im=1,nmat_in
    
  enddo  ! do while
 
-  if(scheck .eq. 1)then
-   write(11,*) "ncenter",ncenter
-   write(11,*) "vol",vol,vol/(h*h)
-   write(11,*) "center_mark", center_mark
+!  if(scheck .eq. 1)then
+!   write(11,*) "ncenter",ncenter
+!   write(11,*) "vol",vol,vol/(h*h)
+!   write(11,*) "center_mark", center_mark!
+! 
+!   write(11,*) "ic",ic
+!   do i=1,ic
+!    write(11,*) "center_hold", center_hold(i,:)
+!   enddo
 
-   write(11,*) "ic",ic
-   do i=1,ic
-    write(11,*) "center_hold", center_hold(i,:)
-   enddo
-
-  endif
+!  endif
 
 
 
@@ -2852,6 +2852,8 @@ do im = 1,nmat_in
   if(vol(im) .lt. 0.0d0)then
     print *,"vol(im) is negtive, 2155"
     stop
+  elseif(vol(im) .eq. 0.0)then
+    centroid(im,:)=center(:)
   else
    centroid(im,1) = cxtemp(im)/vol(im)
    centroid(im,2) = cytemp(im)/vol(im)
@@ -3288,7 +3290,12 @@ real(kind=8)                       :: vf(-1:N,-1:N,nmat_in)
     do dir=1,2
      center(dir) = cell(i,j)%center%val(dir)
     enddo
+   
+!    write(3,*) "center",center
+
     call AdaptQuad_2d(i,j,nmat_in,dx,center,cen_temp,vf_temp,probtype_in)
+    
+    
 
     do im = 1, nmat_in
      do dir=1,2
@@ -3297,7 +3304,7 @@ real(kind=8)                       :: vf(-1:N,-1:N,nmat_in)
      vf(i,j,im) = vf_temp(im)
 
      if (1.eq.0) then
-      write(11,*) "i,j,im,vf,cenx,ceny ",i,j,im,vf_temp(im), &
+      write(3,*) "i,j,im,vf,cenx,ceny ",i,j,im,vf_temp(im), &
         cen_temp(im,1),cen_temp(im,2)
      endif  
     enddo ! im
@@ -3495,7 +3502,7 @@ REAL*8 mypi
     theta_in=acos(delx/radius_in)
     theta_in=2.0d0*mypi-theta_in
    else
-    print *,"delx or dely invalid"
+    print *,"delx or dely invalid,1",x_in
     stop
    endif
 
