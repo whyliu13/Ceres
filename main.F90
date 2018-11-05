@@ -468,7 +468,7 @@ CALL INIT_V(N,XLINE(0:N),YLINE(0:N),uu,vv)
   thermal_cond(2) = 2.0d0          ! exterior region
 
  elseif(probtype_in .eq. 5)then      ! hypocycloid with 2 materials
-  thermal_cond(1) = 1.0d0           ! interior region    
+  thermal_cond(1) = 0.5d0           ! interior region    
   thermal_cond(2) = 0.01d0          ! exterior region
 
  elseif(probtype_in .eq. 6)then
