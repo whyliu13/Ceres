@@ -13,7 +13,7 @@ IMPLICIT NONE
 ! 0= flat interface  
 ! 1= annulus  
 ! 2= vertical interface
-! 3= star for thin filament
+! 3= star with thin filament
 ! 4 = star for two material sanity check
 ! 5 = hypocycloid with 2 materials
 ! 6 = nucleate boiling diffusion with thin filament between vapor bubble and substrate
@@ -30,7 +30,7 @@ INTEGER,PARAMETER          :: probtype_in = 5
 INTEGER,PARAMETER          :: operator_type_in = 1 !0=low,1=simple,2=least sqr
 INTEGER,PARAMETER          :: dclt_test_in = 0 ! 1 = Dirichlet test  on
 INTEGER,PARAMETER          :: solvtype = 1 ! 0 = CG  1 = bicgstab
-INTEGER,PARAMETER          :: N=32,M= 1
+INTEGER,PARAMETER          :: N=128,M= 4
 INTEGER,PARAMETER          :: plot_int = 1
 real(kind=8),parameter     :: fixed_dt = 1.25d-2 /real(M,8) ! !!!!!!!!!!!!!!!!!!
 real(kind=8),parameter     :: cf= 1.0d0         ! multiplier of the time step.
@@ -130,6 +130,9 @@ real(kind=8)         :: temptestt1,temptestt2
 
 real(kind=8)         :: vftot
 
+real(kind=8)         :: dtemp1,dtemp2
+real(kind=8)         :: cc(2)
+
 
 
 !NAMELIST /PMTR/ probtype_in, operator_type_in, dclt_test_in, &
@@ -196,7 +199,7 @@ call_time=0
 !    write(12,*) (pcurve_ls(:,i)+1.0d0)/2.0d0
 !   enddo
 ! call starshape2(pcurve_ls2)
-if( 1 .eq. 1)then
+if( 1 .eq. 0)then
  if(probtype_in .eq. 5 .or. probtype_in .eq. 7)then
   pcurve_ls = 0.0d0
   call asteroidshape(pcurve_ls)
@@ -379,7 +382,16 @@ CALL INIT_V(N,XLINE(0:N),YLINE(0:N),uu,vv)
 
   ! real(kind=8),dimension(:,:,:,:),allocatable :: centroid_mult
  call convert_cen(nmat_in,sdim_in,N,CENTROID_FAB,centroid_mult)
- 
+
+ if(1 .eq. 0)then           ! intial centroid check 
+ do i=-1,N
+  do j= -1,N
+   do ii = 1,2
+    print *,i,j,ii,vf(i,j,ii),centroid_mult(i,j,ii,:)
+   enddo
+  enddo
+ enddo
+ endif
   
 ! INIT_MOFdata
  nten = ( (nmat_in-1)*(nmat_in-1)+nmat_in-1 )/2
@@ -468,8 +480,8 @@ CALL INIT_V(N,XLINE(0:N),YLINE(0:N),uu,vv)
   thermal_cond(2) = 2.0d0          ! exterior region
 
  elseif(probtype_in .eq. 5)then      ! hypocycloid with 2 materials
-  thermal_cond(1) = 0.5d0           ! interior region    
-  thermal_cond(2) = 0.01d0          ! exterior region
+  thermal_cond(1) = 0.1d0           ! interior region    
+  thermal_cond(2) = 1.0d0          ! exterior region
 
  elseif(probtype_in .eq. 6)then
   thermal_cond(1) = 1.0d0
@@ -562,17 +574,31 @@ CALL INIT_V(N,XLINE(0:N),YLINE(0:N),uu,vv)
 !     nmat_in,thermal_cond,dclt_test_in)
 !    T(i,j,2)=exact_temperature(xcen,ycen,time_init,2,probtype_in, &
 !     nmat_in,thermal_cond,dclt_test_in)
-!   T(i,j,1)=2.0d0
-!   T(i,j,2)=2.0d0
-    
-   if( sqrt((nox(i)-0.5d0)**2.0d0+ (noy(j)-0.5d0)**2.0d0) .lt. 0.1d0)then
-    T(i,j,:)=10.0d0
-   else
-    T(i,j,:)=0.0d0
-   endif
 
+!   exact_temperature = (x**2.0d0 + y**2.0d0)*exp(-t)
 
  
+ !  if( sqrt((xcen-0.5d0)**2.0d0+ (ycen-0.5d0)**2.0d0) .lt. 0.1d0)then
+ !   T(i,j,1)=10.0d0
+ !   T(i,j,2)=0.0d0
+ !  else
+ !   T(i,j,:)=0.0d0
+ !  endif
+   cc =0.5d0
+   do im=1,2
+    if(centroid_mult(i,j,im,1) .eq. 0.5d0 .and. &
+        centroid_mult(i,j,im,2) .eq. 0.5d0)then
+     T(i,j,im)=1.0d0
+    else
+     call dist_to_boundary(centroid_mult(i,j,im,:),dtemp1)
+     call l2normd(2,centroid_mult(i,j,im,:),cc, dtemp2)
+       T(i,j,im)= 1.0d0+dtemp2/dtemp1*(10.0d0-1.0d0)
+     endif
+  enddo
+
+ !        T(i,j,im)=sqrt((centroid_mult(i,j,1,1)-0.5d0)**2.0d0 + &
+ !          (centroid_mult(i,j,1,2)-0.5d0)**2.0d0)/0.5d0*10.0d0
+
   elseif(probtype_in .eq. 6)then
    T(i,j,1)=2.0
    T(i,j,2)=2.0    
@@ -592,7 +618,8 @@ CALL INIT_V(N,XLINE(0:N),YLINE(0:N),uu,vv)
  enddo
  enddo
 
- do i= -1,N
+ if(1 .eq. 1)then
+  do i= -1,N
   do j= -1,N
    do im = 1,nmat_in
 
@@ -608,8 +635,8 @@ CALL INIT_V(N,XLINE(0:N),YLINE(0:N),uu,vv)
 
    enddo ! im
   enddo
- enddo
-
+  enddo
+ endif
 
 
    do jj=0,Mp
@@ -753,8 +780,6 @@ else
  stop
 endif
  
-
-
 !  write(2,*)"#################################################################"
 !  write(2,*) "T2", "  mat = 1"
 !  do i1 = loy_in-1,hiy_in+1
@@ -797,8 +822,8 @@ endif
 
  T = T_new
 
-
-if(probtype_in.eq.9)then              ! polar solution updated                                    
+! ----------------------------------------------------------------- ONLY FOR PROBLEM TYPE  999
+if(probtype_in.eq.9)then                                           ! polar solution updated                                    
  call polar_2d_heat(sdim_in,Np,Mp,thermal_cond(2),tau, r_polar,z_polar &     
                       ,dr_polar,dz_polar,upolar)
  do j=0,Mp
@@ -807,8 +832,6 @@ if(probtype_in.eq.9)then              ! polar solution updated
  enddo
   call_time=call_time+1
   print *,"call_times",call_time
-
-
 sgflag = 0
 diflag = 0
 do i=1,2
@@ -939,8 +962,15 @@ print *,"GRADERR2",GRADERR2, "GRADERR3", GRADERR3
 
 print *,"time", Ts(tm)
 
-enddo ! tm=1,...,M
+enddo ! tm=1,...,M ,  temperature loop end 
 
+
+
+
+
+
+
+! output temperature profile
 
 do i=N-1,0,-1
  if(N.eq.32)then
@@ -989,6 +1019,7 @@ endif
 ! enddo
 !enddo
 
+! output level set sign distance
 
 if(probtype_in .eq. 6 .or. probtype_in .eq. 3)then
  do i=0,N

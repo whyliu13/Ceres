@@ -20,182 +20,7 @@ integer,parameter        :: shapeflag = 2   ! asteroid test case 0: asteroid 1:d
                                            ! 2: circle
 
 contains
-! 
-subroutine test_dist_fns(imat,x,y,dist,probtype_in)
-implicit none
 
-integer,intent(in)               :: imat,probtype_in
-real(kind=8)                     :: x,y,dist
-real(kind=8)                     :: dist1,dist2,dist3,dist4,dist5
-real(kind=8)                     :: dist6,dist7,dist8
-real(kind=8)                     :: d1,d2,d3,d4,d5
-real(kind=8)                     :: xy(2)
-real(kind=8)                     :: x1(2),x2(2),x3(2),x4(2),x5(2)
-real(kind=8)                     :: x6(2)
-real(kind=8)                     :: xxl(2),xxr(2)
-integer                          :: i
-real(kind=8)                     :: r1,r2,r3,r4
-real(kind=8)                     :: center(2),cc(2)
-
-real(kind=8)                     :: x0,y0
-real(kind=8)                     :: c1,c2,c3,c4,tt,ttcrit,tt1,tt2
-integer                          :: ttsign
-real(kind=8)                     :: tcrit,tcrit1,tcrit2  !theta
-real(kind=8)                     :: signtemp
-real(kind=8)                     :: xtheta,ytheta
-real(kind=8)                     :: xtheta1,ytheta1,xtheta2,ytheta2
-integer                          :: flag
-integer                          :: pp1,pp2
-real(kind=8)                     :: pcurve_crit(2)
-integer                          :: cenflag,cccflag
-
-real(kind=8)                     :: vt1(2),vt2(2),vt3(2),vt4(2)
-real(kind=8)                     :: vtd1,vtd2,vtd3,vtd4
-
-real(kind=8)                     :: smrad
-real(kind=8)                     :: rad_crit(2)
-integer                          :: ppcrit
-real(kind=8)                     :: pcrit1(2),pcrit2(2),pcrit(2)
-real(kind=8)                     :: psig1(2),psig2(2)
-
-real(kind=8)                     :: mx,my,c
-real(kind=8)                     :: cdiff
-real(kind=8)                     :: xysign 
-real(kind=8)                     :: xc(2),xc1(2),xc2(2),xc3(2)
-
-
-if(probtype_in .eq. 5)then     ! asteroid 2 materials 
- xy(1)=x
- xy(2)=y
-
-! center(1) = 0.02d0*sqrt(5.0d0)
-! center(2) = 0.02d0*sqrt(5.0d0)
- center = 0.0d0
-
- cc(1)=(center(1)+1.0d0)/2.0d0
- cc(2)=(center(2)+1.0d0)/2.0d0
-!  print *,"xy",xy
- call rad_cal(xy,cc,tt)
- if(tt .ge. 0.0d0 .and. tt .le. 0.5d0*pi)then
-   pp1=1
-   pp2=pcurve_num/4+1
- elseif(tt .le. pi)then
-   pp1=pcurve_num/4+1
-   pp2=pcurve_num/2+1
- elseif(tt .le. 1.5d0*pi)then
-   pp1= pcurve_num/2+1
-   pp2=pcurve_num/4*3+1
- elseif(tt .lt. 2.0d0*pi)then
-   pp1=pcurve_num/4*3+1
-   pp2=pcurve_num+1
- else
-  print *,"invalid tt", tt
-  stop
- endif 
-
-
- dist1=100000.0d0
- ppcrit=pp1
- do i=pp1,pp2
-  call l2normd(2,xy,pcurve_ls(:,i),dist2)
-  if(dist2 .lt. dist1)then
-!   pcurve_crit=pcurve_ls(:,i)
-   dist1=dist2
-   ppcrit=i
-  endif
- enddo
- !  pcrit1 >> pcrit >> pcrit2
- ! print *,"ppcrit=",ppcrit
- if(ppcrit .eq. pp1) then
-  pcrit(:)=pcurve_ls(:,pp1)
-  pcrit2(:)=pcurve_ls(:,pp1+1)
- elseif(ppcrit .eq. pp2)then
-  pcrit1(:)=pcurve_ls(:,pp2-1)
-  pcrit(:)=pcurve_ls(:,pp2)  
- elseif(ppcrit .gt. pp1 .and. ppcrit .lt. pp2)then
-  pcrit(:)=pcurve_ls(:,ppcrit)
-  pcrit1(:)=pcurve_ls(:,ppcrit-1)
-  pcrit2(:)=pcurve_ls(:,ppcrit+1)   
-!  print *,"pcrit", pcrit
-!  print *,"pcrit1",pcrit1
-!  print *,"pcrit2",pcrit2
- else
-  print *,"ppcrit invalid 212"
-  stop
- endif
-
- if(ppcrit .eq. pp1) then
-  call l2normd(2,xy,pcurve_ls(:,pp1),dist1)
-  psig1(:)=pcrit(:)
-  psig2(:)=pcrit2(:)
-  write(51,*) xy,pcurve_ls(:,pp1)
- elseif(ppcrit .eq. pp2)then
-  call l2normd(2,xy,pcurve_ls(:,pp2),dist1)
-  psig1(:)=pcrit1(:)
-  psig2(:)=pcrit(:)
-  write(51,*) xy,pcurve_ls(:,pp2)
- elseif(ppcrit .gt. pp1 .and. ppcrit .lt. pp2)then
-   call dist_point_to_line_modify(2,pcrit1,pcrit,xy,dist3,xc1)
-   call dist_point_to_line_modify(2,pcrit2,pcrit,xy,dist4,xc2)
-
-!  print *,"pp1,pp2",pp1,pp2
-!  print *,"pcrit", pcrit, dist1
-!  print *,"pcrit1", pcrit1, dist3
-!  print *,"pcirt2", pcrit2, dist4
-!  print *,"xy",xy
-
-
-
-  if(dist3 .lt. 0.0d0 .or. dist4 .lt. 0.0d0)then
-   print *,"check sign 233"
-   stop
-  endif
-
-   if(dist3 .le. dist4 .and. dist3 .le. dist1)then
-    psig1(:)=pcrit1(:)
-    psig2(:)=pcrit(:)
-    dist1=dist3
-    write(51,*) xy,xc1
-   elseif(dist4 .le. dist3 .and. dist4 .le. dist1)then
-    psig1(:)=pcrit(:)
-    psig2(:)=pcrit2(:)
-    dist1=dist4 
-    write(51,*) xy,xc2 
-   else
-    print *, "err, check251",dist3,dist4,dist1
-!    psig1(:)=pcrit1(:)
-!    psig2(:)=pcrit(:)
-!    dist1=dist3
-    stop
-   endif
- else
-  print *,"ppcrit invalid 224"
-  stop
- endif
-
-!  print *,  "dist", dist1
-
- call rad_cal(psig1,xy,tt1)
- call rad_cal(psig2,xy,tt2)  
- if(tt1 .le. tt2)then
-  xysign=+1.0d0
- else 
-  xysign=-1.0d0
- endif
-
- if(imat .eq. 1)then
-  dist=dist1*xysign
- elseif(imat .eq. 2)then
-  dist=-1.0d0*dist1*xysign
- else
-  print *,"wrong num of materials for test 5"
-  stop
- endif
-
-endif
-
-
-end subroutine test_dist_fns
 
 !---------------------------------------------------------
 subroutine dist_fns(imat,x,y,dist,probtype_in)
@@ -541,7 +366,7 @@ elseif(probtype_in .eq. 15)then     ! diamand
 elseif(probtype_in .eq. 5)then    ! whole circle
   xy(1)=x
   xy(2)=y
-   cc(1)=0.5d0
+  cc(1)=0.5d0
   cc(2)=0.5d0
   call l2normd(2,xy,cc,dist2)
   if(imat .eq. 1)then
@@ -1096,7 +921,53 @@ endif
 
 
 end subroutine dist_fns
+!----------------------------------------------------
+ subroutine dist_to_boundary(xy,dist)    ! distance from center to the boudary of comutational domain
+ implicit none                           ! with the same rad
 
+ real(kind=8),intent(in)   :: xy(2)
+ real(kind=8)              :: cc(2)
+ real(kind=8)              :: dist
+ real(kind=8)              :: dd(2)
+ real(kind=8)              :: theta
+
+ cc=0.5d0
+ if(cc(1) .eq. xy(1) .and. cc(2) .eq. xy(2))then
+  print *,"warning, cc=xy,934"
+  stop
+ endif
+
+ call rad_cal(xy,cc,theta) 
+ dd=0.0d0
+
+ if(theta .eq. 0.0d0 .or. theta .eq. pi*0.5d0 &
+     .or. theta .eq. pi .or. theta .eq. pi*1.5d0)then
+   dist=0.5d0
+ elseif(theta .eq. pi*0.25d0 .or. theta .eq. pi*0.75d0 &
+      .or. theta .eq. pi*1.25d0  .or. theta .eq. pi*1.75d0)then
+   dist=0.5d0*sqrt(2.0d0)
+ elseif(theta .gt. pi*0.25d0 .and. theta .lt. pi*0.75d0)then
+   dd(2)=1.0d0
+   dd(1)=0.5d0/tan(theta)+0.5d0
+ elseif(theta .gt. pi*0.75d0 .and. theta .lt. pi*1.25d0)then
+   dd(1)=0.0d0
+   dd(2)=-0.5*tan(theta)+0.5d0
+ elseif(theta .gt. pi*1.25d0 .and. theta .lt. pi*1.75d0)then
+   dd(2)=0.0d0
+   dd(1)=-0.5d0/tan(theta)+0.5d0
+ elseif(theta .gt. 0.0d0 .and. theta .lt. pi*0.25d0)then
+   dd(1)=1.0d0
+   dd(2)=0.5*tan(theta)+0.5d0
+ elseif(theta .gt. pi*1.75d0 .and. theta .lt. pi*2.0d0)then
+   dd(1)=1.0d0
+   dd(2)=0.5*tan(theta)+0.5d0
+ else
+  print *,"check theta, 960", theta
+  stop
+ endif
+
+
+ end subroutine
 !------------------------------------------------- 
 subroutine cross_product(sdim,x1,x2,cc,crossp)
 implicit none
@@ -2884,15 +2755,15 @@ enddo
 
 call vf_correct(iin,jin,nmat_in,vf,probtype_in)
 
-if (probtype_in.eq.0) then
+if (probtype_in.eq.0) then                                          ! 0
  ! do nothing
-else if (probtype_in.eq.2) then
+else if (probtype_in.eq.2) then                                     ! 2
  ! do nothing
-elseif(probtype_in .eq. 4 )then
+elseif(probtype_in .eq. 4 )then                                      ! 4
   ! do nothing
-elseif(probtype_in .eq. 5)then
-  vf(2)=1.0-vf(1)
-else if (probtype_in.eq.1 .or. probtype_in .eq. 3 &
+elseif(probtype_in .eq. 5)then                                       ! 5
+ ! vf(2)=1.0-vf(1)
+else if (probtype_in.eq.1 .or. probtype_in .eq. 3 &                  ! 1,3,9
          .or. probtype_in .eq. 9) then
  vf(2) = 1.0d0 - vf(1) -vf(3)
 
@@ -2903,7 +2774,7 @@ else if (probtype_in.eq.1 .or. probtype_in .eq. 3 &
   print *,"vf(2) is negative"
  endif
 
-elseif(probtype_in .eq. 6)then
+elseif(probtype_in .eq. 6)then                                     ! 6
  vf(3) = 1.0d0 - vf(1) -vf(2)
 
  if(abs(vf(3)) .lt. eps)then
@@ -2913,7 +2784,7 @@ elseif(probtype_in .eq. 6)then
   print *,"vf(3) is negative"
  endif
 
-elseif(probtype_in .eq. 7)then
+elseif(probtype_in .eq. 7)then                                      ! 7
 
  if(center(1) .gt. 0.5d0 .and. center(2) .gt. 0.5d0)then
   vf(2) = 1.0d0-vf(1)
@@ -2997,10 +2868,10 @@ else if (probtype_in.eq.2) then
 elseif(probtype_in .eq. 4)then
   ! do nothing
 elseif(probtype_in .eq. 5) then
-  do dir=1,2
-   centroid(2,dir) =  &
-    (center(dir) - vf(1)*centroid(1,dir))/vf(2)
-  enddo  
+ !  do dir=1,2
+ !   centroid(2,dir) =  &
+ !   (center(dir) - vf(1)*centroid(1,dir))/vf(2)
+ !  enddo  
 
 else if (probtype_in.eq.1 .or. probtype_in .eq. 3 &
          .or. probtype_in .eq. 9) then
