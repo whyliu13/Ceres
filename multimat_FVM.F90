@@ -949,22 +949,30 @@ end subroutine dist_fns
  elseif(theta .gt. pi*0.25d0 .and. theta .lt. pi*0.75d0)then
    dd(2)=1.0d0
    dd(1)=0.5d0/tan(theta)+0.5d0
+   call l2normd(2,cc,dd,dist)
  elseif(theta .gt. pi*0.75d0 .and. theta .lt. pi*1.25d0)then
    dd(1)=0.0d0
    dd(2)=-0.5*tan(theta)+0.5d0
+   call l2normd(2,cc,dd,dist)
  elseif(theta .gt. pi*1.25d0 .and. theta .lt. pi*1.75d0)then
    dd(2)=0.0d0
    dd(1)=-0.5d0/tan(theta)+0.5d0
+   call l2normd(2,cc,dd,dist)
  elseif(theta .gt. 0.0d0 .and. theta .lt. pi*0.25d0)then
    dd(1)=1.0d0
    dd(2)=0.5*tan(theta)+0.5d0
+   call l2normd(2,cc,dd,dist)
  elseif(theta .gt. pi*1.75d0 .and. theta .lt. pi*2.0d0)then
    dd(1)=1.0d0
    dd(2)=0.5*tan(theta)+0.5d0
+   call l2normd(2,cc,dd,dist)
  else
   print *,"check theta, 960", theta
   stop
  endif
+
+ 
+
 
 
  end subroutine
