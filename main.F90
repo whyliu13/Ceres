@@ -30,7 +30,7 @@ INTEGER,PARAMETER          :: probtype_in = 5
 INTEGER,PARAMETER          :: operator_type_in = 1 !0=low,1=simple,2=least sqr
 INTEGER,PARAMETER          :: dclt_test_in = 0 ! 1 = Dirichlet test  on
 INTEGER,PARAMETER          :: solvtype = 1 ! 0 = CG  1 = bicgstab
-INTEGER,PARAMETER          :: N=64,M= 2
+INTEGER,PARAMETER          :: N=32,M= 1
 INTEGER,PARAMETER          :: plot_int = 1
 real(kind=8),parameter     :: fixed_dt = 1.25d-2 /real(M,8) ! !!!!!!!!!!!!!!!!!!
 real(kind=8),parameter     :: cf= 1.0d0         ! multiplier of the time step.
@@ -199,7 +199,7 @@ call_time=0
 !    write(12,*) (pcurve_ls(:,i)+1.0d0)/2.0d0
 !   enddo
 ! call starshape2(pcurve_ls2)
-if( 1 .eq. 0)then
+if( 1 .eq. 1)then
  if(probtype_in .eq. 5 .or. probtype_in .eq. 7)then
   pcurve_ls = 0.0d0
   call asteroidshape(pcurve_ls)
@@ -481,7 +481,7 @@ CALL INIT_V(N,XLINE(0:N),YLINE(0:N),uu,vv)
 
  elseif(probtype_in .eq. 5)then      ! hypocycloid with 2 materials
   thermal_cond(1) = 0.1d0           ! interior region    
-  thermal_cond(2) = 1.0d0          ! exterior region
+  thermal_cond(2) = 10.0d0          ! exterior region
 
  elseif(probtype_in .eq. 6)then
   thermal_cond(1) = 1.0d0
