@@ -26,9 +26,9 @@ IMPLICIT NONE
 ! for flat interface, interface is y=0.3.
 ! for dirichlet, top material has k=0 T(y=0.3)=2.0   T(y=0.0)=3.0
 
-INTEGER,PARAMETER          :: probtype_in = 5
+INTEGER,PARAMETER          :: probtype_in = 7
 INTEGER,PARAMETER          :: operator_type_in = 1 !0=low,1=simple,2=least sqr
-INTEGER,PARAMETER          :: dclt_test_in = 0 ! 1 = Dirichlet test  on
+INTEGER,PARAMETER          :: dclt_test_in = 1 ! 1 = Dirichlet test  on
 INTEGER,PARAMETER          :: solvtype = 1 ! 0 = CG  1 = bicgstab
 INTEGER,PARAMETER          :: N=32,M= 1
 INTEGER,PARAMETER          :: plot_int = 1

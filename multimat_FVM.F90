@@ -487,11 +487,145 @@ endif
 !  print *,"wrong num of material, 187"
 !  stop
 ! endif
-
-
-
-
 elseif(probtype_in .eq. 7)then
+ xy(1)=x
+ xy(2)=y
+ cenflag=0    ! 0= axis symmetry aligned with grid
+              ! 1= not aligned with grid
+ cccflag=0    ! 0= sigular at center
+              ! 1= nonsigular
+ if(cenflag .eq. 1)then 
+  center(1) = 0.02d0*sqrt(5.0d0)
+  center(2) = 0.02d0*sqrt(5.0d0)
+ elseif(cenflag .eq. 0)then
+  center(1) = 0.0d0
+  center(2) = 0.0d0
+ else
+  print *,"cenflag error"
+  stop
+ endif
+
+ cc(1)=(center(1)+1.0d0)/2.0d0
+ cc(2)=(center(2)+1.0d0)/2.0d0
+!  print *,"center",cc
+ if(cenflag .eq. 0)then              ! center aligned with grid
+  if(abs(xy(1) - cc(1)) .lt. 1.0e-12 &
+     .and. abs(xy(2)-cc(2)) .lt. 1.0e-12)then
+   cccflag=1    
+  else
+   call rad_cal(xy,cc,tt)
+  endif 
+ elseif(cenflag .eq. 1)then    ! center not aligned with grid
+  call rad_cal(xy,cc,tt)
+ endif
+
+ if(cccflag .eq. 0)then
+
+  if(tt .ge. 0.0d0 .and. tt .le. 0.5d0*pi)then
+   pp1=1
+   pp2=pcurve_num/4+1
+  elseif(tt .le. pi)then
+   pp1=pcurve_num/4+1
+   pp2=pcurve_num/2+1
+  elseif(tt .le. 1.5d0*pi)then
+   pp1= pcurve_num/2+1
+   pp2=pcurve_num/4*3
+  elseif(tt .lt. 2.0d0*pi)then
+   pp1=pcurve_num/4*3+1
+   pp2=pcurve_num+1
+  else
+   print *,"invalid tt", tt
+   stop
+  endif 
+
+  dist1=100000.0d0
+  smrad=100000.0d0
+  do i=pp1,pp2
+   call l2normd(2,xy,pcurve_ls(:,i),dist2)
+   if(dist2 .lt. dist1)then
+    pcurve_crit=pcurve_ls(:,i)
+    dist1=dist2
+   endif
+   if(abs(pcurve_rad(i)-tt) .lt. smrad)then
+    smrad=abs(pcurve_rad(i)-tt)
+    rad_crit= pcurve_ls(:,i)   
+   endif
+  enddo
+
+  call l2normd(2,cc,rad_crit,dist3) 
+  call l2normd(2,cc,xy,dist2)
+
+  x1(1)=cc(1)+0.4d0                            !          x2  
+  x1(2)=cc(2)                                  ! 
+  x2(1)=cc(1)                                  ! 
+  x2(2)=cc(2)+0.4d0                            !    x3           x1
+  x3(1)=cc(1)-0.4d0                            ! 
+  x3(2)=cc(2)                                  ! 
+  x4(1)=cc(1)                                  !           x4 
+  x4(2)=cc(2)-0.4d0                            !  
+
+
+
+ if(imat .eq. 1)then
+  dist=-sign(dist1,(dist3-dist2))
+ elseif(imat .eq. 2)then
+  call dist_point_to_lined(2,cc,x1,xy,dist4)
+  call dist_point_to_lined(2,cc,x2,xy,dist5)
+  
+  if(xy(1) .lt. cc(1) .or. xy(2) .lt. cc(2))then
+   dist= -min(dist4,dist5)
+  else
+   dist= min(sign(dist1,(dist3-dist2)),dist4,dist5)
+  endif
+
+ elseif(imat .eq. 3)then
+  call dist_point_to_lined(2,cc,x2,xy,dist4)
+  call dist_point_to_lined(2,cc,x3,xy,dist5)
+  
+  if(xy(1) .gt. cc(1) .or. xy(2) .lt. cc(2))then
+   dist= -min(dist4,dist5)
+  else
+   dist= min(sign(dist1,(dist3-dist2)),dist4,dist5)
+  endif
+
+ elseif(imat .eq. 4)then
+  call dist_point_to_lined(2,cc,x3,xy,dist4)
+  call dist_point_to_lined(2,cc,x4,xy,dist5)
+  
+  if(xy(1) .gt. cc(1) .or. xy(2) .gt. cc(2))then
+   dist= -min(dist4,dist5)
+  else
+   dist= min(sign(dist1,(dist3-dist2)),dist4,dist5)
+  endif
+
+ elseif(imat .eq. 5)then
+  call dist_point_to_lined(2,cc,x4,xy,dist4)
+  call dist_point_to_lined(2,cc,x1,xy,dist5)
+  
+   if(xy(1) .lt. cc(1) .or. xy(2) .gt. cc(2))then
+    dist= -min(dist4,dist5)
+   else
+    dist= min(sign(dist1,(dist3-dist2)),dist4,dist5)
+   endif
+  else
+   print *, "wrong number of materials 368"
+   stop
+  endif
+
+ elseif(cccflag .eq. 1)then
+  if(imat .eq. 1)then
+   dist=-0.1d0*sqrt(2.0)
+  else
+   dist=0.0d0
+  endif
+ else
+  print *,"cccflag invald 353"
+  stop
+ endif
+
+
+
+elseif(probtype_in .eq. 17)then           ! backup for 7
  xy(1)=x
  xy(2)=y
  cenflag=0    ! 0= axis symmetry aligned with grid
