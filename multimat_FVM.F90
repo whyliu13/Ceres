@@ -2470,7 +2470,7 @@ implicit none
 
 integer,intent(in)       :: probtype_in,im
 real(kind=8),intent(in)  :: v1(2),v2(2),v3(2)
-real(kind=8)             :: d1,d2,d3
+real(kind=8)             :: d1,d2,d3,dcheck
 real(kind=8)             :: d(3)
 real(kind=8)             :: v(3,2)
 
@@ -2479,7 +2479,7 @@ real(kind=8)            :: x1(2),x2(2),xx(2,2)
 
 real(kind=8)            :: area, cen(2)
 real(kind=8)            :: area1,area2
-real(kind=8)            :: cen1(2),cen2(2)
+real(kind=8)            :: cen1(2),cen2(2),cencheck(2)
 integer                 :: i,j
 integer                 :: ct
 
@@ -2528,6 +2528,19 @@ integer                 :: ct
    print *, v1,d1
    print *, v2,d2
    print *, v3,d3
+   call tri_centroid(v1,v2,v3,cencheck)
+   call dist_fns(im,cencheck(1),cencheck(2),dcheck,probtype_in) 
+   if(dcheck .eq. 0.0d0)then
+    print *,"dcheck is still 0"
+   elseif(dcheck .gt. 0.0d0)then
+    call tri_area8(v1,v2,v3,area)
+    call tri_centroid(v1,v2,v3,cen) 
+   elseif(dcheck .lt. 0.0d0)then
+    ! do nothing
+   else
+    print *,"dcheck in valid",dcheck
+    stop
+   endif
    
  elseif(d1 .gt. 0.0d0  .and. d2 .gt. 0.0d0 .and. d3 .gt. 0.0d0)then         ! +0  +0  +0
   call tri_area8(v1,v2,v3,area)
