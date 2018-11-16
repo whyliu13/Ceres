@@ -912,7 +912,7 @@
         print *,"dir or sidesten invalid"
         stop
        endif
-      else if (probtypeCG.eq.5) then
+      else if (probtypeCG.eq.5 .or. probtypeCG.eq.10) then
        if ((dir.eq.1).and.(sidesten.eq.1)) then
         bctype=1 !
         UWALL=10.0
@@ -2755,6 +2755,9 @@
       elseif(nmat .eq. 5)then
        write(11,*) 'VARIABLES="X","Y","U1","U2","U3","U4","U5", &
                    "F1","F2","F3","F4","F5"'
+      elseif(nmat .eq. 6)then
+       write(11,*) 'VARIABLES="X","Y","U1","U2","U3","U4","U5", "U6", &
+                   "F1","F2","F3","F4","F5","F6"'
       else
        print *,"nmat not supported"
        stop
@@ -2791,6 +2794,20 @@
          VFRAC_MOF(i,j,3), & 
          VFRAC_MOF(i,j,4), & 
          VFRAC_MOF(i,j,5)  
+       elseif(nmat .eq. 6)then
+         write(11,*) xpoint,ypoint,UNEW(i,j,1), &
+         UNEW(i,j,2), &
+         UNEW(i,j,3), &
+         UNEW(i,j,4), &
+         UNEW(i,j,5), &
+         UNEW(i,j,6), &
+         VFRAC_MOF(i,j,1), &
+         VFRAC_MOF(i,j,2), &
+         VFRAC_MOF(i,j,3), & 
+         VFRAC_MOF(i,j,4), & 
+         VFRAC_MOF(i,j,5),&  
+         VFRAC_MOF(i,j,6)
+
        else
         print *,"nmat not supported"
         stop

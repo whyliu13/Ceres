@@ -710,6 +710,9 @@ real(kind=8)               :: refc
   ! exact_temperature = (x*x + y*y)*exp(-t)
  elseif(probtype_in .eq. 7)then
   ! do nothing
+ elseif(probtype_in .eq. 10)then
+  ! do nothing
+
  elseif(probtype_in .eq. 9)then
    xy(1)=x
    xy(2)=y

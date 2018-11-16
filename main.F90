@@ -20,13 +20,13 @@ IMPLICIT NONE
 ! 7 = hypocycloid with 5 materials
 ! 8 = nucleate boiling diffusion without filament
 ! 9 = annulus cvg test
-! 
+! 10= hypocycloid with 6 materials
 
 
 ! for flat interface, interface is y=0.3.
 ! for dirichlet, top material has k=0 T(y=0.3)=2.0   T(y=0.0)=3.0
 
-INTEGER,PARAMETER          :: probtype_in = 7
+INTEGER,PARAMETER          :: probtype_in = 10
 INTEGER,PARAMETER          :: operator_type_in = 1 !0=low,1=simple,2=least sqr
 INTEGER,PARAMETER          :: dclt_test_in = 1 ! 1 = Dirichlet test  on
 INTEGER,PARAMETER          :: solvtype = 1 ! 0 = CG  1 = bicgstab
@@ -38,7 +38,7 @@ real(kind=8),parameter     :: CFL = 0.5d0
 real(kind=8),parameter     :: problo= 0.0d0, probhi= 1.0d0
 integer,parameter          :: sdim_in = 2
 
-integer,parameter          :: msample=1
+integer,parameter          :: msample=2
 integer,parameter          :: cal_off=0
 
 INTEGER :: nmat_in
@@ -106,7 +106,7 @@ real(kind=8),dimension(:,:,:),allocatable :: T_new
 
 
 real(kind=8)  ::dtest(N+1,N+1),dtest1(N+1,N+1),dtest2(N+1,N+1)             
-
+real(kind=8)  ::dtest3(N+1,N+1),dtest4(N+1,N+1),dtest5(N+1,N+1)
 !----------------------------------------------------------
 real(kind=8)   :: fcenter(2)
 real(kind=8)   :: fprobe(2), fI(2)
@@ -155,9 +155,13 @@ real(kind=8)         :: cc(2)
  open(unit=21,file="cen2.dat")
  open(unit=22,file="cen3.dat")
  open(unit=23,file="cen4.dat")
+ open(unit=24,file="cen5.dat")
  open(unit=10,file="levelset.dat")
  open(unit=31,file="levelset1.dat")
  open(unit=32,file="levelset2.dat")
+ open(unit=33,file="levelset3.dat")
+ open(unit=34,file="levelset4.dat")
+ open(unit=35,file="levelset5.dat")
  open(unit=11,file="check.dat")
  open(unit=12,file="para.dat")
 
@@ -200,7 +204,8 @@ call_time=0
 !   enddo
 ! call starshape2(pcurve_ls2)
 if( 1 .eq. 1)then
- if(probtype_in .eq. 5 .or. probtype_in .eq. 7)then
+ if(probtype_in .eq. 5 .or. probtype_in .eq. 7 &
+                       .or. probtype_in .eq. 10)then
   pcurve_ls = 0.0d0
   call asteroidshape(pcurve_ls)
   do i=1,pcurve_num+1
@@ -259,6 +264,10 @@ elseif(probtype_in .eq. 7)then
  order_algorithm(3)=3
  order_algorithm(4)=4
  order_algorithm(5)=5
+elseif(probtype_in .eq. 10)then
+ nmat_in=6
+ order_algorithm(1)=1
+ order_algorithm(6)=2
 else
  print *,"probtype_in invalid"
  stop
@@ -337,6 +346,38 @@ CALL INIT_V(N,XLINE(0:N),YLINE(0:N),uu,vv)
  endif
 
  print *,"tau=",tau
+
+
+ if(probtype_in .eq. 10)then
+ do i=0,N
+ do j = 0,N
+  call dist_fns(1,xline(i),yline(j),dtest(i+1,j+1),probtype_in)
+  call dist_fns(2,xline(i),yline(j),dtest1(i+1,j+1),probtype_in)
+  call dist_fns(3,xline(i),yline(j),dtest2(i+1,j+1),probtype_in)
+  call dist_fns(4,xline(i),yline(j),dtest3(i+1,j+1),probtype_in)
+  call dist_fns(5,xline(i),yline(j),dtest4(i+1,j+1),probtype_in)
+  call dist_fns(6,xline(i),yline(j),dtest5(i+1,j+1),probtype_in)
+ enddo
+ enddo
+ do j=1,N+1
+  write(10,*) dtest(:,j) 
+ enddo
+ do j=1,N+1
+  write(31,*) dtest1(:,j) 
+ enddo
+ do j=1,N+1
+  write(32,*) dtest2(:,j) 
+ enddo
+ do j=1,N+1
+  write(33,*) dtest3(:,j) 
+ enddo
+ do j=1,N+1
+  write(34,*) dtest4(:,j) 
+ enddo
+ do j=1,N+1
+  write(35,*) dtest5(:,j) 
+ enddo
+ endif
 
 
 
@@ -431,6 +472,9 @@ CALL INIT_V(N,XLINE(0:N),YLINE(0:N),uu,vv)
    elseif(im1 .eq. 5 .and. mofdata_FAB_in(i,j,vofcomp) .gt. eps)then
     write(23,*) mofdata_FAB_in(i,j,1+vofcomp)+CELL_FAB(i,j)%center%val(1), &
                mofdata_FAB_in(i,j,2+vofcomp)+CELL_FAB(i,j)%center%val(2) 
+   elseif(im1 .eq. 6.and. mofdata_FAB_in(i,j,vofcomp) .gt. eps)then
+    write(24,*) mofdata_FAB_in(i,j,1+vofcomp)+CELL_FAB(i,j)%center%val(1), &
+               mofdata_FAB_in(i,j,2+vofcomp)+CELL_FAB(i,j)%center%val(2) 
    else
 
    endif 
@@ -494,7 +538,13 @@ CALL INIT_V(N,XLINE(0:N),YLINE(0:N),uu,vv)
   thermal_cond(3) = 1.0d0
   thermal_cond(4) = 0.1d0 
   thermal_cond(5) = 1.0d0
-
+ elseif(probtype_in .eq. 10)then
+  thermal_cond(1) = 1.0d0
+  thermal_cond(2) = 0.1d0 
+  thermal_cond(3) = 1.0d0
+  thermal_cond(4) = 0.1d0 
+  thermal_cond(5) = 1.0d0
+  thermal_cond(6) = 0.01d0
  else 
   print *,"probtype_in invalid"
   stop
@@ -609,7 +659,18 @@ CALL INIT_V(N,XLINE(0:N),YLINE(0:N),uu,vv)
    T(i,j,3)=2.0  
    T(i,j,4)=2.0    
    T(i,j,5)=2.0 
-
+  elseif(probtype_in .eq. 10)then
+   cc =0.5d0
+   do im=1,6
+    if(centroid_mult(i,j,im,1) .eq. 0.5d0 .and. &
+        centroid_mult(i,j,im,2) .eq. 0.5d0)then
+     T(i,j,im)=1.0d0
+    else
+     call dist_to_boundary(centroid_mult(i,j,im,:),dtemp1)
+     call l2normd(2,centroid_mult(i,j,im,:),cc, dtemp2)
+       T(i,j,im)= 1.0d0+dtemp2/dtemp1*(10.0d0-1.0d0)
+     endif
+  enddo
   else
    print *,"probtype_in invalid"
    stop
@@ -1109,8 +1170,12 @@ deallocate(T_new)
  close(21)
  close(22)
  close(23)
+ close(24)
  close(31)
  close(32)
+ close(33)
+ close(34)
+ close(35)
 ! close(41)
 ! close(42)
 ! close(43)

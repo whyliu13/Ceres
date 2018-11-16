@@ -31,7 +31,9 @@ integer,intent(in)               :: imat,probtype_in
 real(kind=8)                     :: x,y,dist
 real(kind=8)                     :: dist1,dist2,dist3,dist4,dist5
 real(kind=8)                     :: dist6,dist7,dist8
+real(kind=8)                     :: dista,distb,distc,distd
 real(kind=8)                     :: d1,d2,d3,d4,d5
+real(kind=8)                     :: dd1,dd2,dd3,dd4,dd5
 real(kind=8)                     :: xy(2)
 real(kind=8)                     :: x1(2),x2(2),x3(2),x4(2),x5(2)
 real(kind=8)                     :: x6(2)
@@ -54,6 +56,8 @@ integer                          :: cenflag,cccflag
 
 real(kind=8)                     :: vt1(2),vt2(2),vt3(2),vt4(2)
 real(kind=8)                     :: vtd1,vtd2,vtd3,vtd4
+real(kind=8)                     :: va(2),vb(2),vc(2),vd(2)
+real(kind=8)                     :: vra(2),vrb(2),vrc(2),vrd(2)
 
 real(kind=8)                     :: smrad
 real(kind=8)                     :: rad_crit(2)
@@ -68,6 +72,7 @@ real(kind=8)                     :: xysign
 real(kind=8)                     :: xc(2),xc1(2),xc2(2),xc3(2)
 real(kind=8)                     :: crossp(3)
 integer                          :: choosepn
+real(kind=8)                     :: r_inner  ! radius of inner circle
 
 
 if(probtype_in .eq. 1 .or. probtype_in .eq. 9) then
@@ -459,41 +464,16 @@ else
   stop
  endif
 
+ endif
 
 
-
-endif
-
-
-
-
-! call l2normd(2,cc,rad_crit,dist3)
-! call l2normd(2,cc,xy,dist2)
-
-! if(imat .eq. 1)then
-!  dist=sign(dist1,(dist3-dist2))
-! elseif(imat .eq. 2)then
-!  dist=-sign(dist1,(dist3-dist2))
-! else
-!  print *,"wrong num of material, 187"
-!  stop
-! endif
- 
-! if(imat .eq. 1)then
-!  dist=sign(dist1,(dist3-dist2))
-! elseif(imat .eq. 2)then
-!  dist=-sign(dist1,(dist3-dist2))
-! else
-!  print *,"wrong num of material, 187"
-!  stop
-! endif
-elseif(probtype_in .eq. 7)then
+elseif(probtype_in .eq. 10)then
+ r_inner=0.1d0
  xy(1)=x
  xy(2)=y
  cenflag=0    ! 0= axis symmetry aligned with grid
-              ! 1= not aligned with grid
- cccflag=0    ! 0= sigular at center
-              ! 1= nonsigular
+              ! 1= not aligned with grid 
+ cccflag =0
  if(cenflag .eq. 1)then 
   center(1) = 0.02d0*sqrt(5.0d0)
   center(2) = 0.02d0*sqrt(5.0d0)
@@ -507,7 +487,58 @@ elseif(probtype_in .eq. 7)then
 
  cc(1)=(center(1)+1.0d0)/2.0d0
  cc(2)=(center(2)+1.0d0)/2.0d0
-!  print *,"center",cc
+
+
+   vra(1)=cc(1)+r_inner
+   vra(2)=cc(2)
+   vrb(1)=cc(1)
+   vrb(2)=cc(2)+r_inner
+   vrc(1)=cc(1)-r_inner
+   vrc(2)=cc(2)
+   vrd(1)=cc(1)
+   vrd(2)=cc(2)-r_inner
+
+   va(1)=cc(1)+0.4d0
+   va(2)=cc(2)
+   vb(1)=cc(1)
+   vb(2)=cc(2)+0.4d0
+   vc(1)=cc(1)-0.4d0
+   vc(2)=cc(2)
+   vd(1)=cc(1)
+   vd(2)=cc(2)-0.4d0
+
+
+ vt1(1)=0.6d0
+ vt1(2)=0.5d0
+ vt2(1)=0.5d0
+ vt2(2)=0.6d0
+ vt3(1)=0.4d0
+ vt3(2)=0.5d0
+ vt4(1)=0.5d0
+ vt4(2)=0.4d0
+ call dist_point_to_lined(2,vt1,vt2,xy,dd1)
+ call dist_point_to_lined(2,vt2,vt3,xy,dd2) 
+ call dist_point_to_lined(2,vt3,vt4,xy,dd3)
+ call dist_point_to_lined(2,vt4,vt1,xy,dd4)
+
+ dist6=min(dd1,dd2,dd3,dd4)
+
+ d1=x+y-1.1d0
+ d2=x+y-0.9d0
+ d3=x-y-0.1d0
+ d4=x-y+0.1d0
+
+ if(d1 .le. 0.0d0 .and. d2 .ge. 0.0d0 .and. d3 .le. 0.0d0 .and. d4 .ge. 0.0d0)then
+  ! do nothing
+ else
+  dist6 = -dist6
+ endif
+
+
+
+
+
+
  if(cenflag .eq. 0)then              ! center aligned with grid
   if(abs(xy(1) - cc(1)) .lt. 1.0e-12 &
      .and. abs(xy(2)-cc(2)) .lt. 1.0e-12)then
@@ -521,102 +552,373 @@ elseif(probtype_in .eq. 7)then
 
  if(cccflag .eq. 0)then
 
-  if(tt .ge. 0.0d0 .and. tt .le. 0.5d0*pi)then
+
+ if(tt .ge. 0.0d0 .and. tt .le. 0.5d0*pi)then
    pp1=1
    pp2=pcurve_num/4+1
-  elseif(tt .le. pi)then
+ elseif(tt .le. pi)then
    pp1=pcurve_num/4+1
    pp2=pcurve_num/2+1
-  elseif(tt .le. 1.5d0*pi)then
+ elseif(tt .le. 1.5d0*pi)then
    pp1= pcurve_num/2+1
-   pp2=pcurve_num/4*3
-  elseif(tt .lt. 2.0d0*pi)then
+   pp2=pcurve_num/4*3+1
+ elseif(tt .le. 2.0d0*pi)then
    pp1=pcurve_num/4*3+1
    pp2=pcurve_num+1
+ else
+  print *,"invalid tt", tt
+  stop
+ endif 
+
+
+ dist1=100000.0d0
+! smrad=100000.0d0
+ ppcrit=pp1
+ do i=pp1,pp2
+  call l2normd(2,xy,pcurve_ls(:,i),dist2)
+  if(dist2 .lt. dist1)then
+   pcurve_crit=pcurve_ls(:,i)
+   dist1=dist2
+   ppcrit=i
+  endif
+!  if(abs(pcurve_rad(i)-tt) .lt. smrad)then
+!   smrad=abs(pcurve_rad(i)-tt)
+!   rad_crit= pcurve_ls(:,i)   
+!  endif
+ enddo
+
+if(pcurve_ls(1,ppcrit) .eq. x .and. pcurve_ls(2,ppcrit) .eq. y)then
+ dist=0.0d0
+ crossp=0.0d0
+else
+ if(ppcrit .eq. pp2)then
+  call cross_product(2,pcurve_ls(:,ppcrit-1),&
+                     pcurve_ls(:,ppcrit),xy,crossp)
+ else
+  call cross_product(2,pcurve_ls(:,ppcrit), & 
+                   pcurve_ls(:,ppcrit+1),xy,crossp) 
+ endif
+
+ if(crossp(3) .eq. 0.0d0)then
+  dist=0.0d0
+  crossp=0.0d0
+!  print *,"cross_product is 0 check!"
+!  print *,"xy",xy
+!  print *, pcurve_ls(:,ppcrit-1)
+!  print *,pcurve_ls(:,ppcrit)
+!  print *,pcurve_ls(:,ppcrit+1)
+!  print *,"crossp",crossp
+!  stop
+ endif
+endif
+
+
+
+   call dist_point_to_lined(2,va,vra,xy,dist2)
+   call dist_point_to_lined(2,vb,vrb,xy,dist3)
+   call dist_point_to_lined(2,vc,vrc,xy,dist4)
+   call dist_point_to_lined(2,vd,vrd,xy,dist5)
+
+   call dist_point_to_lined(2,vra,vrb,xy,dista)
+   call dist_point_to_lined(2,vrb,vrc,xy,distb)
+   call dist_point_to_lined(2,vrc,vrd,xy,distc)
+   call dist_point_to_lined(2,vrd,vra,xy,distd)
+
+     if(dist2.lt.0.0d0 .or. dist3 .lt. 0.0d0 &
+        .or. dist4.lt. 0.0d0 .or. dist5.lt. 0.0d0 )then
+      print *,"check dist2345"
+      stop
+     endif
+
+
+!   first qudrant>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+ if(tt .eq. 0.0d0)then
+  if(imat .eq. 1)then
+    if(crossp(3) .eq. 0.0d0)then
+     dist=0.0d0
+    else
+     dist=sign(dist1,-crossp(3))
+    endif
+  elseif(imat .eq. 2)then
+   if(xy(1) .lt. 0.5d0+r_inner)then
+    dist=-dista
+   elseif(xy(1) .gt. 0.9d0)then
+    dist=-(xy(1)-0.9d0)
+   else
+    dist=0.0d0
+   endif
+  elseif(imat .eq. 3)then
+   dist=-distb
+  elseif(imat .eq. 4)then
+   dist=-distc
+  elseif(imat .eq. 5)then
+   if(xy(1) .lt. 0.5d0+r_inner)then
+    dist=-dista
+   elseif(xy(1) .gt. 0.9d0)then
+    dist=-(xy(1)-0.9d0)
+   else
+    dist=0.0d0
+   endif
+  elseif(imat .eq. 6)then
+   dist=dist6
   else
-   print *,"invalid tt", tt
-   stop
+    print *,"wrong material num"
+    stop
+  endif  
+
+  elseif(tt .gt. 0.0d0 .and. tt .lt. 0.5d0*pi)then
+
+   if(imat .eq. 1)then    
+    if(crossp(3) .eq. 0.0d0)then
+     dist=0.0d0
+    else
+     dist=sign(dist1,-crossp(3))
+    endif
+   elseif(imat .eq. 2)then
+     if(crossp(3) .ge. 0.0d0 .and. dist6 .le. 0.0d0)then
+     dist = min(dist1,dist2,dist3,-dist6)
+     if(dist1 .lt. 0.0d0 .or.  -dist6.lt.0.0d0)then
+      print *,"check dist1,6"
+      stop
+     endif
+    else
+     dist= -min(dist1,-dist6)
+    endif
+   elseif(imat .eq. 3)then
+    dist=-min(dist3,distb)
+   elseif(imat .eq. 4)then
+    dist=-distc
+   elseif(imat .eq. 5)then
+    dist=-dist2
+   elseif(imat .eq. 6)then
+    dist=dist6
+   else
+    print *,"wrong material num"
+    stop
+   endif
+
+ elseif(tt .eq. 0.5d0*pi)then 
+
+  if(imat .eq. 1)then
+    if(crossp(3) .eq. 0.0d0)then
+     dist=0.0d0
+    else
+     dist=sign(dist1,-crossp(3))
+    endif
+  elseif(imat .eq. 2)then
+   if(xy(2) .lt. 0.5d0+r_inner)then
+    dist=-dista
+   elseif(xy(2) .gt. 0.9d0)then
+    dist=-(xy(2)-0.9d0)
+   else
+    dist=0.0d0
+   endif
+  elseif(imat .eq. 3)then
+   if(xy(2) .lt. 0.5d0+r_inner)then
+    dist=-distb
+   elseif(xy(2) .gt. 0.9d0)then
+    dist=-(xy(2)-0.9d0)
+   else
+    dist=0.0d0
+   endif
+  elseif(imat .eq. 4)then
+   dist=-min(distc,dist4)
+  elseif(imat .eq. 5)then
+   dist=-min(dist2,distd)
+  elseif(imat .eq. 6)then
+   dist=dist6
+  else
+    print *,"wrong material num"
+    stop
+  endif  
+  ! second quadrant >>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+ elseif(tt .lt. pi)then
+
+   if(imat .eq. 1)then
+    if(crossp(3) .eq. 0.0d0)then
+     dist=0.0d0
+    else
+     dist=sign(dist1,-crossp(3))
+    endif
+   elseif(imat .eq. 2)then
+    dist=-min(dist3,dista)
+   elseif(imat .eq. 3)then
+    if(crossp(3) .gt. 0.0d0 .and. dist6 .lt. 0.0d0)then
+     dist = min(dist1,dist3,dist4,-dist6)
+     if(dist1 .lt. 0.0d0 .or.  -dist6.lt.0.0d0)then
+      print *,"check dist1,6"
+      stop
+     endif
+    else
+     dist= - min(dist1,-dist6)
+    endif
+   elseif(imat .eq. 4)then
+    dist=-min(dist4,distc)
+   elseif(imat .eq. 5)then 
+    dist=-distd
+   elseif(imat .eq. 6)then
+    dist=dist6
+   else
+    print *,"wrong material num"
+    stop
+   endif
+ elseif(tt .eq. pi)then
+  if(imat .eq. 1)then
+    if(crossp(3) .eq. 0.0d0)then
+     dist=0.0d0
+    else
+     dist=sign(dist1,-crossp(3))
+    endif
+  elseif(imat .eq. 2)then
+    dist=-min(dist3,dista)
+  elseif(imat .eq. 3)then
+   if(xy(1) .gt. 0.5d0-r_inner)then
+    dist=-distb
+   elseif(xy(1) .lt. 0.1d0)then
+    dist=xy(1)-0.1d0
+   else
+    dist=0.0d0
+   endif
+
+  elseif(imat .eq. 4)then
+   if(xy(1) .gt. 0.5d0-r_inner)then
+    dist=-distc
+   elseif(xy(1) .lt. 0.1d0)then
+    dist=xy(1)-0.1d0
+   else
+    dist=0.0d0
+   endif
+  elseif(imat .eq. 5)then
+   dist=-distd
+  elseif(imat .eq. 6)then
+   dist=dist6
+  else
+    print *,"wrong material num"
+    stop
   endif 
 
-  dist1=100000.0d0
-  smrad=100000.0d0
-  do i=pp1,pp2
-   call l2normd(2,xy,pcurve_ls(:,i),dist2)
-   if(dist2 .lt. dist1)then
-    pcurve_crit=pcurve_ls(:,i)
-    dist1=dist2
-   endif
-   if(abs(pcurve_rad(i)-tt) .lt. smrad)then
-    smrad=abs(pcurve_rad(i)-tt)
-    rad_crit= pcurve_ls(:,i)   
-   endif
-  enddo
+  ! third quadrant
+ elseif(tt .lt. 1.5d0*pi)then
 
-  call l2normd(2,cc,rad_crit,dist3) 
-  call l2normd(2,cc,xy,dist2)
+   if(imat .eq. 1)then
+    if(crossp(3) .eq. 0.0d0)then
+     dist=0.0d0
+    else
+     dist=sign(dist1,-crossp(3))
+    endif
+   elseif(imat .eq. 2)then
+    dist=-dista
+   elseif(imat .eq. 3)then
+    dist=-min(dist4,distb)
 
-  x1(1)=cc(1)+0.4d0                            !          x2  
-  x1(2)=cc(2)                                  ! 
-  x2(1)=cc(1)                                  ! 
-  x2(2)=cc(2)+0.4d0                            !    x3           x1
-  x3(1)=cc(1)-0.4d0                            ! 
-  x3(2)=cc(2)                                  ! 
-  x4(1)=cc(1)                                  !           x4 
-  x4(2)=cc(2)-0.4d0                            !  
+   elseif(imat .eq. 4)then
 
-
-
- if(imat .eq. 1)then
-  dist=-sign(dist1,(dist3-dist2))
- elseif(imat .eq. 2)then
-  call dist_point_to_lined(2,cc,x1,xy,dist4)
-  call dist_point_to_lined(2,cc,x2,xy,dist5)
-  
-  if(xy(1) .lt. cc(1) .or. xy(2) .lt. cc(2))then
-   dist= -min(dist4,dist5)
-  else
-   dist= min(sign(dist1,(dist3-dist2)),dist4,dist5)
-  endif
-
- elseif(imat .eq. 3)then
-  call dist_point_to_lined(2,cc,x2,xy,dist4)
-  call dist_point_to_lined(2,cc,x3,xy,dist5)
-  
-  if(xy(1) .gt. cc(1) .or. xy(2) .lt. cc(2))then
-   dist= -min(dist4,dist5)
-  else
-   dist= min(sign(dist1,(dist3-dist2)),dist4,dist5)
-  endif
-
- elseif(imat .eq. 4)then
-  call dist_point_to_lined(2,cc,x3,xy,dist4)
-  call dist_point_to_lined(2,cc,x4,xy,dist5)
-  
-  if(xy(1) .gt. cc(1) .or. xy(2) .gt. cc(2))then
-   dist= -min(dist4,dist5)
-  else
-   dist= min(sign(dist1,(dist3-dist2)),dist4,dist5)
-  endif
-
- elseif(imat .eq. 5)then
-  call dist_point_to_lined(2,cc,x4,xy,dist4)
-  call dist_point_to_lined(2,cc,x1,xy,dist5)
-  
-   if(xy(1) .lt. cc(1) .or. xy(2) .gt. cc(2))then
-    dist= -min(dist4,dist5)
+    if(crossp(3) .gt. 0.0d0 .and. dist6 .lt. 0.0d0)then
+     dist = min(dist1,dist5,dist4,-dist6)
+     if(dist1 .lt. 0.0d0 .or.  -dist6.lt.0.0d0)then
+      print *,"check dist1,6"
+      stop
+     endif
+    else
+     dist= - min(dist1,-dist6)
+    endif
+   elseif(imat .eq. 5)then
+    dist=-min(dist5,distd)
+   elseif(imat .eq. 6)then
+    dist=dist6
    else
-    dist= min(sign(dist1,(dist3-dist2)),dist4,dist5)
+    print *,"wrong material num"
+    stop
    endif
-  else
-   print *, "wrong number of materials 368"
-   stop
-  endif
+ 
+ elseif( tt .eq. 1.5d0*pi) then
 
+  if(imat .eq. 1)then
+    if(crossp(3) .eq. 0.0d0)then
+     dist=0.0d0
+    else
+     dist=sign(dist1,-crossp(3))
+    endif
+  elseif(imat .eq. 2)then
+   dist = -min(dist2,dista)
+  elseif(imat .eq. 3)then
+   dist = -min(distb,dist4)
+
+   elseif(imat .eq. 4)then
+
+   if(xy(2) .gt. 0.5d0-r_inner)then
+    dist=-distc
+   elseif(xy(2) .lt. 0.1d0)then
+    dist= xy(2)-0.1d0
+   else
+    dist=0.0d0
+   endif
+
+  elseif(imat .eq. 5)then
+   if(xy(2) .gt. 0.5d0-r_inner)then
+    dist=-distd
+   elseif(xy(2) .lt. 0.1d0)then
+    dist= xy(2)-0.1d0
+   else
+    dist=0.0d0
+   endif
+  elseif(imat .eq. 6)then
+   dist=dist6
+  else
+    print *,"wrong material num"
+    stop
+  endif  
+
+
+ elseif(tt .lt. 2.0d0*pi)then
+
+
+   if(imat .eq. 1)then
+    if(crossp(3) .eq. 0.0d0)then
+     dist=0.0d0
+    else
+     dist=sign(dist1,-crossp(3))
+    endif
+   elseif(imat .eq. 2)then
+    dist=-min(dista,dist2)
+
+   elseif(imat .eq. 3)then
+    
+    dist=-distb
+ 
+   elseif(imat .eq. 4)then
+     dist=-min(distc,dist5)
+
+   elseif(imat .eq. 5)then  
+
+    if(crossp(3) .gt. 0.0d0 .and. dist6 .lt. 0.0d0)then
+     dist = min(dist1,dist2,dist5,-dist6)
+     if(dist1 .lt. 0.0d0 .or.  -dist6.lt.0.0d0)then
+      print *,"check dist1,6"
+      stop
+     endif
+    else
+     dist= -min(dist1,-dist6)
+    endif
+   elseif(imat .eq. 6)then
+    dist=dist6
+   else
+    print *,"wrong material num"
+    stop
+   endif
+ else
+  print *,"invalid tt", tt
+  stop
+ endif  
  elseif(cccflag .eq. 1)then
   if(imat .eq. 1)then
    dist=-0.1d0*sqrt(2.0)
+  elseif(imat .eq. 2 .or. imat .eq. 3 .or. imat .eq. 4 &
+           .or. imat .eq. 5)then
+   dist=-0.1d0/sqrt(2.0)
   else
-   dist=0.0d0
+   dist=+0.1d0/sqrt(2.0)
   endif
  else
   print *,"cccflag invald 353"
@@ -625,7 +927,7 @@ elseif(probtype_in .eq. 7)then
 
 
 
-elseif(probtype_in .eq. 17)then           ! backup for 7
+elseif(probtype_in .eq. 17)then           ! backup for type 7
  xy(1)=x
  xy(2)=y
  cenflag=0    ! 0= axis symmetry aligned with grid
@@ -894,7 +1196,7 @@ elseif(probtype_in .eq. 8)then
 
 
 
- elseif(probtype_in .eq. 10)then  ! old hypercycloid
+ elseif(probtype_in .eq. 20)then  ! old hypercycloid
   
  xy(1)=x
  xy(2)=y
@@ -2977,6 +3279,22 @@ elseif(probtype_in .eq. 7)then                                      ! 7
  endif
  endif
 
+elseif(probtype_in .eq. 10)then                                     
+
+ if(center(1) .gt. 0.5d0 .and. center(2) .gt. 0.5d0)then
+  vf(2) = 1.0d0-vf(1)-vf(6)
+ elseif(center(1) .lt. 0.5d0 .and. center(2) .gt. 0.5d0)then
+  vf(3) = 1.0d0-vf(1)-vf(6)  
+ elseif(center(1) .lt. 0.5d0 .and. center(2) .lt. 0.5d0)then
+  vf(4) = 1.0d0-vf(1)-vf(6)  
+ elseif(center(1) .gt. 0.5d0 .and. center(2) .lt. 0.5d0)then
+  vf(5) = 1.0d0-vf(1)-vf(6)  
+ else
+  print *,"center is not aligned with grid"
+  stop
+ endif
+
+
 
 
 
@@ -3053,6 +3371,31 @@ else if (probtype_in.eq.7) then
   enddo 
 
  endif
+
+else if (probtype_in.eq.10) then
+ if(vf(2) .gt. eps .and. vf(2) .lt. 1.0d0)then
+  do dir=1,2
+   centroid(2,dir) =  &
+    (center(dir) - vf(1)*centroid(1,dir)-vf(6)*centroid(6,dir))/vf(2)
+  enddo
+ elseif(vf(3) .gt. eps .and. vf(3) .lt. 1.0d0)then
+  do dir=1,2
+   centroid(3,dir) =  &
+    (center(dir) - vf(1)*centroid(1,dir)-vf(6)*centroid(6,dir))/vf(3)
+  enddo
+ elseif(vf(4) .gt. eps .and. vf(4) .lt. 1.0d0)then
+  do dir=1,2
+   centroid(4,dir) =  &
+    (center(dir) - vf(1)*centroid(1,dir)-vf(6)*centroid(6,dir))/vf(4)
+  enddo
+ elseif(vf(5) .gt. eps .and. vf(5) .lt. 1.0d0)then
+  do dir=1,2
+   centroid(5,dir) =  &
+    (center(dir) - vf(1)*centroid(1,dir)-vf(6)*centroid(6,dir))/vf(5)
+  enddo 
+
+ endif
+
 
 else
  print *,"probtype_in invalid"
@@ -3260,6 +3603,45 @@ elseif(probtype_in .eq. 7)then
   ! do nothing
    
  endif
+elseif(probtype_in .eq. 10)then
+! vcheck = vf(1) + vf(2)+vf(3)+vf(4)+vf(5)
+!  if(vcheck .gt. 1.0d0+eps) then
+!  print *,"goes into vf_correct4",vcheck,vf
+! endif
+
+ if (nmat_in.ne.6) then
+  print *,"nmat_in invalid"
+  stop
+ endif
+ 
+ vcheck = vf(1) + vf(6)
+ if(vf(1) .lt. 0.0d0 .or. vf(6) .lt. 0.0d0) then
+  print *,"vf is negative"
+ endif
+
+ if(vcheck .gt. 1.0d0+eps) then
+  print *,"goes into vf_correct2",vcheck
+  if(vf(1) .gt. 1.0d0) then
+    print *,"case1"
+     vf(1) = 1.0d0
+     vf(6) = 0.0d0
+  elseif(vf(6) .gt. 1.0d0)then
+    print *,"case2"
+     vf(1) = 0.0d0
+     vf(6) = 1.0d0
+  else
+    print *,"case3",iin,jin
+    print *,"overshoot", vf(1) , vf(3)
+    if(vf(1) .gt. vf(6))then
+       vf(1) = 1.0d0
+       vf(6) = 0.0d0
+    elseif(vf(1) .lt. vf(6))then
+       vf(1) = 0.0d0
+       vf(6) = 1.0d0
+    endif
+  endif
+ endif
+
 else
  print *,"probtype_in invalid"
  stop
@@ -3605,6 +3987,8 @@ REAL*8 mypi
  elseif(probtype_in .eq. 7)then
    G_in = 0.0d0
  elseif(probtype_in .eq. 9)then
+   G_in = 0.0d0
+ elseif(probtype_in .eq. 10)then
    G_in = 0.0d0
  else
   print *,"probtype_in invalid"
