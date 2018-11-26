@@ -712,6 +712,34 @@ real(kind=8)               :: refc
   ! do nothing
  elseif(probtype_in .eq. 10)then
   ! do nothing
+ !  delx=x-0.5d0
+ !  dely=y-0.5d0
+ !  radius = sqrt(delx**2.0d0 +dely**2.0d0)
+ 
+       ! x=r cos(theta)
+       ! y=r sin(theta)
+ !  if (radius.le.0.2/1000.0) then
+ !   theta=0.0
+ !  else if ((delx.ge.0.0).and.(dely.ge.0.0)) then
+ !   theta=acos(delx/radius)
+ !  else if ((delx.le.0.0).and.(dely.ge.0.0)) then
+ !   theta=acos(abs(delx)/radius)
+ !   theta=mypi-theta
+ !  else if ((delx.le.0.0).and.(dely.le.0.0)) then!
+
+
+!    theta=acos(abs(delx)/radius)
+!    theta=mypi+theta
+!   else if ((delx.ge.0.0).and.(dely.le.0.0)) then
+!    theta=acos(delx/radius)
+!    theta=2.0d0*mypi-theta
+!   else
+!    print *,"delx or dely invalid",2,x,y
+!    stop
+!   endif
+
+!   exact_temperature=2.0d0+sin(theta)
+
 
  elseif(probtype_in .eq. 9)then
    xy(1)=x

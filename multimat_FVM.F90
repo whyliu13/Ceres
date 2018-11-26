@@ -2525,9 +2525,9 @@ integer                 :: ct
  if(abs(d1) .lt. 1.0d-10 .and. abs(d2) .lt. 1.0d-10 &                       ! 0  0  0
     .and. abs(d3) .lt. 1.0d-10)then
    print *,"invalid d1 d2 d3, check triangle_interface_detect"
-   print *, v1,d1
-   print *, v2,d2
-   print *, v3,d3
+!   print *, v1,d1
+!   print *, v2,d2
+!   print *, v3,d3
    call tri_centroid(v1,v2,v3,cencheck)
    call dist_fns(im,cencheck(1),cencheck(2),dcheck,probtype_in) 
    if(dcheck .eq. 0.0d0)then

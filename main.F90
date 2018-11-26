@@ -28,7 +28,7 @@ IMPLICIT NONE
 
 INTEGER,PARAMETER          :: probtype_in = 10
 INTEGER,PARAMETER          :: operator_type_in = 1 !0=low,1=simple,2=least sqr
-INTEGER,PARAMETER          :: dclt_test_in = 1 ! 1 = Dirichlet test  on
+INTEGER,PARAMETER          :: dclt_test_in = 0 ! 1 = Dirichlet test  on
 INTEGER,PARAMETER          :: solvtype = 1 ! 0 = CG  1 = bicgstab
 INTEGER,PARAMETER          :: N=32,M= 1
 INTEGER,PARAMETER          :: plot_int = 1
@@ -539,12 +539,12 @@ CALL INIT_V(N,XLINE(0:N),YLINE(0:N),uu,vv)
   thermal_cond(4) = 0.1d0 
   thermal_cond(5) = 1.0d0
  elseif(probtype_in .eq. 10)then
-  thermal_cond(1) = 1.0d0
+  thermal_cond(1) = 10.0d0
   thermal_cond(2) = 0.1d0 
-  thermal_cond(3) = 1.0d0
+  thermal_cond(3) = 0.1d0
   thermal_cond(4) = 0.1d0 
-  thermal_cond(5) = 1.0d0
-  thermal_cond(6) = 0.01d0
+  thermal_cond(5) = 0.1d0
+  thermal_cond(6) = 0.1d0
  else 
   print *,"probtype_in invalid"
   stop
@@ -620,20 +620,6 @@ CALL INIT_V(N,XLINE(0:N),YLINE(0:N),uu,vv)
 
   elseif(probtype_in .eq. 5)then
 
-!    T(i,j,1)=exact_temperature(xcen,ycen,time_init,1,probtype_in, &
-!     nmat_in,thermal_cond,dclt_test_in)
-!    T(i,j,2)=exact_temperature(xcen,ycen,time_init,2,probtype_in, &
-!     nmat_in,thermal_cond,dclt_test_in)
-
-!   exact_temperature = (x**2.0d0 + y**2.0d0)*exp(-t)
-
- 
- !  if( sqrt((xcen-0.5d0)**2.0d0+ (ycen-0.5d0)**2.0d0) .lt. 0.1d0)then
- !   T(i,j,1)=10.0d0
- !   T(i,j,2)=0.0d0
- !  else
- !   T(i,j,:)=0.0d0
- !  endif
    cc =0.5d0
    do im=1,2
     if(centroid_mult(i,j,im,1) .eq. 0.5d0 .and. &
@@ -646,9 +632,6 @@ CALL INIT_V(N,XLINE(0:N),YLINE(0:N),uu,vv)
      endif
   enddo
 
- !        T(i,j,im)=sqrt((centroid_mult(i,j,1,1)-0.5d0)**2.0d0 + &
- !          (centroid_mult(i,j,1,2)-0.5d0)**2.0d0)/0.5d0*10.0d0
-
   elseif(probtype_in .eq. 6)then
    T(i,j,1)=2.0
    T(i,j,2)=2.0    
@@ -660,8 +643,20 @@ CALL INIT_V(N,XLINE(0:N),YLINE(0:N),uu,vv)
    T(i,j,4)=2.0    
    T(i,j,5)=2.0 
   elseif(probtype_in .eq. 10)then
+!   cc =0.5d0
+!   do im=1,6
+!    if(centroid_mult(i,j,im,1) .eq. 0.5d0 .and. &
+!        centroid_mult(i,j,im,2) .eq. 0.5d0)then
+!     T(i,j,im)=1.0d0
+!    else
+!     call dist_to_boundary(centroid_mult(i,j,im,:),dtemp1)
+!     call l2normd(2,centroid_mult(i,j,im,:),cc, dtemp2)
+!       T(i,j,im)= 1.0d0+dtemp2/dtemp1*(10.0d0-1.0d0)
+!     endif
+!   enddo
    cc =0.5d0
-   do im=1,6
+   do im=1,nmat_in
+    print *,"centroid", centroid_mult(i,j,im,:)
     if(centroid_mult(i,j,im,1) .eq. 0.5d0 .and. &
         centroid_mult(i,j,im,2) .eq. 0.5d0)then
      T(i,j,im)=1.0d0
@@ -671,6 +666,13 @@ CALL INIT_V(N,XLINE(0:N),YLINE(0:N),uu,vv)
        T(i,j,im)= 1.0d0+dtemp2/dtemp1*(10.0d0-1.0d0)
      endif
   enddo
+
+!   do im=1,nmat_in
+!    xcen=centroid_mult(i,j,im,1)
+!    ycen=centroid_mult(i,j,im,2)
+!    T(i,j,im)=exact_temperature(xcen,ycen,time_init,im,probtype_in, &
+!      nmat_in,thermal_cond,dclt_test_in)
+!   enddo
   else
    print *,"probtype_in invalid"
    stop
