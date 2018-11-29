@@ -18,7 +18,7 @@ IMPLICIT NONE
 ! 5 = hypocycloid with 2 materials
 ! 6 = nucleate boiling diffusion with thin filament between vapor bubble and substrate
 ! 7 = hypocycloid with 5 materials
-! 8 = nucleate boiling diffusion without filament
+! 8 = 
 ! 9 = annulus cvg test
 ! 10= hypocycloid with 6 materials
 
@@ -26,7 +26,7 @@ IMPLICIT NONE
 ! for flat interface, interface is y=0.3.
 ! for dirichlet, top material has k=0 T(y=0.3)=2.0   T(y=0.0)=3.0
 
-INTEGER,PARAMETER          :: probtype_in = 10
+INTEGER,PARAMETER          :: probtype_in = 6
 INTEGER,PARAMETER          :: operator_type_in = 1 !0=low,1=simple,2=least sqr
 INTEGER,PARAMETER          :: dclt_test_in = 0 ! 1 = Dirichlet test  on
 INTEGER,PARAMETER          :: solvtype = 1 ! 0 = CG  1 = bicgstab
@@ -528,10 +528,15 @@ CALL INIT_V(N,XLINE(0:N),YLINE(0:N),uu,vv)
   thermal_cond(1) = 0.1d0           ! interior region    
   thermal_cond(2) = 10.0d0          ! exterior region
 
- elseif(probtype_in .eq. 6)then
-  thermal_cond(1) = 1.0d0
+ elseif(probtype_in .eq. 6)then   ! NB with thin filament
+  thermal_cond(1) = 100.0d0
   thermal_cond(2) = 0.1d0 
-  thermal_cond(3) = 0.01d0
+  thermal_cond(3) = 10.0d0
+
+! elseif(probtype_in .eq. 8)then   ! NB without thin filament
+!  thermal_cond(1) = 1.0d0
+!  thermal_cond(2) = 0.1d0 
+!  thermal_cond(3) = 0.01d0
 
  elseif(probtype_in .eq. 7)then
   thermal_cond(1) = 1.0d0
@@ -634,9 +639,12 @@ CALL INIT_V(N,XLINE(0:N),YLINE(0:N),uu,vv)
   enddo
 
   elseif(probtype_in .eq. 6)then
-   T(i,j,1)=2.0
-   T(i,j,2)=2.0    
-   T(i,j,3)=2.0 
+
+   do im=1,nmat_in
+     T(i,j,im)= NB_bot+(NB_top-NB_bot)/real(N,8)*0.5d0 + &
+         (centroid_mult(i,j,im,2)+0.5d0*h_in)*(NB_top-NB_bot+(NB_top-NB_bot)/real(N,8))
+   enddo
+
   elseif(probtype_in .eq. 7)then
    T(i,j,1)=2.0
    T(i,j,2)=2.0    
@@ -657,7 +665,7 @@ CALL INIT_V(N,XLINE(0:N),YLINE(0:N),uu,vv)
 !   enddo
    cc =0.5d0
    do im=1,nmat_in
-    print *,"centroid", centroid_mult(i,j,im,:)
+ !   print *,"centroid", centroid_mult(i,j,im,:)
     if(centroid_mult(i,j,im,1) .eq. 0.5d0 .and. &
         centroid_mult(i,j,im,2) .eq. 0.5d0)then
      T(i,j,im)=1.0d0

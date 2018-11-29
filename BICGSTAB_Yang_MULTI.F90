@@ -1,4 +1,5 @@
       module bicgstab_module
+       use Generalclass
 
       REAL*8, PARAMETER :: AVGTOL=1.0E-8
       REAL*8,PARAMETER  :: ERRTOL = 0.99D0
@@ -904,10 +905,10 @@
         UWALL=0.0
        else if ((dir.eq.2).and.(sidesten.eq.1)) then
         bctype=1 ! d
-        UWALL=10.0
+        UWALL= NB_bot
        else if ((dir.eq.2).and.(sidesten.eq.2)) then
-        bctype=0 ! n
-        UWALL= 0.0
+        bctype=1 ! n
+        UWALL= NB_top
        else
         print *,"dir or sidesten invalid"
         stop
