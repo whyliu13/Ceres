@@ -30,7 +30,7 @@ INTEGER,PARAMETER          :: probtype_in = 10
 INTEGER,PARAMETER          :: operator_type_in = 1 !0=low,1=simple,2=least sqr
 INTEGER,PARAMETER          :: dclt_test_in = 0 ! 1 = Dirichlet test  on
 INTEGER,PARAMETER          :: solvtype = 1 ! 0 = CG  1 = bicgstab
-INTEGER,PARAMETER          :: N=32,M= 1
+INTEGER,PARAMETER          :: N=128,M= 4
 INTEGER,PARAMETER          :: plot_int = 1
 real(kind=8),parameter     :: fixed_dt = 1.25d-2 /real(M,8) ! !!!!!!!!!!!!!!!!!!
 real(kind=8),parameter     :: cf= 1.0d0         ! multiplier of the time step.
@@ -164,6 +164,7 @@ real(kind=8)         :: cc(2)
  open(unit=35,file="levelset5.dat")
  open(unit=11,file="check.dat")
  open(unit=12,file="para.dat")
+ open(unit=13,file="markers.dat")
 
  !open(unit=41,file="output1.dat")
  !open(unit=42,file="output2.dat")
@@ -1169,6 +1170,7 @@ deallocate(T_new)
  close(10)
  close(11)
  close(12)
+ close(13)
  close(21)
  close(22)
  close(23)

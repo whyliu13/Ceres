@@ -430,7 +430,18 @@ elseif(probtype_in .eq. 5)then     ! asteroid 2 materials back
 !   rad_crit= pcurve_ls(:,i)   
 !  endif
  enddo
+ 
 
+ !------------------------------------------------
+  if(ppcrit .eq. pp2)then
+   ! do nothing
+  else
+   call dist_point_to_lined(2,pcurve_ls(:,ppcrit), &
+                           pcurve_ls(:,ppcrit+1),xy,dist5)
+!   write(13,*) "dist5",dist5,dist1
+  endif
+
+ ! -------------------------------------------------
 if(pcurve_ls(1,ppcrit) .eq. x .and. pcurve_ls(2,ppcrit) .eq. y)then
  dist=0.0d0
  crossp=0.0d0
@@ -456,9 +467,11 @@ else
  endif
 
  if(imat .eq. 1)then
-  dist=sign(dist1,crossp(3))
+!  dist=sign(dist1,crossp(3))
+  dist=sign(min(dist1,dist5),crossp(3))
  elseif(imat .eq. 2)then
-  dist=-1.0d0*sign(dist1,crossp(3))
+! dist=-1.0d0*sign(dist1,crossp(3))
+   dist=-1.0d0*sign(min(dist1,dist5),crossp(3))
  else
   print *,"wrong num of materials for test 5"
   stop
@@ -611,6 +624,14 @@ else
 !  stop
  endif
 endif
+
+  if(ppcrit .eq. pp2)then
+   ! do nothing
+  else
+   call dist_point_to_lined(2,pcurve_ls(:,ppcrit), &
+                           pcurve_ls(:,ppcrit+1),xy,dist1)
+!   write(13,*) "dist5",dist5,dist1
+  endif
 
 
 
@@ -1547,21 +1568,21 @@ call l2normd(sdim, p2, p1, diff21)
 
 s = -1.0d0*(dot_product(x10,x21))/(diff21**2.0d0)
 
-!print *,"s=",s
+!write(13,*) "s=",s
 
 if(s .gt. 1.0d0)then
  call l2normd(sdim, p2, x,dist)
 elseif(s .lt. 0.0d0)then
  call l2normd(sdim,p1,x,dist)
 else
- if(abs((diff10**2.0d0 )*(diff21**2.0d0) - & 
-        (dot_product(x10,x21))**2.0d0) .lt. 1.0e-10)then
-   dist= 0.0d0
- else
+! if(abs((diff10**2.0d0 )*(diff21**2.0d0) - & 
+!        (dot_product(x10,x21))**2.0d0) .lt. 1.0e-10)then
+!   dist= 0.0d0
+! else
   dist = sqrt(((diff10**2.0d0 )*(diff21**2.0d0) - & 
         (dot_product(x10,x21))**2.0d0)/ &
         (diff21**2.0d0))
- endif
+! endif
 endif
 
 deallocate(x10,x21) 
@@ -3387,7 +3408,7 @@ else if (probtype_in.eq.7) then
 
 else if (probtype_in.eq.10) then
  if(vf(2) .gt. eps .and. vf(2) .lt. 1.0d0)then
-  do dir=1,2
+   do dir=1,2
    centroid(2,dir) =  &
     (center(dir) - vf(1)*centroid(1,dir)-vf(6)*centroid(6,dir))/vf(2)
   enddo
