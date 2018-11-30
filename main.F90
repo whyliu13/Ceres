@@ -26,11 +26,11 @@ IMPLICIT NONE
 ! for flat interface, interface is y=0.3.
 ! for dirichlet, top material has k=0 T(y=0.3)=2.0   T(y=0.0)=3.0
 
-INTEGER,PARAMETER          :: probtype_in = 6
+INTEGER,PARAMETER          :: probtype_in = 10
 INTEGER,PARAMETER          :: operator_type_in = 1 !0=low,1=simple,2=least sqr
 INTEGER,PARAMETER          :: dclt_test_in = 0 ! 1 = Dirichlet test  on
 INTEGER,PARAMETER          :: solvtype = 1 ! 0 = CG  1 = bicgstab
-INTEGER,PARAMETER          :: N=128,M= 4
+INTEGER,PARAMETER          :: N=64,M= 2
 INTEGER,PARAMETER          :: plot_int = 1
 real(kind=8),parameter     :: fixed_dt = 1.25d-2 /real(M,8) ! !!!!!!!!!!!!!!!!!!
 real(kind=8),parameter     :: cf= 1.0d0         ! multiplier of the time step.
@@ -1063,19 +1063,19 @@ If(probtype_in .eq. 6)then
  flxtot=0.0d0 
  IF(N .eq. 32) then
   do i = 0,31   
-   flxtot=flxtot+ (T(i,27,3)-T(i,26,3))/h
+   flxtot=flxtot+ (T(i,27,3)-T(i,26,3))
   enddo
  elseif(N .eq. 64)then
   do i = 0,63  
-   flxtot=flxtot+ (T(i,54,3)-T(i,53,3))/h
+   flxtot=flxtot+ (T(i,54,3)-T(i,53,3))
   enddo 
  elseif(N .eq. 128)then
   do i = 0,127  
-   flxtot=flxtot+ (T(i,108,3)-T(i,107,3))/h
+   flxtot=flxtot+ (T(i,108,3)-T(i,107,3))
   enddo 
  elseif(N .eq. 256)then
   do i = 0,255 
-   flxtot=flxtot+ (T(i,216,3)-T(i,215,3))/h
+   flxtot=flxtot+ (T(i,216,3)-T(i,215,3))
   enddo   
  ENDIF
 
