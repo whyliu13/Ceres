@@ -26,7 +26,7 @@ IMPLICIT NONE
 ! for flat interface, interface is y=0.3.
 ! for dirichlet, top material has k=0 T(y=0.3)=2.0   T(y=0.0)=3.0
 
-INTEGER,PARAMETER          :: probtype_in = 10
+INTEGER,PARAMETER          :: probtype_in = 6
 INTEGER,PARAMETER          :: operator_type_in = 1 !0=low,1=simple,2=least sqr
 INTEGER,PARAMETER          :: dclt_test_in = 0 ! 1 = Dirichlet test  on
 INTEGER,PARAMETER          :: solvtype = 1 ! 0 = CG  1 = bicgstab
@@ -37,7 +37,6 @@ real(kind=8),parameter     :: cf= 1.0d0         ! multiplier of the time step.
 real(kind=8),parameter     :: CFL = 0.5d0
 real(kind=8),parameter     :: problo= 0.0d0, probhi= 1.0d0
 integer,parameter          :: sdim_in = 2
-
 integer,parameter          :: msample=2
 integer,parameter          :: cal_off=0
 
@@ -132,6 +131,8 @@ real(kind=8)         :: vftot
 
 real(kind=8)         :: dtemp1,dtemp2
 real(kind=8)         :: cc(2)
+
+integer              :: nb_flag
 
 
 
@@ -530,8 +531,8 @@ CALL INIT_V(N,XLINE(0:N),YLINE(0:N),uu,vv)
 
  elseif(probtype_in .eq. 6)then   ! NB with thin filament
   thermal_cond(1) = 100.0d0
-  thermal_cond(2) = 0.1d0 
-  thermal_cond(3) = 10.0d0
+  thermal_cond(2) = 1.0d0 
+  thermal_cond(3) = 20.0d0
 
 ! elseif(probtype_in .eq. 8)then   ! NB without thin filament
 !  thermal_cond(1) = 1.0d0
@@ -1059,8 +1060,35 @@ do i=N-1,0,-1
 enddo
 
 
+
+
+
 If(probtype_in .eq. 6)then
+
+ nb_flag=1
+
  flxtot=0.0d0 
+if(nb_flag .eq. 2)then
+ IF(N .eq. 32) then
+  do i = 12,18   
+   flxtot=flxtot+ (T(i,13,2)-T(i,12,2))
+  enddo
+ elseif(N .eq. 64)then
+  do i = 24,37  
+   flxtot=flxtot+ (T(i,26,2)-T(i,25,2))
+  enddo 
+ elseif(N .eq. 128)then
+  do i = 48,75  
+   flxtot=flxtot+ (T(i,52,2)-T(i,51,2))
+  enddo 
+ elseif(N .eq. 256)then
+  do i = 96,151 
+   flxtot=flxtot+ (T(i,104,2)-T(i,103,2))
+  enddo   
+ ENDIF
+
+
+elseif(nb_flag .eq. 1)then
  IF(N .eq. 32) then
   do i = 0,31   
    flxtot=flxtot+ (T(i,27,3)-T(i,26,3))
@@ -1076,12 +1104,17 @@ If(probtype_in .eq. 6)then
  elseif(N .eq. 256)then
   do i = 0,255 
    flxtot=flxtot+ (T(i,216,3)-T(i,215,3))
-  enddo   
- ENDIF
+  enddo
+ endif
+ 
+endif
 
  print *,"flux total =", flxtot
 
 endif
+
+
+
 
 
 
