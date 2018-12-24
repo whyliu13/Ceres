@@ -30,7 +30,7 @@ INTEGER,PARAMETER          :: probtype_in = 6
 INTEGER,PARAMETER          :: operator_type_in = 1 !0=low,1=simple,2=least sqr
 INTEGER,PARAMETER          :: dclt_test_in = 0 ! 1 = Dirichlet test  on
 INTEGER,PARAMETER          :: solvtype = 1 ! 0 = CG  1 = bicgstab
-INTEGER,PARAMETER          :: N=64,M= 2
+INTEGER,PARAMETER          :: N=128,M= 4
 INTEGER,PARAMETER          :: plot_int = 1
 real(kind=8),parameter     :: fixed_dt = 1.25d-2 /real(M,8) ! !!!!!!!!!!!!!!!!!!
 real(kind=8),parameter     :: cf= 1.0d0         ! multiplier of the time step.
@@ -72,8 +72,8 @@ real(kind=8)                :: sumT,sumvf
 REAL(KIND=8)                :: thermal_cond(100)
 integer                     :: nten
 
-real(kind=8)                :: flxtot
-
+real(kind=8)                :: flxtot1,flxtot2
+real(kind=8)                :: flxavg1,flxavg2
 
 
 !----------------------------------------
@@ -493,7 +493,7 @@ CALL INIT_V(N,XLINE(0:N),YLINE(0:N),uu,vv)
 ! init thermal conductivity
  if (probtype_in.eq.0) then
   thermal_cond(1)=10.0d0
-  thermal_cond(2)=1.0d0
+  thermal_cond(2)=10.0d0
   if (dclt_test_in.eq.1) then
    thermal_cond(2)=0.1d0  ! top material
   else if (dclt_test_in.eq.0) then
@@ -531,8 +531,8 @@ CALL INIT_V(N,XLINE(0:N),YLINE(0:N),uu,vv)
 
  elseif(probtype_in .eq. 6)then   ! NB with thin filament
   thermal_cond(1) = 100.0d0
-  thermal_cond(2) = 1.0d0 
-  thermal_cond(3) = 20.0d0
+  thermal_cond(2) = 100.0d0 
+  thermal_cond(3) = 0.1d0
 
 ! elseif(probtype_in .eq. 8)then   ! NB without thin filament
 !  thermal_cond(1) = 1.0d0
@@ -574,7 +574,7 @@ CALL INIT_V(N,XLINE(0:N),YLINE(0:N),uu,vv)
   if ((probtype_in.eq.0).or.(probtype_in.eq.2)) then
    T(i,j,1)=2.0
    T(i,j,2)=2.0
-   if (1.eq.0) then
+   if (1.eq.1) then
     do im = 1,nmat_in
      T(i,j,im)=exact_temperature(xcen,ycen,time_init,im,probtype_in, &
       nmat_in,thermal_cond,dclt_test_in)
@@ -644,6 +644,15 @@ CALL INIT_V(N,XLINE(0:N),YLINE(0:N),uu,vv)
    do im=1,nmat_in
      T(i,j,im)= NB_bot+(NB_top-NB_bot)/real(N,8)*0.5d0 + &
          (centroid_mult(i,j,im,2)+0.5d0*h_in)*(NB_top-NB_bot+(NB_top-NB_bot)/real(N,8))
+   enddo
+
+   do im=1,nmat_in
+    if(centroid_mult(i,j,im,2) .le. 0.2d0)then
+     T(i,j,im)= 5.0d0*cos(centroid_mult(i,j,im,2)/0.2*pi)+5.0d0
+    else
+     T(i,j,im)=0.0d0
+    endif    
+
    enddo
 
   elseif(probtype_in .eq. 7)then
@@ -728,6 +737,8 @@ enddo
 
 print *,"tau",tau
 
+flxavg1=0.0d0
+flxavg2=0.0d0
 
 do tm  = 1, M
   print *,"time_step", tm
@@ -1035,10 +1046,67 @@ print *,"GRADERR2",GRADERR2, "GRADERR3", GRADERR3
 
 print *,"time", Ts(tm)
 
+
+If(probtype_in .eq. 6 .or. probtype_in .eq. 0)then
+
+
+ flxtot1=0.0d0 
+ IF(N .eq. 32) then
+  do i = 12,19   
+   flxtot1=flxtot1+ (T(i,13,2)-T(i,12,2))
+  enddo
+ elseif(N .eq. 64)then
+  do i = 24,39  
+   flxtot1=flxtot1+ (T(i,26,2)-T(i,25,2))
+  enddo 
+ elseif(N .eq. 128)then
+  do i = 48,79  
+   flxtot1=flxtot1+ (T(i,52,2)-T(i,51,2))
+  enddo 
+ elseif(N .eq. 256)then
+  do i = 96,159 
+   flxtot1=flxtot1+ (T(i,104,2)-T(i,103,2))
+  enddo   
+ ENDIF
+
+ flxtot2=0.0d0
+ IF(N .eq. 32) then
+  do i = 0,31   
+   flxtot2=flxtot2+ (T(i,27,3)-T(i,26,3))
+  enddo
+ elseif(N .eq. 64)then
+  do i = 0,63  
+   flxtot2=flxtot2+ (T(i,54,3)-T(i,53,3))
+  enddo 
+ elseif(N .eq. 128)then
+  do i = 0,127  
+   flxtot2=flxtot2+ (T(i,108,3)-T(i,107,3))
+  enddo 
+ elseif(N .eq. 256)then
+  do i = 0,255 
+   flxtot2=flxtot2+ (T(i,216,3)-T(i,215,3))
+  enddo
+ endif
+ 
+ print *,"flxtot1", flxtot1
+ print *,"flxtot2", flxtot2
+
+ flxavg1=flxavg1+flxtot1
+ flxavg2=flxavg2+flxtot2
+
+endif
+
+
+
 enddo ! tm=1,...,M ,  temperature loop end 
 
 
-
+If(probtype_in .eq. 6 .or. probtype_in .eq. 0)then
+ flxavg1=flxavg1/real(M,8)
+ flxavg2=flxavg2/real(M,8)
+ print *,"flxavg1", flxavg1
+ print *,"flxavg2", flxavg2
+endif
 
 
 
@@ -1063,55 +1131,6 @@ enddo
 
 
 
-If(probtype_in .eq. 6)then
-
- nb_flag=1
-
- flxtot=0.0d0 
-if(nb_flag .eq. 2)then
- IF(N .eq. 32) then
-  do i = 12,18   
-   flxtot=flxtot+ (T(i,13,2)-T(i,12,2))
-  enddo
- elseif(N .eq. 64)then
-  do i = 24,37  
-   flxtot=flxtot+ (T(i,26,2)-T(i,25,2))
-  enddo 
- elseif(N .eq. 128)then
-  do i = 48,75  
-   flxtot=flxtot+ (T(i,52,2)-T(i,51,2))
-  enddo 
- elseif(N .eq. 256)then
-  do i = 96,151 
-   flxtot=flxtot+ (T(i,104,2)-T(i,103,2))
-  enddo   
- ENDIF
-
-
-elseif(nb_flag .eq. 1)then
- IF(N .eq. 32) then
-  do i = 0,31   
-   flxtot=flxtot+ (T(i,27,3)-T(i,26,3))
-  enddo
- elseif(N .eq. 64)then
-  do i = 0,63  
-   flxtot=flxtot+ (T(i,54,3)-T(i,53,3))
-  enddo 
- elseif(N .eq. 128)then
-  do i = 0,127  
-   flxtot=flxtot+ (T(i,108,3)-T(i,107,3))
-  enddo 
- elseif(N .eq. 256)then
-  do i = 0,255 
-   flxtot=flxtot+ (T(i,216,3)-T(i,215,3))
-  enddo
- endif
- 
-endif
-
- print *,"flux total =", flxtot
-
-endif
 
 
 
