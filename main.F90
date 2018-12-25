@@ -30,9 +30,10 @@ INTEGER,PARAMETER          :: probtype_in = 6
 INTEGER,PARAMETER          :: operator_type_in = 1 !0=low,1=simple,2=least sqr
 INTEGER,PARAMETER          :: dclt_test_in = 0 ! 1 = Dirichlet test  on
 INTEGER,PARAMETER          :: solvtype = 1 ! 0 = CG  1 = bicgstab
-INTEGER,PARAMETER          :: N=128,M= 4
+INTEGER,PARAMETER          :: N=32,M= 1
+REAL(KIND=8),PARAMETER     :: Time_mpr= 1.0d0
 INTEGER,PARAMETER          :: plot_int = 1
-real(kind=8),parameter     :: fixed_dt = 1.25d-2 /real(M,8) ! !!!!!!!!!!!!!!!!!!
+real(kind=8),parameter     :: fixed_dt = 1.25d-2*Time_mpr/real(M,8) ! !!!!!!!!!!!!!!!!!!
 real(kind=8),parameter     :: cf= 1.0d0         ! multiplier of the time step.
 real(kind=8),parameter     :: CFL = 0.5d0
 real(kind=8),parameter     :: problo= 0.0d0, probhi= 1.0d0
@@ -532,7 +533,7 @@ CALL INIT_V(N,XLINE(0:N),YLINE(0:N),uu,vv)
  elseif(probtype_in .eq. 6)then   ! NB with thin filament
   thermal_cond(1) = 100.0d0
   thermal_cond(2) = 100.0d0 
-  thermal_cond(3) = 0.1d0
+  thermal_cond(3) = 0.001d0
 
 ! elseif(probtype_in .eq. 8)then   ! NB without thin filament
 !  thermal_cond(1) = 1.0d0
@@ -1055,18 +1056,22 @@ If(probtype_in .eq. 6 .or. probtype_in .eq. 0)then
   do i = 12,19   
    flxtot1=flxtot1+ (T(i,13,2)-T(i,12,2))
   enddo
+   flxtot1=flxtot1/8.0d0
  elseif(N .eq. 64)then
   do i = 24,39  
    flxtot1=flxtot1+ (T(i,26,2)-T(i,25,2))
   enddo 
+  flxtot1=flxtot1/16.0d0
  elseif(N .eq. 128)then
   do i = 48,79  
    flxtot1=flxtot1+ (T(i,52,2)-T(i,51,2))
   enddo 
+  flxtot1=flxtot1/32.0d0
  elseif(N .eq. 256)then
   do i = 96,159 
    flxtot1=flxtot1+ (T(i,104,2)-T(i,103,2))
   enddo   
+  flxtot1=flxtot1/64.0d0
  ENDIF
 
  flxtot2=0.0d0
@@ -1089,10 +1094,10 @@ If(probtype_in .eq. 6 .or. probtype_in .eq. 0)then
  endif
  
  print *,"flxtot1", flxtot1
- print *,"flxtot2", flxtot2
+! print *,"flxtot2", flxtot2
 
  flxavg1=flxavg1+flxtot1
- flxavg2=flxavg2+flxtot2
+
 
 endif
 
@@ -1103,9 +1108,9 @@ enddo ! tm=1,...,M ,  temperature loop end
 
 If(probtype_in .eq. 6 .or. probtype_in .eq. 0)then
  flxavg1=flxavg1/real(M,8)
- flxavg2=flxavg2/real(M,8)
+! flxavg2=flxavg2/real(M,8)
  print *,"flxavg1", flxavg1
- print *,"flxavg2", flxavg2
+! print *,"flxavg2", flxavg2
 endif
 
 
