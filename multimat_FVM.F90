@@ -3088,6 +3088,14 @@ do im=1,nmat_in
    do i=1,ncenter
     if(center_mark(i) .eq. 1)then
      call AdaptQuad_sub(center_hold(i,:), h/(2.0d0**real(ilev-1,8)), centers1)
+
+     if(ilev .lt. 4)then
+     write(14,*) center_hold(i,1)-h/(2.0d0**real(ilev,8)), center_hold(i,2),&
+                 center_hold(i,1)+h/(2.0d0**real(ilev,8)), center_hold(i,2)
+     write(14,*) center_hold(i,1), center_hold(i,2)-h/(2.0d0**real(ilev,8)),&
+                 center_hold(i,1), center_hold(i,2)+h/(2.0d0**real(ilev,8)) 
+     endif
+     
      do ii=1,4
       ic=ic+1
       do j=1,2
