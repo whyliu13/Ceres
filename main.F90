@@ -30,10 +30,10 @@ INTEGER,PARAMETER          :: probtype_in = 9
 INTEGER,PARAMETER          :: operator_type_in = 1 !0=low,1=simple,2=least sqr
 INTEGER,PARAMETER          :: dclt_test_in = 1 ! 1 = Dirichlet test  on
 INTEGER,PARAMETER          :: solvtype = 1 ! 0 = CG  1 = bicgstab
-INTEGER,PARAMETER          :: N=128,M= 4
+INTEGER,PARAMETER          :: N=256,M= 8
 REAL(KIND=8),PARAMETER     :: Time_mpr= 1.0d0
 INTEGER,PARAMETER          :: plot_int = 1
-real(kind=8),parameter     :: fixed_dt = 1.25d-2*Time_mpr/real(M,8) ! !!!!!!!!!!!!!!!!!!
+real(kind=8),parameter     :: fixed_dt = 1.25d-2 /real(M,8) ! !!!!!!!!!!!!!!!!!!
 real(kind=8),parameter     :: cf= 1.0d0         ! multiplier of the time step.
 real(kind=8),parameter     :: CFL = 0.5d0
 real(kind=8),parameter     :: problo= 0.0d0, probhi= 1.0d0
@@ -135,6 +135,8 @@ real(kind=8)         :: cc(2)
 
 integer              :: nb_flag
 
+real(kind=8)         :: tau_polar
+integer              :: subcycling_step
 
 
 !NAMELIST /PMTR/ probtype_in, operator_type_in, dclt_test_in, &
@@ -348,7 +350,7 @@ CALL INIT_V(N,XLINE(0:N),YLINE(0:N),uu,vv)
   stop
  endif
 
- print *,"tau=",tau
+ print *,"tau1=",tau
 
 
  if(probtype_in .eq. 10)then
@@ -585,24 +587,21 @@ CALL INIT_V(N,XLINE(0:N),YLINE(0:N),uu,vv)
    T(i,j,1)=0.0
    T(i,j,2)=2.0
    T(i,j,3)=0.0
-  if(0 .eq. 1)then
+  if(1 .eq. 1)then
    do im = 1,nmat_in
     T(i,j,im)=exact_temperature(xcen,ycen,time_init,im,probtype_in, &
      nmat_in,thermal_cond,dclt_test_in)
    enddo
   endif
 
-  else if (probtype_in.eq.9) then   ! annulus cvg test
+  else if (probtype_in.eq. 9) then   ! annulus cvg test
    call set_polar_2d(sdim_in,Np,Mp,thermal_cond(2),tau &
-                   ,r_polar,z_polar,dr_polar,dz_polar,upolar)
-
+                   ,r_polar,z_polar,dr_polar,dz_polar,upolar,tau_polar,subcycling_step)
 
    do i1=1,2
     pcenter(i1)=0.5d0
    enddo
-   tau =tau*cf
    
-
    T = 0.0d0
    do i2=0,N-1
     do j2=0,N-1
@@ -701,6 +700,9 @@ CALL INIT_V(N,XLINE(0:N),YLINE(0:N),uu,vv)
  enddo
  enddo
 
+
+
+
  if(1 .eq. 1)then
   do i= -1,N
   do j= -1,N
@@ -722,9 +724,7 @@ CALL INIT_V(N,XLINE(0:N),YLINE(0:N),uu,vv)
  endif
 
 
-   do jj=0,Mp
-    write(91,*) upolar(0:Np,jj) 
-   enddo
+
 
   do j=-1,N
    write(92,*) T(-1:N,j,2)
@@ -908,13 +908,24 @@ endif
  T = T_new
 
 ! ----------------------------------------------------------------- ONLY FOR PROBLEM TYPE  999
-if(probtype_in.eq.9)then                                           ! polar solution updated                                    
- call polar_2d_heat(sdim_in,Np,Mp,thermal_cond(2),tau, r_polar,z_polar &     
+if(probtype_in.eq.9)then   
+   do jj=0,Mp
+    write(91,*) upolar(0:Np,jj) 
+   enddo
+ print *,"tau_polar",tau_polar                            
+ print *,"subcycling_step", subcycling_step    
+                                                ! polar solution updated    
+ do i=1,subcycling_step                               
+  call polar_2d_heat(sdim_in,Np,Mp,thermal_cond(2),tau_polar, r_polar,z_polar &     
                       ,dr_polar,dz_polar,upolar)
+ enddo
+
+
+ write(91,*) "step",tm
  do j=0,Mp
   write(91,*) upolar(0:Np,j) 
-
  enddo
+
   call_time=call_time+1
   print *,"call_times",call_time
 sgflag = 0
@@ -1036,9 +1047,9 @@ endif ! probtype_in .eq. 9
 
 
  
-!GRADERR2 = sqrt(GRADERR2/real(gradcount,8))
+GRADERR2 = sqrt(GRADERR2/real(gradcount,8))
 
-GRADERR2 = sqrt(GRADERR2)
+!GRADERR2 = sqrt(GRADERR2)
 
 print *,"tau",tau
 

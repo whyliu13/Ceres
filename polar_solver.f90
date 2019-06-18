@@ -1,12 +1,12 @@
 program main
 implicit none
 
-integer,parameter           :: N=128
-integer,parameter           :: M=256
+integer,parameter           :: N=64
+integer,parameter           :: M=128
 real(kind=8),parameter      :: rlo=0.25d0-0.1d0
 real(kind=8),parameter      :: rhi=0.25d0+0.1d0
 real(kind=8),parameter      :: pi=4.0d0*atan(1.0d0)
-integer,parameter           :: step=64
+integer,parameter           :: step=1000
 integer,parameter           :: testnum=3
 real(kind=8),parameter      :: T1=2.0d0
 real(kind=8),parameter      :: T2=2.0d0
@@ -32,9 +32,12 @@ do i=0,M
 enddo
 
 kappa=1.0d0
-tau=0.5d0/kappa*min(((dr)**2.0d0), &
-       2.0d0*minval(r)*dr, &
-      (minval(r)**2.0d0)*((dz)**2.0d0))
+!tau=0.5d0/kappa*min(((dr)**2.0d0), &
+!       2.0d0*minval(r)*dr, &
+!      (minval(r)**2.0d0)*((dz)**2.0d0))
+!tau=4.8809058961343228E-006
+
+tau=0.5d0/(kappa*2.0d0*(1.0d0/(dr*dr)+1.0d0/(dz*dz*maxval(r)*maxval(r))))
 
 
 print *,"tau=",tau

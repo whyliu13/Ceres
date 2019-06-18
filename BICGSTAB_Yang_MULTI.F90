@@ -1359,8 +1359,10 @@
           stop
          endif
 
-!         print *,"div_tot", div_tot
-         if(hflag .eq. 1)then
+!          print *,"div_tot", div_tot
+
+       if(0 .eq. 1)then
+          if(hflag .eq. 1)then
           rhs_loc =0.0d0
          elseif(hflag .eq. 0)then
           ! do nothing
@@ -1368,7 +1370,7 @@
           print *, "hflag invalid 1368"
           stop
          endif
-
+      endif
 
 
          vf=VFRAC_MOF(i,j,im)

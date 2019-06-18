@@ -4041,13 +4041,14 @@ return
 end subroutine get_filament_source
 
 
-subroutine set_polar_2d(sdim,N,M,kappa,tau,r,z,dr,dz,u)
+subroutine set_polar_2d(sdim,N,M,kappa,tau,r,z,dr,dz,u,ptau,cycling_step)
 implicit none
 
 
 integer,intent(in)          :: sdim                 
 integer,intent(in)          :: N      ! discretization in r direction
 integer,intent(in)          :: M       ! discretization in theta direction
+real(kind=8),intent(in)     :: tau
 !real(kind=8),parameter      :: rlo=radcen-radeps
 !real(kind=8),parameter      :: rhi=radcen+radeps
 
@@ -4055,12 +4056,13 @@ real(kind=8)                :: r(0:N)
 real(kind=8)                :: z(0:M)
 
 real(kind=8)                :: dr,dz
-real(kind=8)                :: tau
+real(kind=8)                :: ptau
 real(kind=8)                :: kappa
 
 real(kind=8)                :: u(0:N,0:M)
 
 integer                     :: i,j
+integer                     :: cycling_step
 
 
 if(sdim .ne. 2)then
@@ -4083,9 +4085,21 @@ do i=0,M
  z(i)=i*dz
 enddo
 
-tau=0.5d0*kappa*min(((dr)**2.0d0), &
-       minval(r)*dr, &
-      (minval(r)**2.0d0)*((dz)**2.0d0))
+!ptau=0.5d0*kappa*min(((dr)**2.0d0), &
+!       minval(r)*dr, &
+!      (minval(r)**2.0d0)*((dz)**2.0d0))
+
+ptau=0.5d0/(kappa*2.0d0*(1.0d0/(dr*dr)+1.0d0/(dz*dz*maxval(r)*maxval(r))))
+
+
+if(ptau .gt. tau)then
+ print *,"ptau is greater than tau"
+ stop
+endif
+
+cycling_step = floor(tau/ptau) +1
+
+ptau= tau/real(cycling_step,8)
 
 
 !do i=0,N                                                              
