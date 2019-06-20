@@ -13,6 +13,10 @@ real(kind=8),parameter :: thermal_delta= 0.001d0  ! for probtype=6   thickness o
 real(kind=8),parameter :: NB_top=0.0d0, NB_bot=10.0d0  ! for probtype=6 , top and bot temperature profile
 integer,parameter      :: refine_lev = 5
 
+integer,parameter      :: fluxtype = 0        ! different ways for calulation of the flux through material interface
+                                              ! 0: default       The way we create for the paper
+                                              ! 1: simple        without the adjust term       
+                                              ! 2: Dai & Sannapieco
 real(kind=8),parameter :: eps = 1e-10
 real(kind=8),parameter :: tol = 1e-6
 real(kind=8),parameter :: pi  = 4.0d0*atan(1.0d0)
