@@ -32,8 +32,8 @@ real(kind=8)           :: space_partition
 
 ! polar solver
 
-integer,parameter  :: Np=64   
-integer,parameter  :: Mp=128
+integer,parameter  :: Np=256   
+integer,parameter  :: Mp=512
 real(kind=8),dimension(0:Np,0:Mp) :: upolar
 real(kind=8)         :: r_polar(0:Np)
 real(kind=8)         :: z_polar(0:Mp)

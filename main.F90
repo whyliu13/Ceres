@@ -30,7 +30,7 @@ INTEGER,PARAMETER          :: probtype_in = 9
 INTEGER,PARAMETER          :: operator_type_in = 1 !0=low,1=simple,2=least sqr
 INTEGER,PARAMETER          :: dclt_test_in = 1 ! 1 = Dirichlet test  on
 INTEGER,PARAMETER          :: solvtype = 1 ! 0 = CG  1 = bicgstab
-INTEGER,PARAMETER          :: N=256,M= 8
+INTEGER,PARAMETER          :: N=128,M=4
 REAL(KIND=8),PARAMETER     :: Time_mpr= 1.0d0
 INTEGER,PARAMETER          :: plot_int = 1
 real(kind=8),parameter     :: fixed_dt = 1.25d-2 /real(M,8) ! !!!!!!!!!!!!!!!!!!
@@ -909,9 +909,9 @@ endif
 
 ! ----------------------------------------------------------------- ONLY FOR PROBLEM TYPE  999
 if(probtype_in.eq.9)then   
-   do jj=0,Mp
-    write(91,*) upolar(0:Np,jj) 
-   enddo
+!   do jj=0,Mp
+!    write(91,*) upolar(0:Np,jj) 
+!   enddo
  print *,"tau_polar",tau_polar                            
  print *,"subcycling_step", subcycling_step    
                                                 ! polar solution updated    
@@ -921,10 +921,10 @@ if(probtype_in.eq.9)then
  enddo
 
 
- write(91,*) "step",tm
- do j=0,Mp
-  write(91,*) upolar(0:Np,j) 
- enddo
+ !write(91,*) "step",tm
+ !do j=0,Mp
+ ! write(91,*) upolar(0:Np,j) 
+ !enddo
 
   call_time=call_time+1
   print *,"call_times",call_time

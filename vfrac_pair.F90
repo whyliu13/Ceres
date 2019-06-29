@@ -137,7 +137,7 @@ contains
           do mr = 1, nmat
              if(ml .ne. mr) then
                 if(frac_left(ml) .gt. 0.0d0  .and. frac_right(mr) .gt. 0.0d0) then
-                   call two_points_dist(sdim,x_left(ml,:),x_right(mr,:),dist)
+                   call two_points_dist(sdim,x_left(:,ml),x_right(:,mr),dist)
                    if((change .eq. 0) .or. (dist .lt. dcrit)) then
                       dcrit = dist
                       change = 1
