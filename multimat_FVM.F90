@@ -39,7 +39,7 @@ real(kind=8)                     :: x1(2),x2(2),x3(2),x4(2),x5(2)
 real(kind=8)                     :: x6(2)
 real(kind=8)                     :: xxl(2),xxr(2)
 integer                          :: i
-real(kind=8)                     :: r1,r2,r3,r4
+real(kind=8)                     :: r1,r2,r3,r4,r_mat2
 real(kind=8)                     :: center(2),cc(2)
 
 real(kind=8)                     :: x0,y0
@@ -1111,7 +1111,81 @@ elseif(probtype_in .eq. 2) then
    stop
   endif
 
-elseif(probtype_in .eq. 6)then      ! nucleate boiling set-up
+elseif(probtype_in .eq. 6)then    ! new multiscale problem set-up
+ ! input point
+ xy(1)=x
+ xy(2)=y
+
+ ! the signed distance function is symmetric with x=0.5d0
+ ! find the reflection if x is bigger than 0.5d0
+ if (x .gt. 0.5d0) then
+  xy(1)=1.0d0-x
+ elseif(x .le. 0.5d0)then 
+  ! do nothing
+ else
+  print *, "x invalid", "x=",x  
+  stop
+ endif
+
+ ! important points
+ x1(1)=0.0d0
+ x1(2)=0.55d0
+ x2(1)=0.21d0
+ x2(2)=0.55d0
+ x3(1)=0.26d0
+ x3(2)=0.5d0
+ x4(1)=0.5d0
+ x4(2)=0.26d0
+ x5(1)=0.5d0
+ x5(2)=0.5d0
+ x6(1)=0.21d0
+ x6(2)=0.5d0
+
+  r_mat2=0.24d0-thermal_delta
+
+  call l2normd(2,xy,x5,r1)
+  dist1=r_mat2-r1
+  
+  call dist_point_to_line(x1,x2,xy,d1)
+  call dist_point_to_arc(xy,x3,x2,x6,d2)
+  call dist_point_to_arc(xy,x3,x4,x5,d3)
+
+  if(xy(2) .gt. 0.55d0)then
+   signtemp=-1.0d0
+  elseif(xy(1) .ge. 0.21d0 .and. xy(1) .le. 0.26d0  &
+         .and. xy(2) .ge. 0.5d0 .and. xy(2) .le. 0.55d0)then
+   call l2normd(2,xy,x6,r2)
+   dist2=0.05d0-r2
+   signtemp=sign(1.0d0,dist2)
+  elseif(xy(1) .ge. 0.26d0 .and. xy(1) .le. 0.5d0  &
+         .and. xy(2) .ge. 0.5d0 .and. xy(2) .le. 0.55d0)then
+   signtemp=-1.0d0
+  elseif(xy(1) .ge. 0.26d0 .and. xy(1) .le. 0.5d0  &
+         .and. xy(2) .ge. 0.26d0 .and. xy(2) .le. 0.5d0)then
+   dist3=r1-0.24d0
+   signtemp=sign(1.0d0,dist3)
+  else
+   signtemp=1.0d0 
+  endif
+
+  if(imat .eq. 2)then
+   dist=dist1
+  elseif(imat .eq. 1)then
+   dist=signtemp*min(d1,d2,d3)
+  elseif(imat .eq. 3)then
+   if(dist1 .le. 0.0d0 .and. &
+        signtemp .le. 0.0d0)then
+      dist=min(d1,d2,d3,abs(dist1))
+   else
+     dist=-min(d1,d2,d3,abs(dist1))
+   endif
+  else
+   print *,"imat invalid 1183"
+   stop
+  endif
+
+
+elseif(probtype_in .eq. 16)then      ! old multiscale problem set-up
  xy(1)=x
  xy(2)=y
 ! dist1 
