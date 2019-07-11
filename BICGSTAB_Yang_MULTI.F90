@@ -2,7 +2,7 @@
        use Generalclass
 
       REAL*8, PARAMETER :: AVGTOL=1.0E-8
-      REAL*8,PARAMETER  :: ERRTOL = 0.99D0
+      REAL*8,PARAMETER  :: ERRTOL = 0.01D0
 
       integer operator_type ! 0=low order 1=simple 2=high order
       integer probtypeCG ! 0=flat interface  1=annulus 2=vertical interface
